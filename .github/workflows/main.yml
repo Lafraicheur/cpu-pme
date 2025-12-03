@@ -51,12 +51,14 @@ jobs:
           server: "ftp.cpupme.com"
           username: "devopschrist@cpupme.com"
           password: "kobenan@@?"
+
+          protocol: "ftp"
           
           # Dossier local à uploader (le résultat de l'export statique Next.js)
           local-dir: ./out/
           
           # Dossier distant sur le serveur où les fichiers doivent être placés (ex: /public_html/)
-          remote-dir: ./
+          server-dir: ./
           
           # Conserver les informations sur l'état du déploiement pour la synchronisation
           state-name: .ftp-deploy-state.json
