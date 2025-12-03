@@ -48,7 +48,7 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           # Paramètres de connexion FTP (doivent être définis comme secrets GitHub)
-          server: "173.209.32.66"
+          server: "ftp.cpupme.com"
           username: "devopschrist@cpupme.com"
           password: "kobenan@@?"
           
