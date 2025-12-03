@@ -1,11 +1,10 @@
 name: Déploiement Statique Next.js via FTP
 
-# Déclenche le workflow à chaque push sur la branche 'main' (à adapter si nécessaire)
 on:
   push:
     branches:
       - main
-  workflow_dispatch: # Permet de déclencher le workflow manuellement depuis GitHub
+  workflow_dispatch:
 
 jobs:
   build_and_deploy:
@@ -17,52 +16,43 @@ jobs:
       - name: Vérifier le code source
         uses: actions/checkout@v4
 
-      # 2. Configuration de Node.js
+      # 2. Configuration Node.js
       - name: Configuration de Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Utilisez la version de Node.js appropriée
+          node-version: '20'
 
-      # NOUVEAU: 2b. Configuration de Pnpm
+      # 3. Setup pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 8 # Utiliser une version stable de pnpm (à ajuster si besoin)
-          run_install: false # Nous gérons l'installation à l'étape suivante
+          version: 8
+          run_install: false
 
-      # 3. Installation des dépendances et Build Statique
+      # 4. Installation des dépendances
       - name: Installer les dépendances
-        run: npm ci # Utiliser npm ci pour les workflows d'intégration continue
-        
-      - name: Exécuter le Build Next.js (et l'export statique)
-        # Assurez-vous d'avoir 'next build' dans vos scripts package.json
+        run: npm ci
+
+      # 5. Build Next.js
+      - name: Exécuter le Build Next.js (export statique)
         run: npm run build
         env:
-          # Passez ici vos variables d'environnement côté client (commençant par NEXT_PUBLIC_)
           NODE_ENV: production
-          # Exemple: NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
-      # 4. Déploiement sur le serveur FTP
-      # Le dossier par défaut de l'export Next.js est 'out/'
+      # 6. Déploiement FTP
       - name: Déploiement FTP des fichiers statiques
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          # Paramètres de connexion FTP (doivent être définis comme secrets GitHub)
-          server: "ftp.cpupme.com"
+          server: "cpupme.com"   # <<< TEMPORAIRE en attendant que ftp.cpupme.com fonctionne
           username: "devopschrist@cpupme.com"
           password: "kobenan@@?"
-
           protocol: "ftp"
-          
-          # Dossier local à uploader (le résultat de l'export statique Next.js)
+          port: 21
+
           local-dir: ./out/
-          
-          # Dossier distant sur le serveur où les fichiers doivent être placés (ex: /public_html/)
-          server-dir: ./
-          
-          # Conserver les informations sur l'état du déploiement pour la synchronisation
+          server-dir: ./     # remplace remote-dir
+
           state-name: .ftp-deploy-state.json
-          delete-test: false
           dry-run: false
 
   email_notify:
@@ -76,7 +66,7 @@ jobs:
         with: 
           to: "devopschrist@gmail.com"
           subject: >
-            Mise en ligne: Deploiement ${{ needs.build_and_deploy.result == 'success' && 'réussi✅' || 'échoué❌' }}
+            Mise en ligne: Déploiement ${{ needs.build_and_deploy.result == 'success' && 'réussi✅' || 'échoué❌' }}
           body: >
             <p>Le process CI/CD de votre projet cpupme a ${{ needs.build_and_deploy.result == 'success' && 'réussi' || 'échoué' }}.</p>
           type: "text/html"
