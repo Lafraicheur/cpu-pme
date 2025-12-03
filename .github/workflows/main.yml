@@ -45,7 +45,7 @@ jobs:
         with:
           server: "cpupme.com"   # <<< TEMPORAIRE en attendant que ftp.cpupme.com fonctionne
           username: "devopschrist@cpupme.com"
-          password: "kobenan@@?"
+          password: "Kobenan@@?"
           protocol: "ftp"
           port: 21
 
