@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { LogIn, UserPlus, Menu } from "lucide-react";
+import { LogIn, UserPlus, Menu, X } from "lucide-react";
 
 export default function Home() {
   // État pour le compte à rebours
@@ -14,6 +14,19 @@ export default function Home() {
   });
 
   const [targetDate, setTargetDate] = useState<Date | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Empêcher le scroll quand le drawer est ouvert
+  useEffect(() => {
+    if (isDrawerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isDrawerOpen]);
 
   // Initialiser ou récupérer la date cible
   useEffect(() => {
@@ -62,22 +75,22 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
       {/* Decorative background circles */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-100 rounded-full opacity-30 -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-50 rounded-full opacity-40 -translate-x-1/3 translate-y-1/3"></div>
+      <div className="absolute top-0 left-0 w-64 h-64 sm:w-80 sm:h-80 lg:w-96 lg:h-96 bg-blue-100 rounded-full opacity-30 -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 left-0 w-56 h-56 sm:w-64 sm:h-64 lg:w-80 lg:h-80 bg-blue-50 rounded-full opacity-40 -translate-x-1/3 translate-y-1/3"></div>
 
       {/* Header */}
-      <header className="relative z-10 px-6 py-4 bg-white/80 backdrop-blur-sm shadow-sm">
+      <header className="relative z-10 px-4 sm:px-6 py-3 sm:py-4 bg-white/80 backdrop-blur-sm shadow-sm">
         <div className="max-w-[1400px] mx-auto">
-          <div className="flex items-center justify-between gap-8">
+          <div className="flex items-center justify-between gap-2 sm:gap-4 md:gap-8">
             {/* Logo */}
-            <div className="flex items-center flex-shrink-0">
+            <div className="flex items-center shrink-0">
               <Image
                 src="/couverture_cpu_coming_soon.png"
                 alt="CPU-PME Logo"
                 width={140}
                 height={45}
                 priority
-                className="h-10 w-auto object-contain"
+                className="h-8 sm:h-10 w-auto object-contain"
               />
             </div>
 
@@ -134,100 +147,215 @@ export default function Home() {
             </nav>
 
             {/* CTA Buttons */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <button className="flex items-center gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-xs font-semibold px-5 py-2.5 rounded-lg transition-all">
-                <LogIn className="w-4 h-4" />
-                Connexion
+            <div className="hidden md:flex items-center gap-2 lg:gap-3 shrink-0">
+              <button className="flex items-center gap-1.5 lg:gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-xs font-semibold px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg transition-all">
+                <LogIn className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+                <span className="hidden lg:inline">Connexion</span>
+                <span className="lg:hidden">Se connecter</span>
               </button>
-              <button className="flex items-center gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-xs font-semibold px-5 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg">
-                <UserPlus className="w-4 h-4" />
+              <button className="flex items-center gap-1.5 lg:gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-xs font-semibold px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg">
+                <UserPlus className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 Adhérer
               </button>
             </div>
 
             {/* Mobile Menu Button */}
-            <button className="xl:hidden flex items-center justify-center w-10 h-10 text-[#221F1F]">
-              <Menu className="w-6 h-6" />
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className="xl:hidden flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 text-[#221F1F]"
+              aria-label="Ouvrir le menu"
+            >
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
       </header>
 
+      {/* Mobile Drawer */}
+      {isDrawerOpen && (
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black/50 z-40 xl:hidden animate-in fade-in duration-200"
+            onClick={() => setIsDrawerOpen(false)}
+          />
+
+          {/* Drawer */}
+          <div className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 xl:hidden shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
+            {/* Header du drawer */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <Image
+                src="/couverture_cpu_coming_soon.png"
+                alt="CPU-PME Logo"
+                width={120}
+                height={40}
+                className="h-8 w-auto object-contain"
+              />
+              <button
+                onClick={() => setIsDrawerOpen(false)}
+                className="flex items-center justify-center w-9 h-9 text-[#221F1F] hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Fermer le menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex flex-col p-4 space-y-1">
+              <a
+                href="#"
+                className="font-inter text-[#F08223] text-sm font-semibold hover:bg-orange-50 px-4 py-3 rounded-lg transition-colors"
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                Accueil
+              </a>
+              <a
+                href="#"
+                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                À Propos
+              </a>
+              <a
+                href="#"
+                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                Actualités & Publications
+              </a>
+              <a
+                href="#"
+                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                Secteurs & Filières
+              </a>
+              <a
+                href="#"
+                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                Membres
+              </a>
+              <a
+                href="#"
+                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                Plaidoyer & Influence
+              </a>
+              <a
+                href="#"
+                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                CRM & Réseautage
+              </a>
+              <a
+                href="#"
+                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                Contact & Assistance
+              </a>
+            </nav>
+
+            {/* CTA Buttons dans le drawer */}
+            <div className="flex flex-col gap-3 p-4 border-t border-gray-200 mt-auto">
+              <button
+                className="flex items-center justify-center gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all"
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                <LogIn className="w-4 h-4" />
+                Connexion
+              </button>
+              <button
+                className="flex items-center justify-center gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                <UserPlus className="w-4 h-4" />
+                Adhérer
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Main Content */}
-      <main className="relative z-10 px-6 py-12 md:py-20">
+      <main className="relative z-10 px-4 sm:px-6 py-8 sm:py-12 md:py-20">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
             {/* Left Column */}
-            <div className="space-y-8">
+            <div className="space-y-6 sm:space-y-8">
               {/* Title */}
               <div>
-                <h1 className="font-montserrat text-5xl md:text-6xl font-bold text-[#221F1F] mb-4">
+                <h1 className="font-montserrat text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#221F1F] mb-3 sm:mb-4">
                   Coming Soon
                 </h1>
-                <p className="font-inter text-lg text-[#6F6F6F] leading-relaxed">
+                <p className="font-inter text-sm sm:text-base lg:text-lg text-[#6F6F6F] leading-relaxed">
                   Notre plateforme est en cours de construction. Ne vous
                   inquiétez pas ! Nous arriverons bientôt. Restez avec nous.
                 </p>
               </div>
 
               {/* Countdown Timer */}
-              <div className="flex gap-6">
+              <div className="flex flex-wrap gap-3 sm:gap-4 md:gap-6">
                 {/* Days */}
-                <div className="flex flex-col items-start">
-                  <div className="font-montserrat text-6xl md:text-7xl font-bold text-[#F08223]">
+                <div className="flex flex-col items-start min-w-[70px] sm:min-w-20">
+                  <div className="font-montserrat text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#F08223]">
                     {String(timeLeft.days).padStart(2, "0")}
                   </div>
-                  <div className="font-inter text-sm text-[#6F6F6F] mt-2">
+                  <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-1 sm:mt-2">
                     Days
                   </div>
                 </div>
 
                 {/* Hours */}
-                <div className="flex flex-col items-start">
-                  <div className="font-montserrat text-6xl md:text-7xl font-bold text-[#F08223]">
+                <div className="flex flex-col items-start min-w-[70px] sm:min-w-20">
+                  <div className="font-montserrat text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#F08223]">
                     {String(timeLeft.hours).padStart(2, "0")}
                   </div>
-                  <div className="font-inter text-sm text-[#6F6F6F] mt-2">
+                  <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-1 sm:mt-2">
                     Hours
                   </div>
                 </div>
 
                 {/* Minutes */}
-                <div className="flex flex-col items-start">
-                  <div className="font-montserrat text-6xl md:text-7xl font-bold text-[#F08223]">
+                <div className="flex flex-col items-start min-w-[70px] sm:min-w-20">
+                  <div className="font-montserrat text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#F08223]">
                     {String(timeLeft.minutes).padStart(2, "0")}
                   </div>
-                  <div className="font-inter text-sm text-[#6F6F6F] mt-2">
+                  <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-1 sm:mt-2">
                     Minutes
                   </div>
                 </div>
 
                 {/* Seconds */}
-                <div className="flex flex-col items-start">
-                  <div className="font-montserrat text-6xl md:text-7xl font-bold text-[#F08223]">
+                <div className="flex flex-col items-start min-w-[70px] sm:min-w-20">
+                  <div className="font-montserrat text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#F08223]">
                     {String(timeLeft.seconds).padStart(2, "0")}
                   </div>
-                  <div className="font-inter text-sm text-[#6F6F6F] mt-2">
+                  <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-1 sm:mt-2">
                     Seconds
                   </div>
                 </div>
               </div>
 
               {/* Newsletter Form */}
-              <div className="space-y-4">
-                <p className="font-inter text-base text-[#6F6F6F]">
+              <div className="space-y-3 sm:space-y-4">
+                <p className="font-inter text-sm sm:text-base text-[#6F6F6F]">
                   Recevez une notification par e-mail pour les mises à jour.
                 </p>
-                <form className="flex gap-4">
+                <form className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <input
                     type="email"
                     placeholder="Entrez votre Email"
-                    className="flex-1 px-6 py-4 bg-[#F6F6F6] border-none rounded-lg font-inter text-[#6F6F6F] placeholder:text-[#AAAAAA] focus:outline-none focus:ring-2 focus:ring-[#F08223]"
+                    className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-[#F6F6F6] border-none rounded-lg font-inter text-sm sm:text-base text-[#6F6F6F] placeholder:text-[#AAAAAA] focus:outline-none focus:ring-2 focus:ring-[#F08223]"
                     required
                   />
                   <button
                     type="submit"
-                    className="bg-[#199D4E] hover:bg-[#157A3D] text-white font-inter font-semibold px-8 py-4 rounded-lg transition-colors whitespace-nowrap"
+                    className="bg-[#199D4E] hover:bg-[#157A3D] text-white font-inter font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-lg transition-colors whitespace-nowrap text-sm sm:text-base"
                   >
                     S&apos;inscrire
                   </button>
@@ -235,14 +363,14 @@ export default function Home() {
               </div>
 
               {/* Social Icons */}
-              <div className="flex gap-4">
+              <div className="flex gap-3 sm:gap-4 flex-wrap justify-center sm:justify-start">
                 <a
                   href="#"
-                  className="w-12 h-12 bg-[#3B5998] hover:bg-[#2D4373] rounded-full flex items-center justify-center text-white transition-colors"
+                  className="w-10 h-10 sm:w-12 sm:h-12 bg-[#3B5998] hover:bg-[#2D4373] rounded-full flex items-center justify-center text-white transition-colors"
                   aria-label="Facebook"
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 h-4 sm:w-5 sm:h-5"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -252,11 +380,11 @@ export default function Home() {
 
                 <a
                   href="#"
-                  className="w-12 h-12 bg-[#1DA1F2] hover:bg-[#0D8BD9] rounded-full flex items-center justify-center text-white transition-colors"
+                  className="w-10 h-10 sm:w-12 sm:h-12 bg-[#1DA1F2] hover:bg-[#0D8BD9] rounded-full flex items-center justify-center text-white transition-colors"
                   aria-label="Twitter"
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 h-4 sm:w-5 sm:h-5"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -266,11 +394,11 @@ export default function Home() {
 
                 <a
                   href="#"
-                  className="w-12 h-12 bg-[#0077B5] hover:bg-[#005582] rounded-full flex items-center justify-center text-white transition-colors"
+                  className="w-10 h-10 sm:w-12 sm:h-12 bg-[#0077B5] hover:bg-[#005582] rounded-full flex items-center justify-center text-white transition-colors"
                   aria-label="LinkedIn"
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 h-4 sm:w-5 sm:h-5"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -280,11 +408,11 @@ export default function Home() {
 
                 <a
                   href="#"
-                  className="w-12 h-12 bg-[#FF0000] hover:bg-[#CC0000] rounded-full flex items-center justify-center text-white transition-colors"
+                  className="w-10 h-10 sm:w-12 sm:h-12 bg-[#FF0000] hover:bg-[#CC0000] rounded-full flex items-center justify-center text-white transition-colors"
                   aria-label="YouTube"
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 h-4 sm:w-5 sm:h-5"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
