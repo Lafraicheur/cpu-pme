@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { LogIn, UserPlus, Menu, X } from "lucide-react";
 
 export default function Home() {
   // État pour le compte à rebours
@@ -14,19 +13,6 @@ export default function Home() {
   });
 
   const [targetDate, setTargetDate] = useState<Date | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  // Empêcher le scroll quand le drawer est ouvert
-  useEffect(() => {
-    if (isDrawerOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isDrawerOpen]);
 
   // Initialiser ou récupérer la date cible
   useEffect(() => {
@@ -73,366 +59,177 @@ export default function Home() {
   }, [targetDate]);
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
-      {/* Decorative background circles */}
-      <div className="absolute top-0 left-0 w-64 h-64 sm:w-80 sm:h-80 lg:w-96 lg:h-96 bg-blue-100 rounded-full opacity-30 -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 left-0 w-56 h-56 sm:w-64 sm:h-64 lg:w-80 lg:h-80 bg-blue-50 rounded-full opacity-40 -translate-x-1/3 translate-y-1/3"></div>
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
+      {/* Background mosaïque */}
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{
+          backgroundImage: 'url(/couverture_cpu_coming_soon.png)',
+          backgroundSize: '150px 150px',
+          backgroundRepeat: 'repeat',
+          backgroundPosition: 'center',
+        }}
+      ></div>
 
-      {/* Header */}
-      <header className="relative z-10 px-4 sm:px-6 py-3 sm:py-4 bg-white/80 backdrop-blur-sm shadow-sm">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="flex items-center justify-between gap-2 sm:gap-4 md:gap-8">
-            {/* Logo */}
-            <div className="flex items-center shrink-0">
+      {/* Overlay gradient pour adoucir le background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-orange-50/60 to-blue-50/65"></div>
+
+      {/* Decorative elements - Plus modernes et dynamiques */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-[#F08223]/10 to-transparent rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-200/15 to-transparent rounded-full blur-3xl"></div>
+
+      {/* Main Content - Centré */}
+      <main className="relative z-10 w-full px-4 sm:px-6 py-12">
+        <div className="max-w-6xl mx-auto">
+          {/* Logo en haut centré */}
+          <div className="flex justify-center mb-12 sm:mb-16">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl px-8 py-4">
               <Image
-                src="/couverture_cpu_coming_soon.png"
+                src="/logo.png"
                 alt="CPU-PME Logo"
-                width={140}
-                height={45}
+                width={200}
+                height={60}
                 priority
-                className="h-8 sm:h-10 w-auto object-contain"
+                className="h-12 sm:h-16 w-auto object-contain"
               />
             </div>
-
-            {/* Navigation */}
-            <nav className="hidden xl:flex items-center gap-5 flex-1 justify-center">
-              <a
-                href="#"
-                className="font-inter text-[#F08223] text-xs font-semibold hover:text-[#D97420] transition-colors whitespace-nowrap"
-              >
-                Accueil
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
-              >
-                À Propos
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
-              >
-                Actualités & Publications
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
-              >
-                Secteurs & Filières
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
-              >
-                Membres
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
-              >
-                Plaidoyer & Influence
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
-              >
-                CRM & Réseautage
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
-              >
-                Contact & Assistance
-              </a>
-            </nav>
-
-            {/* CTA Buttons */}
-            <div className="hidden md:flex items-center gap-2 lg:gap-3 shrink-0">
-              <button className="flex items-center gap-1.5 lg:gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-xs font-semibold px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg transition-all">
-                <LogIn className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-                <span className="hidden lg:inline">Connexion</span>
-                <span className="lg:hidden">Se connecter</span>
-              </button>
-              <button className="flex items-center gap-1.5 lg:gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-xs font-semibold px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg">
-                <UserPlus className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-                Adhérer
-              </button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsDrawerOpen(true)}
-              className="xl:hidden flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 text-[#221F1F]"
-              aria-label="Ouvrir le menu"
-            >
-              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
           </div>
-        </div>
-      </header>
 
-      {/* Mobile Drawer */}
-      {isDrawerOpen && (
-        <>
-          {/* Overlay */}
-          <div
-            className="fixed inset-0 bg-black/50 z-40 xl:hidden animate-in fade-in duration-200"
-            onClick={() => setIsDrawerOpen(false)}
-          />
-
-          {/* Drawer */}
-          <div className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 xl:hidden shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
-            {/* Header du drawer */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <Image
-                src="/couverture_cpu_coming_soon.png"
-                alt="CPU-PME Logo"
-                width={120}
-                height={40}
-                className="h-8 w-auto object-contain"
-              />
-              <button
-                onClick={() => setIsDrawerOpen(false)}
-                className="flex items-center justify-center w-9 h-9 text-[#221F1F] hover:bg-gray-100 rounded-lg transition-colors"
-                aria-label="Fermer le menu"
-              >
-                <X className="w-5 h-5" />
-              </button>
+          {/* Contenu principal centré */}
+          <div className="text-center space-y-8 sm:space-y-12">
+            {/* Title avec animation subtile */}
+            <div className="space-y-4 sm:space-y-6">
+              <h1 className="font-montserrat text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-[#221F1F] mb-4 sm:mb-6 tracking-tight">
+                Bientôt disponible
+              </h1>
+              <p className="font-inter text-base sm:text-lg lg:text-xl text-[#6F6F6F] leading-relaxed max-w-2xl mx-auto px-4">
+                Notre nouvelle plateforme est en cours de finalisation.
+                <br className="hidden sm:block" />
+                Une expérience innovante arrive très bientôt.
+              </p>
             </div>
 
-            {/* Navigation */}
-            <nav className="flex flex-col p-4 space-y-1">
-              <a
-                href="#"
-                className="font-inter text-[#F08223] text-sm font-semibold hover:bg-orange-50 px-4 py-3 rounded-lg transition-colors"
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                Accueil
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                À Propos
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                Actualités & Publications
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                Secteurs & Filières
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                Membres
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                Plaidoyer & Influence
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                CRM & Réseautage
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                Contact & Assistance
-              </a>
-            </nav>
-
-            {/* CTA Buttons dans le drawer */}
-            <div className="flex flex-col gap-3 p-4 border-t border-gray-200 mt-auto">
-              <button
-                className="flex items-center justify-center gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all"
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                <LogIn className="w-4 h-4" />
-                Connexion
-              </button>
-              <button
-                className="flex items-center justify-center gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                <UserPlus className="w-4 h-4" />
-                Adhérer
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Main Content */}
-      <main className="relative z-10 px-4 sm:px-6 py-8 sm:py-12 md:py-20">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
-            {/* Left Column */}
-            <div className="space-y-6 sm:space-y-8">
-              {/* Title */}
-              <div>
-                <h1 className="font-montserrat text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#221F1F] mb-3 sm:mb-4">
-                  Coming Soon
-                </h1>
-                <p className="font-inter text-sm sm:text-base lg:text-lg text-[#6F6F6F] leading-relaxed">
-                  Notre plateforme est en cours de construction. Ne vous
-                  inquiétez pas ! Nous arriverons bientôt. Restez avec nous.
-                </p>
-              </div>
-
-              {/* Countdown Timer */}
-              <div className="flex flex-wrap gap-3 sm:gap-4 md:gap-6">
-                {/* Days */}
-                <div className="flex flex-col items-start min-w-[70px] sm:min-w-20">
-                  <div className="font-montserrat text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#F08223]">
-                    {String(timeLeft.days).padStart(2, "0")}
-                  </div>
-                  <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-1 sm:mt-2">
-                    Days
-                  </div>
+            {/* Countdown Timer - Design moderne avec cartes */}
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 px-4">
+              {/* Days */}
+              <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl px-6 py-6 sm:px-8 sm:py-8 min-w-[100px] sm:min-w-[120px] hover:scale-105 transition-transform duration-300">
+                <div className="font-montserrat text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-br from-[#F08223] to-[#D97420] bg-clip-text text-transparent">
+                  {String(timeLeft.days).padStart(2, "0")}
                 </div>
-
-                {/* Hours */}
-                <div className="flex flex-col items-start min-w-[70px] sm:min-w-20">
-                  <div className="font-montserrat text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#F08223]">
-                    {String(timeLeft.hours).padStart(2, "0")}
-                  </div>
-                  <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-1 sm:mt-2">
-                    Hours
-                  </div>
-                </div>
-
-                {/* Minutes */}
-                <div className="flex flex-col items-start min-w-[70px] sm:min-w-20">
-                  <div className="font-montserrat text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#F08223]">
-                    {String(timeLeft.minutes).padStart(2, "0")}
-                  </div>
-                  <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-1 sm:mt-2">
-                    Minutes
-                  </div>
-                </div>
-
-                {/* Seconds */}
-                <div className="flex flex-col items-start min-w-[70px] sm:min-w-20">
-                  <div className="font-montserrat text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#F08223]">
-                    {String(timeLeft.seconds).padStart(2, "0")}
-                  </div>
-                  <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-1 sm:mt-2">
-                    Seconds
-                  </div>
+                <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-2 sm:mt-3 uppercase tracking-wider font-semibold">
+                  Jours
                 </div>
               </div>
 
-              {/* Newsletter Form */}
-              <div className="space-y-3 sm:space-y-4">
-                <p className="font-inter text-sm sm:text-base text-[#6F6F6F]">
-                  Recevez une notification par e-mail pour les mises à jour.
-                </p>
-                <form className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                  <input
-                    type="email"
-                    placeholder="Entrez votre Email"
-                    className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-[#F6F6F6] border-none rounded-lg font-inter text-sm sm:text-base text-[#6F6F6F] placeholder:text-[#AAAAAA] focus:outline-none focus:ring-2 focus:ring-[#F08223]"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className="bg-[#199D4E] hover:bg-[#157A3D] text-white font-inter font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-lg transition-colors whitespace-nowrap text-sm sm:text-base"
-                  >
-                    S&apos;inscrire
-                  </button>
-                </form>
+              {/* Hours */}
+              <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl px-6 py-6 sm:px-8 sm:py-8 min-w-[100px] sm:min-w-[120px] hover:scale-105 transition-transform duration-300">
+                <div className="font-montserrat text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-br from-[#F08223] to-[#D97420] bg-clip-text text-transparent">
+                  {String(timeLeft.hours).padStart(2, "0")}
+                </div>
+                <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-2 sm:mt-3 uppercase tracking-wider font-semibold">
+                  Heures
+                </div>
               </div>
 
-              {/* Social Icons */}
-              <div className="flex gap-3 sm:gap-4 flex-wrap justify-center sm:justify-start">
-                <a
-                  href="#"
-                  className="w-10 h-10 sm:w-12 sm:h-12 bg-[#3B5998] hover:bg-[#2D4373] rounded-full flex items-center justify-center text-white transition-colors"
-                  aria-label="Facebook"
-                >
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                  </svg>
-                </a>
+              {/* Minutes */}
+              <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl px-6 py-6 sm:px-8 sm:py-8 min-w-[100px] sm:min-w-[120px] hover:scale-105 transition-transform duration-300">
+                <div className="font-montserrat text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-br from-[#F08223] to-[#D97420] bg-clip-text text-transparent">
+                  {String(timeLeft.minutes).padStart(2, "0")}
+                </div>
+                <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-2 sm:mt-3 uppercase tracking-wider font-semibold">
+                  Minutes
+                </div>
+              </div>
 
-                <a
-                  href="#"
-                  className="w-10 h-10 sm:w-12 sm:h-12 bg-[#1DA1F2] hover:bg-[#0D8BD9] rounded-full flex items-center justify-center text-white transition-colors"
-                  aria-label="Twitter"
-                >
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
-                  </svg>
-                </a>
-
-                <a
-                  href="#"
-                  className="w-10 h-10 sm:w-12 sm:h-12 bg-[#0077B5] hover:bg-[#005582] rounded-full flex items-center justify-center text-white transition-colors"
-                  aria-label="LinkedIn"
-                >
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                  </svg>
-                </a>
-
-                <a
-                  href="#"
-                  className="w-10 h-10 sm:w-12 sm:h-12 bg-[#FF0000] hover:bg-[#CC0000] rounded-full flex items-center justify-center text-white transition-colors"
-                  aria-label="YouTube"
-                >
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                  </svg>
-                </a>
+              {/* Seconds */}
+              <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl px-6 py-6 sm:px-8 sm:py-8 min-w-[100px] sm:min-w-[120px] hover:scale-105 transition-transform duration-300">
+                <div className="font-montserrat text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-br from-[#F08223] to-[#D97420] bg-clip-text text-transparent">
+                  {String(timeLeft.seconds).padStart(2, "0")}
+                </div>
+                <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-2 sm:mt-3 uppercase tracking-wider font-semibold">
+                  Secondes
+                </div>
               </div>
             </div>
 
-            {/* Right Column - Image Placeholder */}
-            <div className="hidden lg:flex items-center justify-center">
-              <div className="relative w-full max-w-lg">
-                <Image
-                  src="/coming_soon.jpg"
-                  alt="Coming Soon Illustration"
-                  width={600}
-                  height={600}
-                  className="w-full h-auto object-contain"
+            {/* Newsletter Form - Design moderne */}
+            <div className="max-w-2xl mx-auto space-y-4 sm:space-y-5 px-4">
+              <p className="font-inter text-base sm:text-lg text-[#221F1F] font-medium">
+                Soyez informé du lancement
+              </p>
+              <form className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <input
+                  type="email"
+                  placeholder="Votre adresse email"
+                  className="flex-1 px-5 sm:px-7 py-4 sm:py-5 bg-white/80 backdrop-blur-md border-2 border-[#F08223]/20 rounded-xl font-inter text-sm sm:text-base text-[#221F1F] placeholder:text-[#AAAAAA] focus:outline-none focus:ring-2 focus:ring-[#F08223] focus:border-transparent shadow-lg transition-all"
+                  required
                 />
-              </div>
+                <button
+                  type="submit"
+                  className="bg-gradient-to-r from-[#199D4E] to-[#157A3D] hover:from-[#157A3D] hover:to-[#199D4E] text-white font-inter font-bold px-8 sm:px-10 py-4 sm:py-5 rounded-xl transition-all whitespace-nowrap text-sm sm:text-base shadow-xl hover:shadow-2xl hover:scale-105 transform duration-300"
+                >
+                  M&apos;informer
+                </button>
+              </form>
+            </div>
+
+            {/* Social Icons - Design moderne avec effet de hover */}
+            <div className="flex gap-4 sm:gap-5 flex-wrap justify-center pt-4">
+              <a
+                href="#"
+                className="w-12 h-12 sm:w-14 sm:h-14 bg-white/80 backdrop-blur-md hover:bg-[#3B5998] rounded-xl flex items-center justify-center text-[#3B5998] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 transform group"
+                aria-label="Facebook"
+              >
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                </svg>
+              </a>
+
+              <a
+                href="#"
+                className="w-12 h-12 sm:w-14 sm:h-14 bg-white/80 backdrop-blur-md hover:bg-[#1DA1F2] rounded-xl flex items-center justify-center text-[#1DA1F2] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 transform group"
+                aria-label="Twitter"
+              >
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
+                </svg>
+              </a>
+
+              <a
+                href="#"
+                className="w-12 h-12 sm:w-14 sm:h-14 bg-white/80 backdrop-blur-md hover:bg-[#0077B5] rounded-xl flex items-center justify-center text-[#0077B5] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 transform group"
+                aria-label="LinkedIn"
+              >
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                </svg>
+              </a>
+
+              <a
+                href="#"
+                className="w-12 h-12 sm:w-14 sm:h-14 bg-white/80 backdrop-blur-md hover:bg-[#FF0000] rounded-xl flex items-center justify-center text-[#FF0000] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 transform group"
+                aria-label="YouTube"
+              >
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                </svg>
+              </a>
             </div>
           </div>
         </div>
