@@ -1,4 +1,4 @@
-name: Déploiement Statique Next.js via SFTP
+name: Déploiement Statique Next.js via FTP
 
 on:
   push:
@@ -9,49 +9,56 @@ on:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
-
+    environment: cpupme
+    
     steps:
-      # Checkout
       - name: Vérifier le code source
         uses: actions/checkout@v4
 
-      # Node.js
-      - name: Configuration Node.js
+      - name: Configuration de Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 8
           run_install: false
 
-      # Install
       - name: Installer les dépendances
         run: npm ci
-
-      # Build Next.js
-      - name: Build Next.js
+        
+      - name: Exécuter le Build Next.js
         run: npm run build
         env:
           NODE_ENV: production
 
-      # 🟢 Déploiement SFTP
-      - name: Déploiement via SFTP
-        uses: easingthemes/ssh-deploy@v5.0.3
+      # 4. Déploiement FTP/FTPS
+      - name: Déploiement FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: 173.209.32.66
-          username: cpupm452
-          password: BzuN#)92Ze9W4s   # ou use_private_key: true
-          port: 27
+          server: ftp.cpupme.com
+          username: devopschrist@cpupme.com
+          password: Kobenan@@?   # ⚠️ mettre ton mot de passe dans GitHub Secrets
+          protocol: ftp  # ou ftps si ton serveur supporte FTPS
+          local-dir: ./out/
+          server-dir: /    # dossier distant
+          dry-run: false
+          log-level: standard
 
-          # Dossier local : Next.js exporte dans ./out/
-          local_path: "./out/"
-          
-          # Dossier distant (ex: /home/xxxx/public_html/)
-          remote_path: ./
+  email_notify:
+    runs-on: ubuntu-latest
+    needs: build_and_deploy
+    if: always()
 
-          # Nettoie les anciens fichiers avant upload
-          clean: true
+    steps:
+      - name: CINotify Email
+        uses: cinotify/github-action@main
+        with: 
+          to: "devopschrist@gmail.com"
+          subject: >
+            Mise en ligne: Déploiement ${{ needs.build_and_deploy.result == 'success' && 'réussi✅' || 'échoué❌' }}
+          body: >
+            <p>Le process CI/CD de votre projet cpupme a ${{ needs.build_and_deploy.result == 'success' && 'réussi' || 'échoué' }}.</p>
+          type: "text/html"
