@@ -1,239 +1,366 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Award,
+  Banknote,
+  ChevronRight,
+  FileSearch,
+  GraduationCap,
+  Link,
+  Store,
+  UserPlus,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
-export default function Home() {
-  // État pour le compte à rebours
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
+// Composant de décompte animé
+function CountUp({
+  end,
+  duration = 2000,
+  suffix = "",
+}: {
+  end: number;
+  duration?: number;
+  suffix?: string;
+}) {
+  const [count, setCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const countRef = useRef<HTMLSpanElement>(null);
 
-  const [targetDate, setTargetDate] = useState<Date | null>(null);
-
-  // Initialiser ou récupérer la date cible
   useEffect(() => {
-    const storedDate = localStorage.getItem("countdownTargetDate");
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isVisible) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.3 }
+    );
 
-    if (storedDate) {
-      // Utiliser la date sauvegardée
-      setTargetDate(new Date(storedDate));
-    } else {
-      // Créer une nouvelle date (30 jours dans le futur)
-      const newTargetDate = new Date();
-      newTargetDate.setDate(newTargetDate.getDate() + 30);
-      localStorage.setItem("countdownTargetDate", newTargetDate.toISOString());
-      setTargetDate(newTargetDate);
+    if (countRef.current) {
+      observer.observe(countRef.current);
     }
-  }, []);
 
-  // Mettre à jour le compte à rebours chaque seconde
-  useEffect(() => {
-    if (!targetDate) return;
-
-    const timer = setInterval(() => {
-      const now = new Date().getTime();
-      const distance = targetDate.getTime() - now;
-
-      if (distance < 0) {
-        // Le compte à rebours est terminé
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        clearInterval(timer);
-        return;
+    return () => {
+      if (countRef.current) {
+        observer.unobserve(countRef.current);
       }
+    };
+  }, [isVisible]);
 
-      setTimeLeft({
-        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-        hours: Math.floor(
-          (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-        ),
-        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((distance % (1000 * 60)) / 1000),
-      });
-    }, 1000);
+  useEffect(() => {
+    if (!isVisible) return;
 
-    return () => clearInterval(timer);
-  }, [targetDate]);
+    let startTime: number;
+    let animationFrame: number;
+
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+
+      setCount(Math.floor(progress * end));
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [isVisible, end, duration]);
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
-      {/* Background mosaïque */}
-      <div
-        className="absolute inset-0 opacity-30"
-        style={{
-          backgroundImage: 'url(/couverture_cpu_coming_soon.png)',
-          backgroundSize: '150px 150px',
-          backgroundRepeat: 'repeat',
-          backgroundPosition: 'center',
-        }}
-      ></div>
+    <span ref={countRef}>
+      {count}
+      {suffix}
+    </span>
+  );
+}
 
-      {/* Overlay gradient pour adoucir le background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-orange-50/60 to-blue-50/65"></div>
+export default function Home() {
+  return (
+    <>
+      {/* Hero Section */}
+      <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
+        {/* BACKGROUND IMAGE */}
+        <div className="absolute inset-0">
+          <img
+            src="/logo.png"
+            alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+        </div>
 
-      {/* Decorative elements - Plus modernes et dynamiques */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-[#F08223]/10 to-transparent rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-200/15 to-transparent rounded-full blur-3xl"></div>
+        {/* CONTENU */}
+        <div className="relative z-10 container mx-auto px-4 text-center text-white">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in">
+            Confédération Patronale Unique des PME de Côte d'Ivoire
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in">
+            Votre partenaire pour le développement et la croissance des
+            entreprises ivoiriennes
+          </p>
 
-      {/* Main Content - Centré */}
-      <main className="relative z-10 w-full px-4 sm:px-6 py-12">
-        <div className="max-w-6xl mx-auto">
-          {/* Logo en haut centré */}
-          <div className="flex justify-center mb-12 sm:mb-16">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl px-8 py-4">
-              <Image
-                src="/logo.png"
-                alt="CPU-PME Logo"
-                width={200}
-                height={60}
-                priority
-                className="h-12 sm:h-16 w-auto object-contain"
-              />
-            </div>
-          </div>
-
-          {/* Contenu principal centré */}
-          <div className="text-center space-y-8 sm:space-y-12">
-            {/* Title avec animation subtile */}
-            <div className="space-y-4 sm:space-y-6">
-              <h1 className="font-montserrat text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-[#221F1F] mb-4 sm:mb-6 tracking-tight">
-                Bientôt disponible
-              </h1>
-              <p className="font-inter text-base sm:text-lg lg:text-xl text-[#6F6F6F] leading-relaxed max-w-2xl mx-auto px-4">
-                Notre nouvelle plateforme est en cours de finalisation.
-                <br className="hidden sm:block" />
-                Une expérience innovante arrive très bientôt.
-              </p>
-            </div>
-
-            {/* Countdown Timer - Design moderne avec cartes */}
-            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 px-4">
-              {/* Days */}
-              <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl px-6 py-6 sm:px-8 sm:py-8 min-w-[100px] sm:min-w-[120px] hover:scale-105 transition-transform duration-300">
-                <div className="font-montserrat text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-br from-[#F08223] to-[#D97420] bg-clip-text text-transparent">
-                  {String(timeLeft.days).padStart(2, "0")}
-                </div>
-                <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-2 sm:mt-3 uppercase tracking-wider font-semibold">
-                  Jours
-                </div>
-              </div>
-
-              {/* Hours */}
-              <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl px-6 py-6 sm:px-8 sm:py-8 min-w-[100px] sm:min-w-[120px] hover:scale-105 transition-transform duration-300">
-                <div className="font-montserrat text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-br from-[#F08223] to-[#D97420] bg-clip-text text-transparent">
-                  {String(timeLeft.hours).padStart(2, "0")}
-                </div>
-                <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-2 sm:mt-3 uppercase tracking-wider font-semibold">
-                  Heures
-                </div>
-              </div>
-
-              {/* Minutes */}
-              <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl px-6 py-6 sm:px-8 sm:py-8 min-w-[100px] sm:min-w-[120px] hover:scale-105 transition-transform duration-300">
-                <div className="font-montserrat text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-br from-[#F08223] to-[#D97420] bg-clip-text text-transparent">
-                  {String(timeLeft.minutes).padStart(2, "0")}
-                </div>
-                <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-2 sm:mt-3 uppercase tracking-wider font-semibold">
-                  Minutes
-                </div>
-              </div>
-
-              {/* Seconds */}
-              <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl px-6 py-6 sm:px-8 sm:py-8 min-w-[100px] sm:min-w-[120px] hover:scale-105 transition-transform duration-300">
-                <div className="font-montserrat text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-br from-[#F08223] to-[#D97420] bg-clip-text text-transparent">
-                  {String(timeLeft.seconds).padStart(2, "0")}
-                </div>
-                <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-2 sm:mt-3 uppercase tracking-wider font-semibold">
-                  Secondes
-                </div>
-              </div>
-            </div>
-
-            {/* Newsletter Form - Design moderne */}
-            <div className="max-w-2xl mx-auto space-y-4 sm:space-y-5 px-4">
-              <p className="font-inter text-base sm:text-lg text-[#221F1F] font-medium">
-                Soyez informé du lancement
-              </p>
-              <form className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <input
-                  type="email"
-                  placeholder="Votre adresse email"
-                  className="flex-1 px-5 sm:px-7 py-4 sm:py-5 bg-white/80 backdrop-blur-md border-2 border-[#F08223]/20 rounded-xl font-inter text-sm sm:text-base text-[#221F1F] placeholder:text-[#AAAAAA] focus:outline-none focus:ring-2 focus:ring-[#F08223] focus:border-transparent shadow-lg transition-all"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="bg-gradient-to-r from-[#199D4E] to-[#157A3D] hover:from-[#157A3D] hover:to-[#199D4E] text-white font-inter font-bold px-8 sm:px-10 py-4 sm:py-5 rounded-xl transition-all whitespace-nowrap text-sm sm:text-base shadow-xl hover:shadow-2xl hover:scale-105 transform duration-300"
-                >
-                  M&apos;informer
-                </button>
-              </form>
-            </div>
-
-            {/* Social Icons - Design moderne avec effet de hover */}
-            <div className="flex gap-4 sm:gap-5 flex-wrap justify-center pt-4">
-              <a
-                href="#"
-                className="w-12 h-12 sm:w-14 sm:h-14 bg-white/80 backdrop-blur-md hover:bg-[#3B5998] rounded-xl flex items-center justify-center text-[#3B5998] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 transform group"
-                aria-label="Facebook"
-              >
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-              </a>
-
-              <a
-                href="#"
-                className="w-12 h-12 sm:w-14 sm:h-14 bg-white/80 backdrop-blur-md hover:bg-[#1DA1F2] rounded-xl flex items-center justify-center text-[#1DA1F2] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 transform group"
-                aria-label="Twitter"
-              >
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
-                </svg>
-              </a>
-
-              <a
-                href="#"
-                className="w-12 h-12 sm:w-14 sm:h-14 bg-white/80 backdrop-blur-md hover:bg-[#0077B5] rounded-xl flex items-center justify-center text-[#0077B5] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 transform group"
-                aria-label="LinkedIn"
-              >
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                </svg>
-              </a>
-
-              <a
-                href="#"
-                className="w-12 h-12 sm:w-14 sm:h-14 bg-white/80 backdrop-blur-md hover:bg-[#FF0000] rounded-xl flex items-center justify-center text-[#FF0000] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 transform group"
-                aria-label="YouTube"
-              >
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                </svg>
-              </a>
-            </div>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in">
+            <a
+              href="#"
+              className="bg-white text-black hover:bg-white/90 px-6 py-3 rounded-lg font-semibold"
+            >
+              Découvrir nos services
+            </a>
+            <a
+              href="#"
+              className="border border-white text-white hover:bg-white/10 px-6 py-3 rounded-lg font-semibold"
+            >
+              Devenir membre
+            </a>
           </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* Section Statistiques */}
+      <section className="py-16 bg-[var(--color-bg)]">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-[var(--color-neutral-dark)] mb-4">
+              Les PME en Côte d'Ivoire
+            </h2>
+            <p className="text-[var(--color-text-secondary)] max-w-2xl mx-auto">
+              Les PME constituent le moteur économique du pays, représentant
+              plus de 90% du tissu économique national.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-[var(--color-primary)] mb-2">
+                    <CountUp end={90} suffix="%" />
+                  </p>
+                  <p className="text-[var(--color-neutral-dark)]">
+                    du tissu économique
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-[var(--color-success)] mb-2">
+                    <CountUp end={80} suffix="%" />
+                  </p>
+                  <p className="text-[var(--color-neutral-dark)]">
+                    des emplois
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-[var(--color-primary)] mb-2">
+                    <CountUp end={30} suffix="%" />
+                  </p>
+                  <p className="text-[var(--color-neutral-dark)]">
+                    du PIB national
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-[var(--color-success)] mb-2">
+                    +<CountUp end={1000} />
+                  </p>
+                  <p className="text-[var(--color-neutral-dark)]">
+                    membres CPU-PME
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-[var(--color-neutral-dark)] mb-4">
+              Nos Services
+            </h2>
+            <p className="text-[var(--color-text-secondary)] max-w-2xl mx-auto">
+              CPU-PME.CI offre une gamme de services pour soutenir les PME
+              ivoiriennes dans leur développement et leur croissance.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-3 rounded-full mb-4" style={{ backgroundColor: 'rgba(240, 130, 35, 0.1)' }}>
+                    <Award className="h-8 w-8 text-[var(--color-primary)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    Incubateur champion 225
+                  </h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Accompagnement personnalisé pour les startups et PME à fort
+                    potentiel de croissance.
+                  </p>
+                  <a
+                    href="https://incubateur.cpu-pme.ci"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-3 rounded-full mb-4" style={{ backgroundColor: 'rgba(25, 157, 78, 0.1)' }}>
+                    <FileSearch className="h-8 w-8 text-[var(--color-success)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    Appels d'offres & Opportunités
+                  </h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Accédez à des appels d'offres publics et privés exclusifs et
+                    des opportunités commerciales pour développer votre
+                    activité.
+                  </p>
+                  <a
+                    href="https://appeldoffre.cpu-pme.ci"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-[var(--color-success)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-3 rounded-full mb-4" style={{ backgroundColor: 'rgba(240, 130, 35, 0.1)' }}>
+                    <GraduationCap className="h-8 w-8 text-[var(--color-primary)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Formation</h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Développez vos compétences grâce à nos programmes de
+                    formation adaptés aux besoins des PME.
+                  </p>
+                  <a
+                    href="https://formation.cpu-pme.ci"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-3 rounded-full mb-4" style={{ backgroundColor: 'rgba(25, 157, 78, 0.1)' }}>
+                    <Store className="h-8 w-8 text-[var(--color-success)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    Marketplace de produits locaux
+                  </h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Vendez et achetez des produits locaux sur notre plateforme
+                    de commerce dédiée aux entreprises ivoiriennes.
+                  </p>
+                  <a
+                    href="https://marketplace.cpu-pme.ci"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-[var(--color-success)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-3 rounded-full mb-4" style={{ backgroundColor: 'rgba(240, 130, 35, 0.1)' }}>
+                    <Banknote className="h-8 w-8 text-[var(--color-primary)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Financement</h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Accédez à des solutions de financement adaptées pour
+                    développer votre entreprise et réaliser vos projets.
+                  </p>
+                  <a
+                    href="https://financement.cpu-pme.ci"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-3 rounded-full mb-4" style={{ backgroundColor: 'rgba(25, 157, 78, 0.1)' }}>
+                    <UserPlus className="h-8 w-8 text-[var(--color-success)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Réseautage</h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Rejoignez un réseau de plus de 1000 entrepreneurs et
+                    établissez des partenariats stratégiques.
+                  </p>
+                  <Link
+                    to="/reseautage"
+                    className="flex items-center text-[var(--color-success)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center mt-12">
+            <Button
+              className="text-white hover:opacity-90"
+              style={{ backgroundColor: "var(--color-success)" }}
+            >
+              Voir tous nos services
+            </Button>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
