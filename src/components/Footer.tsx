@@ -11,7 +11,7 @@ export default function Footer() {
           {/* Logo et Description */}
           <div className="space-y-4">
             <Image
-              src="/couverture_cpu_coming_soon.png"
+              src="/logo.png"
               alt="CPU-PME Logo"
               width={160}
               height={50}

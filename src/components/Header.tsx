@@ -22,13 +22,13 @@ export default function Header() {
   return (
     <>
       {/* Header */}
-      <header className="relative z-10 px-4 sm:px-6 py-3 sm:py-4 bg-white/80 backdrop-blur-sm shadow-sm">
+      <header className="sticky top-0 z-50 px-4 sm:px-6 py-3 sm:py-4 bg-white/80 backdrop-blur-sm shadow-sm">
         <div className="max-w-[1400px] mx-auto">
           <div className="flex items-center justify-between gap-2 sm:gap-4 md:gap-8">
             {/* Logo */}
             <div className="flex items-center shrink-0">
               <Image
-                src="/couverture_cpu_coming_soon.png"
+                src="/logo.png"
                 alt="CPU-PME Logo"
                 width={140}
                 height={45}
@@ -128,7 +128,7 @@ export default function Header() {
             {/* Header du drawer */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <Image
-                src="/couverture_cpu_coming_soon.png"
+                src="/logo.png"
                 alt="CPU-PME Logo"
                 width={120}
                 height={40}
