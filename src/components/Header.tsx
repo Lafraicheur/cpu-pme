@@ -1,11 +1,20 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { LogIn, UserPlus, Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Button } from "./ui/button";
 
 export default function Header() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Debug: afficher le pathname
+  useEffect(() => {
+    console.log("Current pathname:", pathname);
+  }, [pathname]);
 
   // Empêcher le scroll quand le drawer est ouvert
   useEffect(() => {
@@ -22,9 +31,9 @@ export default function Header() {
   return (
     <>
       {/* Header */}
-      <header className="sticky top-0 z-50 px-4 sm:px-6 py-3 sm:py-4 bg-white/80 backdrop-blur-sm shadow-sm">
+      <header className="sticky top-0 z-50 px-4 sm:px-6 py-4 sm:py-5 bg-white/80 backdrop-blur-sm shadow-sm">
         <div className="max-w-[1400px] mx-auto">
-          <div className="flex items-center justify-between gap-2 sm:gap-4 md:gap-8">
+          <div className="flex items-center justify-between gap-2 sm:gap-4 md:gap-6">
             {/* Logo */}
             <div className="flex items-center shrink-0">
               <Image
@@ -33,74 +42,110 @@ export default function Header() {
                 width={140}
                 height={45}
                 priority
-                className="h-8 sm:h-10 w-auto object-contain"
+                className="h-10 sm:h-12 w-auto object-contain"
               />
             </div>
 
             {/* Navigation */}
-            <nav className="hidden xl:flex items-center gap-5 flex-1 justify-center">
-              <a
-                href="#"
-                className="font-inter text-[#F08223] text-xs font-semibold hover:text-[#D97420] transition-colors whitespace-nowrap"
+            <nav className="hidden xl:flex items-center gap-4 flex-1 justify-center">
+              <Link
+                href="/"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  pathname === "/" || pathname === ""
+                    ? "text-[#F08223] font-semibold border-[#F08223]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
               >
                 Accueil
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
+              </Link>
+              <Link
+                href="/a-propos"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  pathname.startsWith("/a-propos")
+                    ? "text-[#F08223] font-semibold border-[#F08223]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
               >
                 À Propos
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
+              </Link>
+              <Link
+                href="/actualites"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  pathname.startsWith("/actualites")
+                    ? "text-[#F08223] font-semibold border-[#F08223]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
               >
                 Actualités & Publications
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
+              </Link>
+              <Link
+                href="/secteurs"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  pathname.startsWith("/secteurs")
+                    ? "text-[#F08223] font-semibold border-[#F08223]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
               >
                 Secteurs & Filières
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
+              </Link>
+              <Link
+                href="/membres"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  pathname.startsWith("/membres")
+                    ? "text-[#F08223] font-semibold border-[#F08223]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
               >
                 Membres
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
+              </Link>
+              <Link
+                href="/plaidoyer"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  pathname.startsWith("/plaidoyer")
+                    ? "text-[#F08223] font-semibold border-[#F08223]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
               >
                 Plaidoyer & Influence
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
+              </Link>
+              <Link
+                href="/crm"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  pathname.startsWith("/crm")
+                    ? "text-[#F08223] font-semibold border-[#F08223]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
               >
                 CRM & Réseautage
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
+              </Link>
+              <Link
+                href="/contact"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  pathname.startsWith("/contact")
+                    ? "text-[#F08223] font-semibold border-[#F08223]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
               >
                 Contact & Assistance
-              </a>
-            </nav>
+              </Link>
 
-            {/* CTA Buttons */}
-            <div className="hidden md:flex items-center gap-2 lg:gap-3 shrink-0">
-              <button className="flex items-center gap-1.5 lg:gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-xs font-semibold px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg transition-all">
-                <LogIn className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-                <span className="hidden lg:inline">Connexion</span>
-                <span className="lg:hidden">Se connecter</span>
-              </button>
-              <button className="flex items-center gap-1.5 lg:gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-xs font-semibold px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg">
-                <UserPlus className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-                Adhérer
-              </button>
-            </div>
+              {/* CTA Buttons */}
+              <div className="hidden md:flex items-center gap-2 shrink-0">
+                <Button
+                  variant="outline"
+                  className="border-success text-success hover:bg-success hover:text-white w-full rounded-sm font-inter text-xs font-semibold px-3 py-1.5 transition-all"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  Connexion
+                </Button>
+                <Button className="bg-[#F08223] text-white hover:bg-opacity-90 w-full font-inter text-xs font-semibold px-3 py-1.5 rounded-sm transition-all shadow-sm hover:shadow-md">
+                  <UserPlus className="w-3.5 h-3.5" />
+                  Adhérer
+                </Button>
+              </div>
+
+              <div className="pt-4 flex flex-col space-y-2"></div>
+            </nav>
 
             {/* Mobile Menu Button */}
             <button
@@ -145,62 +190,94 @@ export default function Header() {
 
             {/* Navigation */}
             <nav className="flex flex-col p-4 space-y-1">
-              <a
-                href="#"
-                className="font-inter text-[#F08223] text-sm font-semibold hover:bg-orange-50 px-4 py-3 rounded-lg transition-colors"
+              <Link
+                href="/"
+                className={`font-inter text-sm font-semibold px-4 py-3 rounded-lg transition-colors ${
+                  pathname === "/" || pathname === ""
+                    ? "text-[#F08223] bg-orange-50"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Accueil
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+              </Link>
+              <Link
+                href="/a-propos"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  pathname.startsWith("/a-propos")
+                    ? "text-[#F08223] bg-orange-50 font-semibold"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 À Propos
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+              </Link>
+              <Link
+                href="/actualites"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  pathname.startsWith("/actualites")
+                    ? "text-[#F08223] bg-orange-50 font-semibold"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Actualités & Publications
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+              </Link>
+              <Link
+                href="/secteurs"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  pathname.startsWith("/secteurs")
+                    ? "text-[#F08223] bg-orange-50 font-semibold"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Secteurs & Filières
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+              </Link>
+              <Link
+                href="/membres"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  pathname.startsWith("/membres")
+                    ? "text-[#F08223] bg-orange-50 font-semibold"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Membres
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+              </Link>
+              <Link
+                href="/plaidoyer"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  pathname.startsWith("/plaidoyer")
+                    ? "text-[#F08223] bg-orange-50 font-semibold"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Plaidoyer & Influence
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+              </Link>
+              <Link
+                href="/crm"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  pathname.startsWith("/crm")
+                    ? "text-[#F08223] bg-orange-50 font-semibold"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 CRM & Réseautage
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+              </Link>
+              <Link
+                href="/contact"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  pathname.startsWith("/contact")
+                    ? "text-[#F08223] bg-orange-50 font-semibold"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Contact & Assistance
-              </a>
+              </Link>
             </nav>
 
             {/* CTA Buttons dans le drawer */}
