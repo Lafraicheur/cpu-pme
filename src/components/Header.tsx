@@ -1,10 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { LogIn, UserPlus, Menu, X } from "lucide-react";
 
 export default function Header() {
+  const pathname = usePathname();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Empêcher le scroll quand le drawer est ouvert
@@ -19,6 +22,14 @@ export default function Header() {
     };
   }, [isDrawerOpen]);
 
+  // Fonction pour vérifier si un lien est actif
+  const isActive = (href: string) => {
+    if (href === "/") {
+      return pathname === "/";
+    }
+    return pathname.startsWith(href);
+  };
+
   return (
     <>
       {/* Header */}
@@ -26,7 +37,7 @@ export default function Header() {
         <div className="max-w-[1400px] mx-auto">
           <div className="flex items-center justify-between gap-2 sm:gap-4 md:gap-8">
             {/* Logo */}
-            <div className="flex items-center shrink-0">
+            <Link href="/" className="flex items-center shrink-0">
               <Image
                 src="/logo.png"
                 alt="CPU-PME Logo"
@@ -35,58 +46,90 @@ export default function Header() {
                 priority
                 className="h-8 sm:h-10 w-auto object-contain"
               />
-            </div>
+            </Link>
 
             {/* Navigation */}
             <nav className="hidden xl:flex items-center gap-5 flex-1 justify-center">
-              <a
-                href="#"
-                className="font-inter text-[#F08223] text-xs font-semibold hover:text-[#D97420] transition-colors whitespace-nowrap"
+              <Link
+                href="/"
+                className={`font-inter text-xs font-semibold transition-colors whitespace-nowrap ${
+                  isActive("/")
+                    ? "text-[#F08223] hover:text-[#D97420]"
+                    : "text-[#6F6F6F] hover:text-[#221F1F]"
+                }`}
               >
                 Accueil
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
+              </Link>
+              <Link
+                href="/a-propos"
+                className={`font-inter text-xs font-medium transition-colors whitespace-nowrap ${
+                  isActive("/a-propos")
+                    ? "text-[#F08223] hover:text-[#D97420]"
+                    : "text-[#6F6F6F] hover:text-[#221F1F]"
+                }`}
               >
                 À Propos
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
+              </Link>
+              <Link
+                href="/actualites"
+                className={`font-inter text-xs font-medium transition-colors whitespace-nowrap ${
+                  isActive("/actualites")
+                    ? "text-[#F08223] hover:text-[#D97420]"
+                    : "text-[#6F6F6F] hover:text-[#221F1F]"
+                }`}
               >
                 Actualités & Publications
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
+              </Link>
+              <Link
+                href="/secteurs"
+                className={`font-inter text-xs font-medium transition-colors whitespace-nowrap ${
+                  isActive("/secteurs")
+                    ? "text-[#F08223] hover:text-[#D97420]"
+                    : "text-[#6F6F6F] hover:text-[#221F1F]"
+                }`}
               >
                 Secteurs & Filières
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
+              </Link>
+              <Link
+                href="/membres"
+                className={`font-inter text-xs font-medium transition-colors whitespace-nowrap ${
+                  isActive("/membres")
+                    ? "text-[#F08223] hover:text-[#D97420]"
+                    : "text-[#6F6F6F] hover:text-[#221F1F]"
+                }`}
               >
                 Membres
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
+              </Link>
+              <Link
+                href="/plaidoyer"
+                className={`font-inter text-xs font-medium transition-colors whitespace-nowrap ${
+                  isActive("/plaidoyer")
+                    ? "text-[#F08223] hover:text-[#D97420]"
+                    : "text-[#6F6F6F] hover:text-[#221F1F]"
+                }`}
               >
                 Plaidoyer & Influence
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
+              </Link>
+              <Link
+                href="/crm"
+                className={`font-inter text-xs font-medium transition-colors whitespace-nowrap ${
+                  isActive("/crm")
+                    ? "text-[#F08223] hover:text-[#D97420]"
+                    : "text-[#6F6F6F] hover:text-[#221F1F]"
+                }`}
               >
                 CRM & Réseautage
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-xs font-medium hover:text-[#221F1F] transition-colors whitespace-nowrap"
+              </Link>
+              <Link
+                href="/contact"
+                className={`font-inter text-xs font-medium transition-colors whitespace-nowrap ${
+                  isActive("/contact")
+                    ? "text-[#F08223] hover:text-[#D97420]"
+                    : "text-[#6F6F6F] hover:text-[#221F1F]"
+                }`}
               >
                 Contact & Assistance
-              </a>
+              </Link>
             </nav>
 
             {/* CTA Buttons */}
@@ -127,13 +170,15 @@ export default function Header() {
           <div className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 xl:hidden shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
             {/* Header du drawer */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <Image
-                src="/logo.png"
-                alt="CPU-PME Logo"
-                width={120}
-                height={40}
-                className="h-8 w-auto object-contain"
-              />
+              <Link href="/" onClick={() => setIsDrawerOpen(false)}>
+                <Image
+                  src="/logo.png"
+                  alt="CPU-PME Logo"
+                  width={120}
+                  height={40}
+                  className="h-8 w-auto object-contain"
+                />
+              </Link>
               <button
                 onClick={() => setIsDrawerOpen(false)}
                 className="flex items-center justify-center w-9 h-9 text-[#221F1F] hover:bg-gray-100 rounded-lg transition-colors"
@@ -145,62 +190,94 @@ export default function Header() {
 
             {/* Navigation */}
             <nav className="flex flex-col p-4 space-y-1">
-              <a
-                href="#"
-                className="font-inter text-[#F08223] text-sm font-semibold hover:bg-orange-50 px-4 py-3 rounded-lg transition-colors"
+              <Link
+                href="/"
+                className={`font-inter text-sm font-semibold px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/")
+                    ? "text-[#F08223] bg-orange-50"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Accueil
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+              </Link>
+              <Link
+                href="/a-propos"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/a-propos")
+                    ? "text-[#F08223] bg-orange-50"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 À Propos
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+              </Link>
+              <Link
+                href="/actualites"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/actualites")
+                    ? "text-[#F08223] bg-orange-50"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Actualités & Publications
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+              </Link>
+              <Link
+                href="/secteurs"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/secteurs")
+                    ? "text-[#F08223] bg-orange-50"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Secteurs & Filières
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+              </Link>
+              <Link
+                href="/membres"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/membres")
+                    ? "text-[#F08223] bg-orange-50"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Membres
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+              </Link>
+              <Link
+                href="/plaidoyer"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/plaidoyer")
+                    ? "text-[#F08223] bg-orange-50"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Plaidoyer & Influence
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+              </Link>
+              <Link
+                href="/crm"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/crm")
+                    ? "text-[#F08223] bg-orange-50"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 CRM & Réseautage
-              </a>
-              <a
-                href="#"
-                className="font-inter text-[#6F6F6F] text-sm font-medium hover:bg-gray-50 px-4 py-3 rounded-lg transition-colors"
+              </Link>
+              <Link
+                href="/contact"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/contact")
+                    ? "text-[#F08223] bg-orange-50"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 Contact & Assistance
-              </a>
+              </Link>
             </nav>
 
             {/* CTA Buttons dans le drawer */}
