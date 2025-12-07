@@ -2,6 +2,7 @@ export interface Member {
     id: string;
     name: string;
     logo?: string;
+    logoUrl?: string;
     sector: string;
     region: string;
     description: string;
@@ -42,6 +43,7 @@ export interface Member {
       sector: "Agriculture & Agroalimentaire",
       region: "Abidjan",
       description: "Entreprise spécialisée dans la transformation de produits agricoles locaux et l'exportation de cacao et café de qualité premium.",
+      logoUrl: "https://images.pexels.com/photos/174937/pexels-photo-174937.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true
     },
     {
@@ -50,6 +52,7 @@ export interface Member {
       sector: "BTP & Construction",
       region: "Yamoussoukro",
       description: "Société de construction et de génie civil intervenant sur des projets d'infrastructure publique et privée.",
+      logoUrl: "https://images.pexels.com/photos/3935683/pexels-photo-3935683.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true
     },
     {
@@ -58,6 +61,7 @@ export interface Member {
       sector: "Technologie & Digital",
       region: "Abidjan",
       description: "Startup innovante dans le développement de solutions digitales pour les entreprises africaines.",
+      logoUrl: "https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true
     },
     {
@@ -66,6 +70,7 @@ export interface Member {
       sector: "Transport & Logistique",
       region: "San-Pédro",
       description: "Entreprise de transport et logistique spécialisée dans le fret maritime et terrestre.",
+      logoUrl: "https://images.pexels.com/photos/3952634/pexels-photo-3952634.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false
     },
     {
@@ -74,6 +79,7 @@ export interface Member {
       sector: "Commerce & Distribution",
       region: "Bouaké",
       description: "Distributeur de produits alimentaires locaux avec un réseau de points de vente dans tout le pays.",
+      logoUrl: "https://images.pexels.com/photos/2531384/pexels-photo-2531384.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false
     },
     {
@@ -82,6 +88,7 @@ export interface Member {
       sector: "Énergie & Environnement",
       region: "Abidjan",
       description: "Entreprise pionnière dans les énergies renouvelables et les solutions solaires pour entreprises et particuliers.",
+      logoUrl: "https://images.pexels.com/photos/60561/solar-panel-array-sun-power-60561.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true
     },
     {
@@ -90,6 +97,7 @@ export interface Member {
       sector: "Santé & Pharmaceutique",
       region: "Korhogo",
       description: "Réseau de pharmacies et distribution de produits pharmaceutiques dans le nord du pays.",
+      logoUrl: "https://images.pexels.com/photos/5632400/pexels-photo-5632400.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false
     },
     {
@@ -98,6 +106,7 @@ export interface Member {
       sector: "Tourisme & Hôtellerie",
       region: "Man",
       description: "Établissement hôtelier haut de gamme offrant des services touristiques dans la région des montagnes.",
+      logoUrl: "https://images.pexels.com/photos/3629547/pexels-photo-3629547.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false
     },
     {
@@ -106,6 +115,7 @@ export interface Member {
       sector: "Services & Conseil",
       region: "Abidjan",
       description: "Cabinet de conseil en stratégie et gestion d'entreprise pour PME et grandes entreprises.",
+      logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true
     },
     {
@@ -114,6 +124,7 @@ export interface Member {
       sector: "Industrie & Transformation",
       region: "Daloa",
       description: "Unité industrielle de transformation de matières premières agricoles en produits finis.",
+      logoUrl: "https://images.pexels.com/photos/2371555/pexels-photo-2371555.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false
     },
     {
@@ -122,6 +133,7 @@ export interface Member {
       sector: "Agriculture & Agroalimentaire",
       region: "Gagnoa",
       description: "Solutions technologiques pour l'agriculture moderne et la gestion des exploitations agricoles.",
+      logoUrl: "https://images.pexels.com/photos/5632400/pexels-photo-5632400.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false
     },
     {
@@ -130,6 +142,7 @@ export interface Member {
       sector: "BTP & Construction",
       region: "Abidjan",
       description: "Entreprise de promotion immobilière et construction de logements sociaux et commerciaux.",
+      logoUrl: "https://images.pexels.com/photos/1454496/pexels-photo-1454496.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false
     }
   ];
@@ -175,7 +188,8 @@ export interface Member {
   
   export interface MembershipPlan {
     name: string;
-    price: string;
+    description: string;
+    price: number;
     period: string;
     features: string[];
     recommended?: boolean;
@@ -184,7 +198,8 @@ export interface Member {
   export const membershipPlans: MembershipPlan[] = [
     {
       name: "Starter",
-      price: "50 000",
+      description: "Idéal pour les petites entreprises qui découvrent le réseau.",
+      price: 50000,
       period: "FCFA/an",
       features: [
         "Accès au réseau de base",
@@ -196,7 +211,8 @@ export interface Member {
     },
     {
       name: "Business",
-      price: "150 000",
+      description: "Notre formule recommandée pour la plupart des PME.",
+      price: 150000,
       period: "FCFA/an",
       features: [
         "Tous les avantages Starter",
@@ -210,7 +226,8 @@ export interface Member {
     },
     {
       name: "Premium",
-      price: "300 000",
+      description: "L'offre complète pour les grandes entreprises ou les partenaires stratégiques.",
+      price: 300000,
       period: "FCFA/an",
       features: [
         "Tous les avantages Business",

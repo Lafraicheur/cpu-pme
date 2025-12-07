@@ -6,9 +6,18 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   images: {
     unoptimized: true, // <-- crucial pour next export
-    // Si tu utilises des images externes, tu peux ajouter des domaines :
-    // domains: ['example.com'],
-    // ou remotePatterns: [...]
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.pexels.com',
+        pathname: '/**',
+      },
+    ],
   },
 };
 

@@ -136,16 +136,25 @@ export default function Secteurs() {
   return (
     <>
       {/* Hero Section */}
-      <section className="py-8 sm:py-12">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
-          <div className="bg-gradient-to-r from-[#F27A20] via-[#A8892A] to-[#009739] rounded-xl sm:rounded-2xl py-12 sm:py-16 px-6 sm:px-8 shadow-lg">
-            <h1 className="font-montserrat text-4xl sm:text-5xl md:text-6xl font-bold text-white text-center mb-4 sm:mb-6">
-              Secteurs & Filières
-            </h1>
-            <p className="font-inter text-base sm:text-lg md:text-xl text-white/95 text-center max-w-3xl mx-auto leading-relaxed">
-              Découvrez la classification sectorielle des PME en Côte d'Ivoire
-            </p>
-          </div>
+      <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
+        {/* BACKGROUND IMAGE */}
+        <div className="absolute inset-0">
+          <img
+            src="/logo.png"
+            alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+        </div>
+
+        {/* CONTENU */}
+        <div className="relative z-10 container mx-auto px-4 text-center text-white">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in">
+            Secteurs & Filières
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in">
+             Découvrez la classification sectorielle des PME en Côte d'Ivoire
+          </p>
         </div>
       </section>
 
