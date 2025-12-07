@@ -3,12 +3,21 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { LogIn, UserPlus, Menu, X } from "lucide-react";
+import { LogIn, UserPlus, Menu, X, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Button } from "./ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
 
 export default function Header() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const pathname = usePathname();
 
   // Debug: afficher le pathname
@@ -133,6 +142,7 @@ export default function Header() {
               <div className="hidden md:flex items-center gap-2 shrink-0">
                 <Button
                   variant="outline"
+                  onClick={() => setIsLoginOpen(true)}
                   className="border-success text-success hover:bg-success hover:text-white w-full rounded-sm font-inter text-xs font-semibold px-3 py-1.5 transition-all"
                 >
                   <LogIn className="w-3.5 h-3.5" />
@@ -284,7 +294,10 @@ export default function Header() {
             <div className="flex flex-col gap-3 p-4 border-t border-gray-200 mt-auto">
               <button
                 className="flex items-center justify-center gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all"
-                onClick={() => setIsDrawerOpen(false)}
+                onClick={() => {
+                  setIsDrawerOpen(false);
+                  setIsLoginOpen(true);
+                }}
               >
                 <LogIn className="w-4 h-4" />
                 Connexion
@@ -300,6 +313,90 @@ export default function Header() {
           </div>
         </>
       )}
+
+      {/* Modal de Connexion */}
+      <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
+        <DialogContent className="sm:max-w-[450px] bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center">
+              Connexion
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Accédez à votre espace membre
+            </DialogDescription>
+          </DialogHeader>
+
+          <form className="space-y-5 mt-4">
+            {/* Email */}
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="email"
+                  required
+                  className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-orange-500 transition-colors"
+                  placeholder="votre@email.com"
+                />
+              </div>
+            </div>
+
+            {/* Mot de passe */}
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                Mot de passe
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  className="w-full pl-11 pr-12 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-orange-500 transition-colors"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Se souvenir & Mot de passe oublié */}
+            <div className="flex items-center justify-between text-sm">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                />
+                <span className="text-gray-600">Se souvenir de moi</span>
+              </label>
+              <a
+                href="#"
+                className="text-orange-600 hover:text-orange-700 font-semibold"
+              >
+                Mot de passe oublié ?
+              </a>
+            </div>
+
+            {/* Bouton de connexion */}
+            <Button
+              type="submit"
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-6 text-base"
+            >
+              Se connecter
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -12,11 +12,24 @@ import {
   Building2,
   HelpCircle,
   ChevronDown,
+  Lock,
+  Eye,
+  EyeOff,
+  UserPlus,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useState } from "react";
 
 export default function Contact() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const faqs = [
     {
@@ -322,7 +335,10 @@ export default function Contact() {
                     Accédez à votre espace membre pour bénéficier de tous vos
                     avantages
                   </p>
-                  <Button className="w-full bg-white text-orange-600 hover:bg-gray-100 font-semibold">
+                  <Button
+                    onClick={() => setIsLoginOpen(true)}
+                    className="w-full bg-white text-orange-600 hover:bg-gray-100 font-semibold"
+                  >
                     Connexion membre
                   </Button>
                 </CardContent>
@@ -394,6 +410,112 @@ export default function Contact() {
           </div>
         </div>
       </section>
+
+      {/* Modal de Connexion */}
+      <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center">
+              Connexion
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Accédez à votre espace membre
+            </DialogDescription>
+          </DialogHeader>
+
+          <form className="space-y-5 mt-4">
+            {/* Email */}
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="email"
+                  required
+                  className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-orange-500 transition-colors"
+                  placeholder="votre@email.com"
+                />
+              </div>
+            </div>
+
+            {/* Mot de passe */}
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                Mot de passe
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  className="w-full pl-11 pr-12 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-orange-500 transition-colors"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Se souvenir & Mot de passe oublié */}
+            <div className="flex items-center justify-between text-sm">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                />
+                <span className="text-gray-600">Se souvenir de moi</span>
+              </label>
+              <a
+                href="#"
+                className="text-orange-600 hover:text-orange-700 font-semibold"
+              >
+                Mot de passe oublié ?
+              </a>
+            </div>
+
+            {/* Bouton de connexion */}
+            <Button
+              type="submit"
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-6 text-base"
+            >
+              Se connecter
+            </Button>
+
+            {/* Séparateur */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white text-gray-500">
+                  Pas encore membre ?
+                </span>
+              </div>
+            </div>
+
+            {/* Bouton d'inscription */}
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full border-2 border-orange-600 text-orange-600 hover:bg-orange-50 font-semibold py-6 text-base"
+            >
+              <UserPlus className="w-5 h-5 mr-2" />
+              Créer un compte
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
