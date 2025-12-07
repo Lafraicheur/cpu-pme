@@ -6,6 +6,8 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
 } from "@/components/ui/carousel";
 import {
   Target,
@@ -35,7 +37,7 @@ export default function APropos() {
 
         {/* CONTENU */}
         <div className="relative z-10 container mx-auto px-4 text-center text-white">
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in">
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold mb-6 animate-fade-in">
             À Propos de CPU-PME.CI
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in">
@@ -49,22 +51,22 @@ export default function APropos() {
       <section className="py-16 sm:py-20 bg-white">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
           <Tabs defaultValue="mission" className="w-full">
-            <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 h-auto md:h-12 gap-2 md:gap-0 bg-gray-100 p-2">
+            <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 h-auto md:h-14 gap-3 md:gap-4 bg-transparent p-0 mb-8">
               <TabsTrigger
                 value="mission"
-                className="text-sm md:text-base py-3 md:py-2 data-[state=active]:bg-[var(--color-primary)] data-[state=active]:text-white"
+                className="text-sm md:text-base py-3.5 px-6 rounded-lg font-semibold transition-all duration-300 border-2 border-gray-200 bg-white hover:border-[var(--color-primary)] hover:shadow-md data-[state=active]:bg-[var(--color-primary)] data-[state=active]:text-white data-[state=active]:border-[var(--color-primary)] data-[state=active]:shadow-lg"
               >
                 Mission & Vision
               </TabsTrigger>
               <TabsTrigger
                 value="histoire"
-                className="text-sm md:text-base py-3 md:py-2 data-[state=active]:bg-[var(--color-primary)] data-[state=active]:text-white"
+                className="text-sm md:text-base py-3.5 px-6 rounded-lg font-semibold transition-all duration-300 border-2 border-gray-200 bg-white hover:border-[var(--color-primary)] hover:shadow-md data-[state=active]:bg-[var(--color-primary)] data-[state=active]:text-white data-[state=active]:border-[var(--color-primary)] data-[state=active]:shadow-lg"
               >
                 Histoire
               </TabsTrigger>
               <TabsTrigger
                 value="equipe"
-                className="text-sm md:text-base py-3 md:py-2 data-[state=active]:bg-[var(--color-primary)] data-[state=active]:text-white"
+                className="text-sm md:text-base py-3.5 px-6 rounded-lg font-semibold transition-all duration-300 border-2 border-gray-200 bg-white hover:border-[var(--color-primary)] hover:shadow-md data-[state=active]:bg-[var(--color-primary)] data-[state=active]:text-white data-[state=active]:border-[var(--color-primary)] data-[state=active]:shadow-lg"
               >
                 Équipe & Partenaires
               </TabsTrigger>
@@ -661,26 +663,26 @@ export default function APropos() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* Président */}
-                    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-                      <div className="h-64 relative bg-gray-100 flex items-center justify-center">
+                    <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
+                      <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
                         <img
-                          src="/lovable-uploads/4c2bca41-3773-486a-8f72-e3a2292ff376.png"
+                          src={require("@/assets/diomande.png").default.src}
                           alt="Dr DIOMANDE Moussa Elias Farakhan"
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                       </div>
-                      <CardContent className="pt-6">
-                        <h3 className="text-lg font-semibold mb-1">
+                      <CardContent className="pt-6 pb-6">
+                        <h3 className="text-lg font-bold mb-2 text-gray-900">
                           Dr DIOMANDE Moussa Elias Farakhan
                         </h3>
                         <p
-                          className="font-medium mb-3"
+                          className="font-semibold mb-3 text-sm"
                           style={{ color: "var(--color-primary)" }}
                         >
                           Président de la CPU-PME.CI
                         </p>
                         <p
-                          className="text-sm mb-4"
+                          className="text-sm leading-relaxed"
                           style={{ color: "var(--color-text-secondary)" }}
                         >
                           Dr DIOMANDE dirige avec vision et détermination la
@@ -693,26 +695,26 @@ export default function APropos() {
                     </Card>
 
                     {/* Président de Filière */}
-                    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-                      <div className="h-64 relative bg-gray-100 flex items-center justify-center">
+                    <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
+                      <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
                         <img
-                          src="/lovable-uploads/1fcb27a0-0711-42a4-9173-1749223dc9c2.png"
+                          src={require("@/assets/herman.png").default.src}
                           alt="Hermann ADJABONI GUEZO"
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                       </div>
-                      <CardContent className="pt-6">
-                        <h3 className="text-lg font-semibold mb-1">
+                      <CardContent className="pt-6 pb-6">
+                        <h3 className="text-lg font-bold mb-2 text-gray-900">
                           Hermann ADJABONI GUEZO
                         </h3>
                         <p
-                          className="font-medium mb-3"
+                          className="font-semibold mb-3 text-sm"
                           style={{ color: "var(--color-primary)" }}
                         >
                           Président de Filière
                         </p>
                         <p
-                          className="text-sm mb-4"
+                          className="text-sm leading-relaxed"
                           style={{ color: "var(--color-text-secondary)" }}
                         >
                           Hermann ADJABONI GUEZO apporte son expertise et son
@@ -725,26 +727,26 @@ export default function APropos() {
                     </Card>
 
                     {/* Secretaire Executif */}
-                    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-                      <div className="h-64 relative bg-gray-100 flex items-center justify-center">
+                    <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
+                      <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
                         <img
-                          src="/lovable-uploads/a4718298-407d-430c-9578-a433f8bc830f.png"
+                          src={require("@/assets/kongo.png").default.src}
                           alt="Silvère Kongo"
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                       </div>
-                      <CardContent className="pt-6">
-                        <h3 className="text-lg font-semibold mb-1">
+                      <CardContent className="pt-6 pb-6">
+                        <h3 className="text-lg font-bold mb-2 text-gray-900">
                           Silvère Kongo
                         </h3>
                         <p
-                          className="font-medium mb-3"
+                          className="font-semibold mb-3 text-sm"
                           style={{ color: "var(--color-primary)" }}
                         >
                           Secretaire Executif
                         </p>
                         <p
-                          className="text-sm mb-4"
+                          className="text-sm leading-relaxed"
                           style={{ color: "var(--color-text-secondary)" }}
                         >
                           Silvère Kongo assure le rôle clé de Secretaire
@@ -756,20 +758,22 @@ export default function APropos() {
                     </Card>
 
                     {/* Autres membres - placeholder */}
-                    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-                      <div className="h-64 bg-gray-300"></div>
-                      <CardContent className="pt-6">
-                        <h3 className="text-lg font-semibold mb-1">
+                    <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
+                      <div className="h-64 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                        <Users className="h-20 w-20 text-gray-400" />
+                      </div>
+                      <CardContent className="pt-6 pb-6">
+                        <h3 className="text-lg font-bold mb-2 text-gray-900">
                           Nom du Dirigeant
                         </h3>
                         <p
-                          className="font-medium mb-3"
+                          className="font-semibold mb-3 text-sm"
                           style={{ color: "var(--color-primary)" }}
                         >
                           Poste / Fonction
                         </p>
                         <p
-                          className="text-sm mb-4"
+                          className="text-sm leading-relaxed"
                           style={{ color: "var(--color-text-secondary)" }}
                         >
                           Courte biographie professionnelle du dirigeant, avec
@@ -821,7 +825,7 @@ export default function APropos() {
                   >
                     <CarouselContent className="-ml-2 md:-ml-4">
                       <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-32 hover:shadow-lg transition-shadow">
+                        <Card className="flex items-center justify-center p-3 h-30 border-0 bg-white transition-shadow">
                           <img
                             src={require("@/assets/bad.png").default.src}
                             alt="Banque Africaine de Développement"
@@ -831,7 +835,7 @@ export default function APropos() {
                       </CarouselItem>
 
                       <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-32 hover:shadow-lg transition-shadow">
+                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
                           <img
                             src={require("@/assets/ecobank.png").default.src}
                             alt="Ecobank"
@@ -841,7 +845,7 @@ export default function APropos() {
                       </CarouselItem>
 
                       <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-32 hover:shadow-lg transition-shadow">
+                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
                           <img
                             src={require("@/assets/mtn.png").default.src}
                             alt="MTN"
@@ -851,7 +855,7 @@ export default function APropos() {
                       </CarouselItem>
 
                       <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-32 hover:shadow-lg transition-shadow">
+                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
                           <img
                             src={require("@/assets/fun.png").default.src}
                             alt="Union Européenne"
@@ -861,7 +865,7 @@ export default function APropos() {
                       </CarouselItem>
 
                       <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-32 hover:shadow-lg transition-shadow">
+                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
                           <img
                             src={require("@/assets/afd.png").default.src}
                             alt="Agence Française de Développement"
@@ -871,7 +875,7 @@ export default function APropos() {
                       </CarouselItem>
 
                       <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-32 hover:shadow-lg transition-shadow">
+                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
                           <img
                             src={require("@/assets/cepici.png").default.src}
                             alt="CEPICI - Centre de Promotion des Investissements en Côte d'Ivoire"
@@ -881,7 +885,7 @@ export default function APropos() {
                       </CarouselItem>
 
                       <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-32 hover:shadow-lg transition-shadow">
+                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
                           <img
                             src={require("@/assets/coperation.png").default.src}
                             alt="Coopération Allemande"
@@ -891,9 +895,11 @@ export default function APropos() {
                       </CarouselItem>
 
                       <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-32 hover:shadow-lg transition-shadow">
+                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
                           <img
-                            src={require("@/assets/agriculture.png").default.src}
+                            src={
+                              require("@/assets/agriculture.png").default.src
+                            }
                             alt="Ministère d'État, Ministre de l'Agriculture, du Développement Rural et des Productions Vivières"
                             className="max-h-full max-w-full object-contain"
                           />
@@ -901,7 +907,7 @@ export default function APropos() {
                       </CarouselItem>
 
                       <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-32 hover:shadow-lg transition-shadow">
+                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
                           <img
                             src={require("@/assets/tourisme.png").default.src}
                             alt="Ministère du Tourisme et des Loisirs"
@@ -911,7 +917,7 @@ export default function APropos() {
                       </CarouselItem>
 
                       <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-32 hover:shadow-lg transition-shadow">
+                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
                           <img
                             src={require("@/assets/commerce.png").default.src}
                             alt="Ministère du Commerce et de l'Industrie"
@@ -922,13 +928,18 @@ export default function APropos() {
 
                       {/* Additional placeholder partners */}
                       {[1, 2].map((i) => (
-                        <CarouselItem key={i} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                          <Card className="flex items-center justify-center p-4 h-32 hover:shadow-lg transition-shadow">
-                            <div className="bg-gray-200 h-16 w-32"></div>
+                        <CarouselItem
+                          key={i}
+                          className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6"
+                        >
+                          <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white shadow-sm hover:shadow-lg transition-shadow">
+                            <div className="bg-gray-200 h-16 w-32 rounded"></div>
                           </Card>
                         </CarouselItem>
                       ))}
                     </CarouselContent>
+                    <CarouselPrevious className="hidden md:flex" />
+                    <CarouselNext className="hidden md:flex" />
                   </Carousel>
                 </div>
 
