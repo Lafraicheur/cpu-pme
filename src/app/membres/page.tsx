@@ -133,21 +133,24 @@ const Members = () => {
       <section className="bg-white border-b border-gray-200 pt-20 pb-16">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <Tabs defaultValue="annuaire" className="w-full">
-            <div className="flex justify-center mb-12">
-              <div className="w-full max-w-3xl">
-               <TabsList className="w-full h-auto bg-transparent border-0 flex gap-4 justify-start">
+            <div className="flex justify-center mb-12 overflow-x-auto">
+              <div className="w-full">
+               <TabsList className="w-full h-auto bg-transparent border-0 flex justify-between gap-2 sm:gap-4 min-w-max sm:min-w-0">
           
-                  <TabsTrigger value="annuaire" className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Annuaire
+                  <TabsTrigger value="annuaire" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                    <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Annuaire</span>
+                    <span className="inline sm:hidden">Annuaire</span>
                   </TabsTrigger>
-                  <TabsTrigger value="avantages" className="flex items-center gap-2">
-                    <Award className="h-4 w-4" />
-                    Avantages
+                  <TabsTrigger value="avantages" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                    <Award className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Avantages</span>
+                    <span className="inline sm:hidden">Avantages</span>
                   </TabsTrigger>
-                  <TabsTrigger value="adhesion" className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
-                    Adhérer
+                  <TabsTrigger value="adhesion" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                    <Building2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Adhérer</span>
+                    <span className="inline sm:hidden">Adhérer</span>
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -163,9 +166,9 @@ const Members = () => {
                 </div>
                 {featuredMembers.length > 0 ? (
                   <div className="relative">
-                    <div className="border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                      <div className={`flex gap-6 ${featuredIndex % 2 === 1 ? 'flex-row-reverse' : ''}`}>
-                        <div className="flex-shrink-0 bg-[#f0f4f8] rounded-lg w-64 h-48 flex items-center justify-center overflow-hidden relative">
+                    <div className="border border-gray-200 rounded-lg p-4 md:p-6 shadow transition-shadow overflow-hidden">
+                      <div className={`flex flex-col md:flex-row gap-4 md:gap-6 ${featuredIndex % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
+                        <div className="flex-shrink-0 bg-[#f0f4f8] rounded-lg w-full md:w-64 h-40 md:h-48 flex items-center justify-center overflow-hidden relative">
                           {shouldShowImage(featuredMembers[featuredIndex].id) && featuredMembers[featuredIndex].logoUrl ? (
                             <Image
                               src={featuredMembers[featuredIndex].logoUrl!}
@@ -210,13 +213,13 @@ const Members = () => {
                     {/* Navigation Arrows */}
                     <button
                       onClick={() => setFeaturedIndex((prev) => (prev - 1 + featuredMembers.length) % featuredMembers.length)}
-                      className="absolute -left-14 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-2 rounded-full hover:bg-orange-700 transition-colors"
+                      className="hidden md:absolute md:block -left-14 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-2 rounded-full hover:bg-orange-700 transition-colors"
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => setFeaturedIndex((prev) => (prev + 1) % featuredMembers.length)}
-                      className="absolute -right-14 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-2 rounded-full hover:bg-orange-700 transition-colors"
+                      className="hidden md:absolute md:block -right-14 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-2 rounded-full hover:bg-orange-700 transition-colors"
                     >
                       <ChevronRight className="h-5 w-5" />
                     </button>
@@ -285,7 +288,7 @@ const Members = () => {
                   {filteredMembers.map((member) => (
                     <div
                       key={member.id}
-                      className="member-card border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 bg-white flex flex-col"
+                      className="member-card border border-gray-200 rounded-lg overflow-hidden shadow hover:shadow-md transition-all duration-300 bg-white flex flex-col"
                     >
                       {/* Card Image/Icon Area */}
                       <div className="member-image bg-gradient-to-br from-[#f0f4f8] to-[#e8ecf1] h-40 flex items-center justify-center border-b border-gray-200 overflow-hidden relative">
@@ -365,7 +368,7 @@ const Members = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
                 {membershipBenefits.map((benefit, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-lg transition-shadow bg-white">
+                  <div key={index} className="border border-gray-200 rounded-lg p-6 shadow hover:shadow-md transition-shadow bg-white">
                     <div className="mx-auto bg-cpu-orange/10 p-4 rounded-full w-fit mb-4">
                       {getBenefitIcon(benefit.icon)}
                     </div>
@@ -390,8 +393,8 @@ const Members = () => {
                       key={index} 
                       className={`relative border rounded-lg overflow-visible transition-all ${
                         plan.recommended 
-                          ? 'border-cpu-orange shadow-lg scale-105 bg-white md:scale-110' 
-                          : 'border-gray-200 shadow-sm hover:shadow-md bg-white'
+                          ? 'border-cpu-orange shadow-md scale-105 bg-white md:scale-110' 
+                          : 'border-gray-200 shadow hover:shadow-md bg-white'
                       }`}
                     >
                       {plan.recommended && (

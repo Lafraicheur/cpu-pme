@@ -136,7 +136,7 @@ export default function Secteurs() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
+      <section className="relative h-64 sm:h-96 md:h-[500px] lg:h-[550px] flex items-center justify-center overflow-hidden">
         {/* BACKGROUND IMAGE */}
         <div className="absolute inset-0">
           <img
@@ -178,7 +178,7 @@ export default function Secteurs() {
               onValueChange={setActiveSecteur as (value: string) => void}
               className="w-full"
             >
-              <TabsList className="w-full h-auto bg-transparent border-0 flex justify-between">
+              <TabsList className="w-full h-auto bg-transparent border-0 flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between sm:justify-between">
                 {Object.keys(secteursData).map((key) => {
                   const secteur = secteursData[key as SecteurKey];
                   return (
@@ -186,10 +186,10 @@ export default function Secteurs() {
                       key={key}
                       value={key}
                       className="
-                        px-8 py-3 text-base font-medium text-[#5A6A7A]
+                        px-4 sm:px-8 py-2 sm:py-3 text-sm sm:text-base font-medium text-[#5A6A7A]
                         data-[state=active]:text-black 
                         data-[state=active]:bg-white 
-                        data-[state=active]:shadow-sm
+                        data-[state=active]:shadow
                         data-[state=active]:border 
                         data-[state=active]:border-gray-200
                         rounded-xl transition-all
