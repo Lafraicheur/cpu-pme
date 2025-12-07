@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,38 +27,96 @@ import {
   Globe,
   Star,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
 } from "lucide-react";
-import { membersData, sectors, regions, membershipBenefits, membershipPlans, Member } from "./data";
+import { membersData, sectors, regions, membershipBenefits, membershipPlans, Member, memberTypes, MemberType } from "./data";
 import { useToast } from "@/components/ui/use-toast";
 
-const Members = () => {
+const MembersContent = () => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSector, setSelectedSector] = useState<string>("all");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  const [selectedMemberType, setSelectedMemberType] = useState<string>("all");
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const membersPerPage = 9;
   const { toast } = useToast();
 
+  // Récupérer les paramètres d'URL au chargement
+  useEffect(() => {
+    const sectorParam = searchParams.get('sector');
+    const subsectorParam = searchParams.get('subsector');
+    const subsectorsParam = searchParams.get('subsectors');
+    const tagParam = searchParams.get('tag');
+    const tagsParam = searchParams.get('tags');
+    const tabParam = searchParams.get('tab');
+    
+    if (sectorParam) {
+      setSelectedSector(sectorParam);
+    }
+    
+    // Si un sous-secteur est spécifié, on peut aussi filtrer par secteur correspondant
+    if (subsectorParam && sectorParam) {
+      setSelectedSector(sectorParam);
+    }
+    
+    // Si plusieurs sous-secteurs sont spécifiés
+    if (subsectorsParam && sectorParam) {
+      setSelectedSector(sectorParam);
+    }
+    
+    // Si un tag est spécifié, on filtre par secteur correspondant
+    if (tagParam && sectorParam) {
+      setSelectedSector(sectorParam);
+    }
+    
+    // Si plusieurs tags sont spécifiés
+    if (tagsParam && sectorParam) {
+      setSelectedSector(sectorParam);
+    }
+  }, [searchParams]);
+  
+  // Déterminer l'onglet actif depuis l'URL
+  const activeTab = searchParams.get('tab') || 'annuaire';
+
   const filteredMembers = membersData.filter((member) => {
-    const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = searchTerm === "" || 
+                         member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          member.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSector = selectedSector === "all" || member.sector === selectedSector;
     const matchesRegion = selectedRegion === "all" || member.region === selectedRegion;
-    return matchesSearch && matchesSector && matchesRegion;
-  });
+    const matchesMemberType = selectedMemberType === "all" || member.memberType === selectedMemberType;
+    return matchesSearch && matchesSector && matchesRegion && matchesMemberType;
+  }).sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }));
 
-  const featuredMembers = membersData.filter(m => m.featured);
+  // Réinitialiser la page quand les filtres changent
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedSector, selectedRegion, selectedMemberType]);
+
+  // Calculer la pagination
+  const totalPages = Math.ceil(filteredMembers.length / membersPerPage);
+  const startIndex = (currentPage - 1) * membersPerPage;
+  const endIndex = startIndex + membersPerPage;
+  const paginatedMembers = filteredMembers.slice(startIndex, endIndex);
+
+  // Membres récemment inscrits (les 5 derniers de la liste)
+  const recentMembers = [...membersData].slice(-5).reverse();
 
   useEffect(() => {
-    if (featuredMembers.length === 0) return;
+    if (recentMembers.length === 0) return;
 
     const interval = setInterval(() => {
-      setFeaturedIndex((prev) => (prev + 1) % featuredMembers.length);
+      setFeaturedIndex((prev) => (prev + 1) % recentMembers.length);
     }, 5000); // Auto-advance every 5 seconds
 
     return () => clearInterval(interval);
-  }, [featuredMembers.length]);
+  }, [recentMembers.length]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +182,7 @@ const Members = () => {
             Nos Membres
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in">
-             Rejoignez la plus grande communauté d'entrepreneurs et de PME de Côte d'Ivoire
+             Rejoignez la plus grande communauté d'entrepreneurs, PME, entreprises, institutions et partenaires de Côte d'Ivoire
           </p>
         </div>
       </section>
@@ -132,75 +191,70 @@ const Members = () => {
       {/* Main Content */}
       <section className="bg-white border-b border-gray-200 pt-20 pb-16">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          <Tabs defaultValue="annuaire" className="w-full">
-            <div className="flex justify-center mb-12 overflow-x-auto">
-              <div className="w-auto">
-               <TabsList className="w-auto h-auto bg-transparent border-0 flex justify-center gap-2 sm:gap-2.5">
-          
-                  <TabsTrigger value="annuaire" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap px-4 py-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50 hover:border-cpu-orange transition-all">
-                    <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">Annuaire</span>
-                    <span className="inline sm:hidden">Annuaire</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="avantages" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap px-4 py-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50 hover:border-cpu-orange transition-all">
-                    <Award className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">Avantages</span>
-                    <span className="inline sm:hidden">Avantages</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="adhesion" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap px-4 py-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50 hover:border-cpu-orange transition-all">
-                    <Building2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">Adhérer</span>
-                    <span className="inline sm:hidden">Adhérer</span>
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-            </div>
+          <Tabs value={activeTab} onValueChange={(value) => {
+            const params = new URLSearchParams(searchParams.toString());
+            params.set('tab', value);
+            router.push(`/membres?${params.toString()}`);
+          }} className="w-full">
 
             {/* Annuaire Tab */}
             <TabsContent value="annuaire" className="mt-8">
-              {/* Featured Members Section */}
+              {/* Recent Members Section */}
               <div className="mb-20 animate-fade-in-up">
                 <div className="flex items-center gap-4 mb-10">
                   <div className="w-1 h-10 bg-cpu-orange rounded-full"></div>
-                  <h2 className="text-3xl font-bold text-[#221F1F]">Membres à la Une</h2>
+                  <h2 className="text-3xl font-bold text-[#221F1F]">Membres Récents</h2>
                 </div>
-                {featuredMembers.length > 0 ? (
+                {recentMembers.length > 0 ? (
                   <div className="relative">
                     <div className="border border-gray-200 rounded-lg p-6 md:p-8 transition-all overflow-hidden bg-white">
                       <div className={`flex flex-col md:flex-row gap-6 md:gap-8 ${featuredIndex % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
                         <div className="flex-shrink-0 bg-[#f0f4f8] rounded-lg w-full md:w-64 h-40 md:h-48 flex items-center justify-center overflow-hidden relative">
-                          {shouldShowImage(featuredMembers[featuredIndex].id) && featuredMembers[featuredIndex].logoUrl ? (
+                          {shouldShowImage(recentMembers[featuredIndex].id) && recentMembers[featuredIndex].logoUrl ? (
                             <Image
-                              src={featuredMembers[featuredIndex].logoUrl!}
-                              alt={featuredMembers[featuredIndex].name}
+                              src={recentMembers[featuredIndex].logoUrl!}
+                              alt={recentMembers[featuredIndex].name}
                               fill
                               className="object-cover"
                               sizes="(max-width: 768px) 100vw, 256px"
-                              onError={() => handleImageError(featuredMembers[featuredIndex].id)}
+                              onError={() => handleImageError(recentMembers[featuredIndex].id)}
                             />
                           ) : (
-                            <div className={`absolute inset-0 bg-gradient-to-br ${getSectorColor(featuredMembers[featuredIndex].sector)} flex items-center justify-center`}>
+                            <div className={`absolute inset-0 bg-gradient-to-br ${getSectorColor(recentMembers[featuredIndex].sector)} flex items-center justify-center`}>
                               <div className="text-center text-white px-4">
-                                <p className="text-sm font-semibold line-clamp-2">{featuredMembers[featuredIndex].name}</p>
+                                <p className="text-sm font-semibold line-clamp-2">{recentMembers[featuredIndex].name}</p>
                               </div>
                             </div>
                           )}
                         </div>
                         <div className="flex-1 flex flex-col justify-between">
                           <div>
-                            <div className="flex items-center gap-2 mb-4">
-                              <Badge className="bg-cpu-orange text-white">À la une</Badge>
-                              <Badge variant="outline">{featuredMembers[featuredIndex].sector}</Badge>
+                            <div className="flex items-center flex-wrap gap-2 mb-4">
+                              {recentMembers[featuredIndex].badge && (
+                                <Badge className={`text-xs ${
+                                  recentMembers[featuredIndex].badge === "Premium" ? "bg-cpu-orange text-white" :
+                                  recentMembers[featuredIndex].badge === "Ambassadeur" ? "bg-purple-600 text-white" :
+                                  recentMembers[featuredIndex].badge === "Honoraire" ? "bg-amber-600 text-white" :
+                                  "bg-blue-600 text-white"
+                                }`}>
+                                  {recentMembers[featuredIndex].badge}
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="text-xs">
+                                {memberTypes.find(t => t.value === recentMembers[featuredIndex].memberType)?.label || recentMembers[featuredIndex].memberType}
+                              </Badge>
+                              <Badge className="bg-green-600 text-white text-xs">Nouveau</Badge>
+                              <Badge variant="outline" className="text-xs">{recentMembers[featuredIndex].sector}</Badge>
                             </div>
-                            <h3 className="text-2xl font-bold text-[#221F1F] mb-4">{featuredMembers[featuredIndex].name}</h3>
-                            <p className="text-[#6F6F6F] text-base leading-relaxed mb-6">{featuredMembers[featuredIndex].description}</p>
+                            <h3 className="text-2xl font-bold text-[#221F1F] mb-4">{recentMembers[featuredIndex].name}</h3>
+                            <p className="text-[#6F6F6F] text-base leading-relaxed mb-6">{recentMembers[featuredIndex].description}</p>
                           </div>
                           <div className="flex items-center gap-6">
                             <span className="flex items-center text-sm text-[#6F6F6F]">
                               <MapPin className="h-4 w-4 mr-2" />
-                              {featuredMembers[featuredIndex].region}
+                              {recentMembers[featuredIndex].region}
                             </span>
-                            {featuredMembers[featuredIndex].website && (
+                            {recentMembers[featuredIndex].website && (
                               <Button variant="outline" size="sm" className="text-cpu-orange border-cpu-orange hover:border-cpu-orange hover:bg-cpu-orange hover:text-white active:bg-cpu-orange active:text-white transition-all">
                                 Voir le site
                               </Button>
@@ -212,13 +266,13 @@ const Members = () => {
 
                     {/* Navigation Arrows */}
                     <button
-                      onClick={() => setFeaturedIndex((prev) => (prev - 1 + featuredMembers.length) % featuredMembers.length)}
+                      onClick={() => setFeaturedIndex((prev) => (prev - 1 + recentMembers.length) % recentMembers.length)}
                       className="hidden md:absolute md:block left-4 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-3 rounded-full hover:bg-orange-700 transition-all hover:scale-110 z-10"
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </button>
                     <button
-                      onClick={() => setFeaturedIndex((prev) => (prev + 1) % featuredMembers.length)}
+                      onClick={() => setFeaturedIndex((prev) => (prev + 1) % recentMembers.length)}
                       className="hidden md:absolute md:block right-4 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-3 rounded-full hover:bg-orange-700 transition-all hover:scale-110 z-10"
                     >
                       <ChevronRight className="h-5 w-5" />
@@ -226,7 +280,7 @@ const Members = () => {
 
                     {/* Dots Indicator */}
                     <div className="flex justify-center gap-2 mt-6">
-                      {featuredMembers.map((_, idx) => (
+                      {recentMembers.map((_, idx) => (
                         <button
                           key={idx}
                           onClick={() => setFeaturedIndex(idx)}
@@ -238,14 +292,14 @@ const Members = () => {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-gray-500">Aucun membre à la une pour le moment.</p>
+                  <p className="text-gray-500">Aucune entreprise récemment inscrite pour le moment.</p>
                 )}
               </div>
 
               {/* Search and Filters Bar */}
               <div className="bg-white border border-gray-200 rounded-lg p-6 mb-12 animate-fade-in-up animate-delay-200">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="md:col-span-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                  <div className="lg:col-span-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <Input
@@ -256,6 +310,17 @@ const Members = () => {
                       />
                     </div>
                   </div>
+                  <Select value={selectedMemberType} onValueChange={setSelectedMemberType}>
+                    <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                      <SelectValue placeholder="Type de membre" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les types</SelectItem>
+                      {memberTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Select value={selectedSector} onValueChange={setSelectedSector}>
                     <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
                       <SelectValue placeholder="Secteur" />
@@ -283,9 +348,31 @@ const Members = () => {
 
               {/* All Members Grid */}
               <div className="animate-fade-in-up animate-delay-300">
-                <h2 className="text-3xl font-bold mb-10 text-[#221F1F]">Tous les Membres</h2>
+                <div className="flex items-center justify-between mb-10">
+                  <h2 className="text-3xl font-bold text-[#221F1F]">
+                    {(() => {
+                      const tagParam = searchParams.get('tag');
+                      if (tagParam) {
+                        return `Membres - ${tagParam}`;
+                      }
+                      return selectedSector !== "all" ? `Membres - ${selectedSector}` : "Tous les Membres";
+                    })()}
+                  </h2>
+                  {(selectedSector !== "all" || searchParams.get('tag')) && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedSector("all");
+                        window.history.pushState({}, '', '/membres');
+                      }}
+                      className="text-cpu-orange border-cpu-orange hover:bg-cpu-orange hover:text-white"
+                    >
+                      Voir tous les membres
+                    </Button>
+                  )}
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                  {filteredMembers.map((member, index) => (
+                  {paginatedMembers.map((member, index) => (
                     <div
                       key={member.id}
                       className={`member-card border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 bg-white flex flex-col animate-fade-in-up`}
@@ -314,10 +401,20 @@ const Members = () => {
 
                       {/* Card Content */}
                       <div className="p-6 flex flex-col flex-1">
-                        <div className="mb-4 flex gap-2">
-                          {member.featured && (
-                            <Badge className="bg-cpu-green text-white">Actif</Badge>
+                        <div className="mb-4 flex flex-wrap gap-2">
+                          {member.badge && (
+                            <Badge className={`text-xs ${
+                              member.badge === "Premium" ? "bg-cpu-orange text-white" :
+                              member.badge === "Ambassadeur" ? "bg-purple-600 text-white" :
+                              member.badge === "Honoraire" ? "bg-amber-600 text-white" :
+                              "bg-blue-600 text-white"
+                            }`}>
+                              {member.badge}
+                            </Badge>
                           )}
+                          <Badge variant="outline" className="text-xs">
+                            {memberTypes.find(t => t.value === member.memberType)?.label || member.memberType}
+                          </Badge>
                           <Badge variant="outline" className="text-xs">{member.sector}</Badge>
                         </div>
 
@@ -349,11 +446,106 @@ const Members = () => {
                   </div>
                 )}
 
-                <div className="text-center mt-12">
-                  <p className="text-[#6F6F6F]">
-                    Plus de <span className="font-bold text-cpu-orange">1000 entreprises</span> nous font confiance
-                  </p>
-                </div>
+                {/* Pagination */}
+                {filteredMembers.length > 0 && totalPages > 1 && (
+                  <div className="mt-12 flex flex-col items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      {/* Bouton Première page */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                        className="border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronsLeft className="h-4 w-4" />
+                      </Button>
+                      
+                      {/* Bouton Page précédente */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        className="border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+
+                      {/* Numéros de page */}
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                          // Afficher seulement quelques pages autour de la page actuelle
+                          if (
+                            page === 1 ||
+                            page === totalPages ||
+                            (page >= currentPage - 1 && page <= currentPage + 1)
+                          ) {
+                            return (
+                              <Button
+                                key={page}
+                                variant={currentPage === page ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentPage(page)}
+                                className={
+                                  currentPage === page
+                                    ? "bg-cpu-orange text-white hover:bg-orange-700 border-cpu-orange"
+                                    : "border-gray-300 hover:bg-gray-50"
+                                }
+                              >
+                                {page}
+                              </Button>
+                            );
+                          } else if (page === currentPage - 2 || page === currentPage + 2) {
+                            return (
+                              <span key={page} className="px-2 text-gray-400">
+                                ...
+                              </span>
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+
+                      {/* Bouton Page suivante */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                        className="border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+
+                      {/* Bouton Dernière page */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronsRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* Informations de pagination */}
+                    <p className="text-sm text-[#6F6F6F]">
+                      Affichage de <span className="font-semibold">{startIndex + 1}</span> à{" "}
+                      <span className="font-semibold">{Math.min(endIndex, filteredMembers.length)}</span> sur{" "}
+                      <span className="font-semibold">{filteredMembers.length}</span> membres
+                    </p>
+                  </div>
+                )}
+
+                {filteredMembers.length > 0 && totalPages === 1 && (
+                  <div className="text-center mt-12">
+                    <p className="text-[#6F6F6F]">
+                      Plus de <span className="font-bold text-cpu-orange">1000 entreprises</span> nous font confiance
+                    </p>
+                  </div>
+                )}
               </div>
             </TabsContent>
 
@@ -462,16 +654,38 @@ const Members = () => {
                   <div className="p-8">
                     <form onSubmit={handleSubmit} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Company Info */}
+                        {/* Type de membre */}
                         <div className="md:col-span-2">
+                          <h3 className="text-lg font-semibold mb-4 text-cpu-orange flex items-center">
+                            <Users className="h-5 w-5 mr-2" />
+                            Type de membre
+                          </h3>
+                        </div>
+                        
+                        <div className="md:col-span-2 space-y-2">
+                          <Label htmlFor="memberType">Je souhaite adhérer en tant que *</Label>
+                          <Select required>
+                            <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange focus:border-cpu-orange">
+                              <SelectValue placeholder="Sélectionnez votre type de membre" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {memberTypes.map((type) => (
+                                <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Company Info */}
+                        <div className="md:col-span-2 pt-4 border-t border-gray-200">
                           <h3 className="text-lg font-semibold mb-4 text-cpu-green flex items-center">
                             <Building2 className="h-5 w-5 mr-2" />
-                            Informations sur l'entreprise
+                            Informations sur l'organisation
                           </h3>
                         </div>
                         
                         <div className="space-y-2">
-                          <Label htmlFor="companyName">Nom de l'entreprise *</Label>
+                          <Label htmlFor="companyName">Nom de l'organisation *</Label>
                           <Input id="companyName" placeholder="Ex: Ma Société SARL" required className="border-gray-300" />
                         </div>
                         
@@ -595,6 +809,20 @@ const Members = () => {
         </div>
       </section>
     </div>
+  );
+};
+
+const Members = () => {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-lg text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    }>
+      <MembersContent />
+    </Suspense>
   );
 };
 
