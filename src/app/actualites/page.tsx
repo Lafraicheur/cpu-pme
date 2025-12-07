@@ -240,7 +240,7 @@ const News = () => {
       {/* Actualités en vedette */}
       {featuredNews.length > 0 && (
         <section className="py-16 bg-gradient-to-b from-white to-slate-50">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-1">
             <div className="flex items-center gap-3 mb-10">
               <div className="flex-shrink-0 w-1 h-8 bg-primary rounded-full"></div>
               <h2 className="text-3xl md:text-4xl font-heading font-bold tracking-tight">
