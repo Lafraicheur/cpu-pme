@@ -125,7 +125,7 @@ const Members = () => {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {featuredMembers.slice(0, 3).map((member) => (
-                    <Card key={member.id} className="border-2 border-cpu-orange/20 bg-gradient-to-br from-white to-[rgba(var(--color-primary-rgb),0.05)]">
+                    <Card key={member.id} className="shadow-md hover:shadow-xl transition-shadow border-0]">
                       <CardHeader>
                         <div className="flex items-start justify-between">
                           <div className="bg-cpu-orange/10 p-3 rounded-lg">
@@ -168,7 +168,7 @@ const Members = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="Secteur" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-cpu-gris">
                       <SelectItem value="all">Tous les secteurs</SelectItem>
                       {sectors.map((sector) => (
                         <SelectItem key={sector} value={sector}>{sector}</SelectItem>
