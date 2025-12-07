@@ -131,23 +131,23 @@ const Members = () => {
 
       {/* Main Content */}
       <section className="bg-white border-b border-gray-200 pt-20 pb-16">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <Tabs defaultValue="annuaire" className="w-full">
             <div className="flex justify-center mb-12 overflow-x-auto">
-              <div className="w-full">
-               <TabsList className="w-full h-auto bg-transparent border-0 flex justify-between gap-2 sm:gap-4 min-w-max sm:min-w-0">
+              <div className="w-auto">
+               <TabsList className="w-auto h-auto bg-transparent border-0 flex justify-center gap-2 sm:gap-2.5">
           
-                  <TabsTrigger value="annuaire" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <TabsTrigger value="annuaire" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap px-4 py-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50 hover:border-cpu-orange transition-all">
                     <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span className="hidden sm:inline">Annuaire</span>
                     <span className="inline sm:hidden">Annuaire</span>
                   </TabsTrigger>
-                  <TabsTrigger value="avantages" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <TabsTrigger value="avantages" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap px-4 py-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50 hover:border-cpu-orange transition-all">
                     <Award className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span className="hidden sm:inline">Avantages</span>
                     <span className="inline sm:hidden">Avantages</span>
                   </TabsTrigger>
-                  <TabsTrigger value="adhesion" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <TabsTrigger value="adhesion" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap px-4 py-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50 hover:border-cpu-orange transition-all">
                     <Building2 className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span className="hidden sm:inline">Adhérer</span>
                     <span className="inline sm:hidden">Adhérer</span>
@@ -159,15 +159,15 @@ const Members = () => {
             {/* Annuaire Tab */}
             <TabsContent value="annuaire" className="mt-8">
               {/* Featured Members Section */}
-              <div className="mb-16">
-                <div className="flex items-center gap-4 mb-8">
+              <div className="mb-20 animate-fade-in-up">
+                <div className="flex items-center gap-4 mb-10">
                   <div className="w-1 h-10 bg-cpu-orange rounded-full"></div>
                   <h2 className="text-3xl font-bold text-[#221F1F]">Membres à la Une</h2>
                 </div>
                 {featuredMembers.length > 0 ? (
                   <div className="relative">
-                    <div className="border border-gray-200 rounded-lg p-4 md:p-6 shadow transition-shadow overflow-hidden">
-                      <div className={`flex flex-col md:flex-row gap-4 md:gap-6 ${featuredIndex % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
+                    <div className="border border-gray-200 rounded-lg p-6 md:p-8 transition-all overflow-hidden bg-white">
+                      <div className={`flex flex-col md:flex-row gap-6 md:gap-8 ${featuredIndex % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
                         <div className="flex-shrink-0 bg-[#f0f4f8] rounded-lg w-full md:w-64 h-40 md:h-48 flex items-center justify-center overflow-hidden relative">
                           {shouldShowImage(featuredMembers[featuredIndex].id) && featuredMembers[featuredIndex].logoUrl ? (
                             <Image
@@ -188,14 +188,14 @@ const Members = () => {
                         </div>
                         <div className="flex-1 flex flex-col justify-between">
                           <div>
-                            <div className="flex items-center gap-2 mb-3">
+                            <div className="flex items-center gap-2 mb-4">
                               <Badge className="bg-cpu-orange text-white">À la une</Badge>
                               <Badge variant="outline">{featuredMembers[featuredIndex].sector}</Badge>
                             </div>
-                            <h3 className="text-2xl font-bold text-[#221F1F] mb-3">{featuredMembers[featuredIndex].name}</h3>
-                            <p className="text-[#6F6F6F] text-base leading-relaxed mb-4">{featuredMembers[featuredIndex].description}</p>
+                            <h3 className="text-2xl font-bold text-[#221F1F] mb-4">{featuredMembers[featuredIndex].name}</h3>
+                            <p className="text-[#6F6F6F] text-base leading-relaxed mb-6">{featuredMembers[featuredIndex].description}</p>
                           </div>
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-6">
                             <span className="flex items-center text-sm text-[#6F6F6F]">
                               <MapPin className="h-4 w-4 mr-2" />
                               {featuredMembers[featuredIndex].region}
@@ -213,13 +213,13 @@ const Members = () => {
                     {/* Navigation Arrows */}
                     <button
                       onClick={() => setFeaturedIndex((prev) => (prev - 1 + featuredMembers.length) % featuredMembers.length)}
-                      className="hidden md:absolute md:block -left-14 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-2 rounded-full hover:bg-orange-700 transition-colors"
+                      className="hidden md:absolute md:block left-4 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-3 rounded-full hover:bg-orange-700 transition-all hover:scale-110 z-10"
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => setFeaturedIndex((prev) => (prev + 1) % featuredMembers.length)}
-                      className="hidden md:absolute md:block -right-14 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-2 rounded-full hover:bg-orange-700 transition-colors"
+                      className="hidden md:absolute md:block right-4 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-3 rounded-full hover:bg-orange-700 transition-all hover:scale-110 z-10"
                     >
                       <ChevronRight className="h-5 w-5" />
                     </button>
@@ -243,7 +243,7 @@ const Members = () => {
               </div>
 
               {/* Search and Filters Bar */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-12">
+              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-12 animate-fade-in-up animate-delay-200">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="md:col-span-2">
                     <div className="relative">
@@ -257,7 +257,7 @@ const Members = () => {
                     </div>
                   </div>
                   <Select value={selectedSector} onValueChange={setSelectedSector}>
-                    <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange focus:border-cpu-orange">
+                    <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
                       <SelectValue placeholder="Secteur" />
                     </SelectTrigger>
                     <SelectContent>
@@ -268,7 +268,7 @@ const Members = () => {
                     </SelectContent>
                   </Select>
                   <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-                    <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange focus:border-cpu-orange">
+                    <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
                       <SelectValue placeholder="Région" />
                     </SelectTrigger>
                     <SelectContent>
@@ -282,13 +282,14 @@ const Members = () => {
               </div>
 
               {/* All Members Grid */}
-              <div>
-                <h2 className="text-3xl font-bold mb-8 text-[#221F1F]">Tous les Membres</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredMembers.map((member) => (
+              <div className="animate-fade-in-up animate-delay-300">
+                <h2 className="text-3xl font-bold mb-10 text-[#221F1F]">Tous les Membres</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                  {filteredMembers.map((member, index) => (
                     <div
                       key={member.id}
-                      className="member-card border border-gray-200 rounded-lg overflow-hidden shadow hover:shadow-md transition-all duration-300 bg-white flex flex-col"
+                      className={`member-card border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 bg-white flex flex-col animate-fade-in-up`}
+                      style={{ animationDelay: `${0.4 + index * 0.1}s`, opacity: 0 }}
                     >
                       {/* Card Image/Icon Area */}
                       <div className="member-image bg-gradient-to-br from-[#f0f4f8] to-[#e8ecf1] h-40 flex items-center justify-center border-b border-gray-200 overflow-hidden relative">
@@ -313,18 +314,18 @@ const Members = () => {
 
                       {/* Card Content */}
                       <div className="p-6 flex flex-col flex-1">
-                        <div className="mb-3 flex gap-2">
+                        <div className="mb-4 flex gap-2">
                           {member.featured && (
                             <Badge className="bg-cpu-green text-white">Actif</Badge>
                           )}
                           <Badge variant="outline" className="text-xs">{member.sector}</Badge>
                         </div>
 
-                        <h3 className="text-lg font-bold text-[#221F1F] mb-2 line-clamp-2">{member.name}</h3>
+                        <h3 className="text-lg font-bold text-[#221F1F] mb-3 line-clamp-2">{member.name}</h3>
 
-                        <p className="text-sm text-[#6F6F6F] mb-4 flex-1 line-clamp-3">{member.description}</p>
+                        <p className="text-sm text-[#6F6F6F] mb-6 flex-1 line-clamp-3 leading-relaxed">{member.description}</p>
 
-                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
                           <span className="flex items-center text-xs text-[#6F6F6F]">
                             <MapPin className="h-3 w-3 mr-1" />
                             {member.region}
@@ -342,7 +343,7 @@ const Members = () => {
                 </div>
 
                 {filteredMembers.length === 0 && (
-                  <div className="text-center py-12 border border-gray-200 rounded-lg bg-gray-50">
+                  <div className="text-center py-12 border border-gray-200 rounded-lg bg-gray-50 animate-fade-in-up">
                     <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500 font-medium">Aucun membre trouvé avec ces critères</p>
                   </div>
@@ -358,7 +359,7 @@ const Members = () => {
 
             {/* Avantages Tab */}
             <TabsContent value="avantages" className="mt-4">
-              <div className="text-center mb-12">
+              <div className="text-center mb-12 animate-fade-in-up">
                 <h2 className="text-3xl font-bold mb-4 text-[#221F1F]">Pourquoi rejoindre CPU-PME.CI ?</h2>
                 <p className="text-cpu-darkgray max-w-2xl mx-auto">
                   En devenant membre, vous bénéficiez d'un ensemble complet de services et d'avantages 
@@ -366,40 +367,45 @@ const Members = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-16">
                 {membershipBenefits.map((benefit, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-6 shadow hover:shadow-md transition-shadow bg-white">
-                    <div className="mx-auto bg-cpu-orange/10 p-4 rounded-full w-fit mb-4">
+                  <div 
+                    key={index} 
+                    className={`border border-gray-200 rounded-lg p-6 lg:p-8 transition-all bg-white animate-fade-in-up hover:border-cpu-orange/50`}
+                    style={{ animationDelay: `${0.2 + index * 0.1}s`, opacity: 0 }}
+                  >
+                    <div className="mx-auto bg-cpu-orange/10 p-4 rounded-full w-fit mb-6">
                       {getBenefitIcon(benefit.icon)}
                     </div>
-                    <h3 className="text-lg font-semibold text-[#221F1F] mb-2">{benefit.title}</h3>
+                    <h3 className="text-lg font-semibold text-[#221F1F] mb-3">{benefit.title}</h3>
                     <p className="text-cpu-darkgray text-sm leading-relaxed">{benefit.description}</p>
                   </div>
                 ))}
               </div>
 
               {/* Pricing Plans */}
-              <div className="bg-white rounded-lg border border-gray-200 p-8 md:p-12">
+              <div className="bg-white rounded-lg border border-gray-200 p-8 md:p-12 animate-fade-in-up animate-delay-400">
                 <div className="text-center mb-12">
                   <h2 className="text-3xl font-bold mb-4 text-[#221F1F]">Nos Formules d'Adhésion</h2>
-                  <p className="text-cpu-darkgray">
+                  <p className="text-cpu-darkgray max-w-2xl mx-auto">
                     Choisissez la formule qui correspond le mieux à vos besoins
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
                   {membershipPlans.map((plan, index) => (
                     <div
                       key={index} 
-                      className={`relative border rounded-lg overflow-visible transition-all ${
+                      className={`relative border rounded-lg overflow-visible transition-all animate-fade-in-up ${
                         plan.recommended 
-                          ? 'border-cpu-orange shadow-md scale-105 bg-white md:scale-110' 
-                          : 'border-gray-200 shadow hover:shadow-md bg-white'
+                          ? 'border-cpu-orange scale-105 bg-white md:scale-110' 
+                          : 'border-gray-200 bg-white'
                       }`}
+                      style={{ animationDelay: `${0.5 + index * 0.15}s`, opacity: 0 }}
                     >
                       {plan.recommended && (
                         <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 z-20">
-                          <Badge className="bg-cpu-orange text-white px-4 py-1.5 shadow-md">
+                          <Badge className="bg-cpu-orange text-white px-4 py-1.5">
                             Recommandé
                           </Badge>
                         </div>
@@ -486,7 +492,7 @@ const Members = () => {
                         <div className="space-y-2">
                           <Label htmlFor="region">Région *</Label>
                           <Select required>
-                            <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange focus:border-cpu-orange">
+                            <SelectTrigger className="bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
                               <SelectValue placeholder="Sélectionnez une région" />
                             </SelectTrigger>
                             <SelectContent>
@@ -500,7 +506,7 @@ const Members = () => {
                         <div className="space-y-2">
                           <Label htmlFor="employees">Nombre d'employés</Label>
                           <Select>
-                            <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange focus:border-cpu-orange">
+                            <SelectTrigger className="bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
                               <SelectValue placeholder="Sélectionnez" />
                             </SelectTrigger>
                             <SelectContent>
@@ -513,7 +519,7 @@ const Members = () => {
                         </div>
 
                         {/* Contact Info */}
-                        <div className="md:col-span-2 pt-6 border-t border-gray-200">
+                        <div className="md:col-span-2 pt-8 border-t border-gray-200">
                           <h3 className="text-lg font-semibold mb-4 text-cpu-orange flex items-center">
                             <Users className="h-5 w-5 mr-2" />
                             Informations de contact
@@ -541,7 +547,7 @@ const Members = () => {
                         </div>
 
                         {/* Membership Plan */}
-                        <div className="md:col-span-2 pt-6 border-t border-gray-200">
+                        <div className="md:col-span-2 pt-8 border-t border-gray-200">
                           <h3 className="text-lg font-semibold mb-4 text-cpu-green flex items-center">
                             <Award className="h-5 w-5 mr-2" />
                             Formule souhaitée
@@ -551,7 +557,7 @@ const Members = () => {
                         <div className="md:col-span-2 space-y-2">
                           <Label htmlFor="plan">Formule souhaitée *</Label>
                           <Select required>
-                            <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange focus:border-cpu-orange">
+                            <SelectTrigger className="bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
                               <SelectValue placeholder="Choisissez une formule" />
                             </SelectTrigger>
                             <SelectContent>
@@ -572,7 +578,7 @@ const Members = () => {
                         </div>
                       </div>
 
-                      <div className="pt-6 border-t border-gray-200">
+                      <div className="pt-8 border-t border-gray-200">
                         <Button type="submit" className="w-full bg-cpu-orange hover:bg-orange-700 active:bg-orange-800 text-white py-3 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cpu-orange transition-all">
                           Soumettre ma demande d'adhésion
                         </Button>
