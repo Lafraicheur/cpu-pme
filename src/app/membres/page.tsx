@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { 
   Users, 
   Building2, 
@@ -29,10 +30,66 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
-  ChevronsRight
+  ChevronsRight,
+  X,
+  Grid3x3,
+  List,
+  RotateCcw,
+  Download,
+  Share2,
+  Heart,
+  Factory,
+  Wrench,
+  Store,
+  Briefcase,
+  Laptop,
+  Truck,
+  Hotel,
+  Heart as HeartIcon,
+  Zap,
+  Gem,
+  Crown,
+  Building,
+  Filter,
+  Menu
 } from "lucide-react";
-import { membersData, sectors, regions, membershipBenefits, membershipPlans, Member, memberTypes, MemberType } from "./data";
+import { membersData, sectors, regions, membershipBenefits, membershipPlans, Member, memberTypes, MemberType, memberBadges } from "./data";
 import { useToast } from "@/components/ui/use-toast";
+import { 
+  IconBTP, 
+  IconCommerce, 
+  IconIndustrie, 
+  IconServices, 
+  IconTechnologie, 
+  IconTransport, 
+  IconTourisme, 
+  IconSante, 
+  IconEnergie,
+  IconAgriculture 
+} from "@/components/icons/SectorIcons";
+
+// Composant Skeleton pour les cartes
+const MemberCardSkeleton = () => (
+  <div className="border border-gray-200 rounded-lg overflow-hidden bg-white flex flex-col animate-pulse">
+    <div className="h-40 bg-gray-200"></div>
+    <div className="p-6 flex flex-col flex-1 space-y-4">
+      <div className="flex gap-2">
+        <div className="h-5 w-16 bg-gray-200 rounded"></div>
+        <div className="h-5 w-20 bg-gray-200 rounded"></div>
+      </div>
+      <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+      <div className="space-y-2">
+        <div className="h-4 bg-gray-200 rounded w-full"></div>
+        <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+        <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+      </div>
+      <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
+        <div className="h-4 bg-gray-200 rounded w-20"></div>
+        <div className="h-8 bg-gray-200 rounded w-16"></div>
+      </div>
+    </div>
+  </div>
+);
 
 const MembersContent = () => {
   const searchParams = useSearchParams();
@@ -41,11 +98,59 @@ const MembersContent = () => {
   const [selectedSector, setSelectedSector] = useState<string>("all");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [selectedMemberType, setSelectedMemberType] = useState<string>("all");
+  const [selectedBadge, setSelectedBadge] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<string>("alphabetical");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const membersPerPage = 9;
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const { toast } = useToast();
+
+  // Simuler le chargement initial
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Charger les favoris depuis localStorage au montage
+  useEffect(() => {
+    const savedFavorites = localStorage.getItem('memberFavorites');
+    if (savedFavorites) {
+      try {
+        setFavorites(new Set(JSON.parse(savedFavorites)));
+      } catch (e) {
+        console.error('Error loading favorites:', e);
+      }
+    }
+  }, []);
+
+  // Sauvegarder les favoris dans localStorage
+  const toggleFavorite = (memberId: string) => {
+    setFavorites(prev => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(memberId)) {
+        newFavorites.delete(memberId);
+        toast({
+          title: "Favori retiré",
+          description: "Ce membre a été retiré de vos favoris.",
+        });
+      } else {
+        newFavorites.add(memberId);
+        toast({
+          title: "Ajouté aux favoris",
+          description: "Ce membre a été ajouté à vos favoris.",
+        });
+      }
+      localStorage.setItem('memberFavorites', JSON.stringify(Array.from(newFavorites)));
+      return newFavorites;
+    });
+  };
 
   // Récupérer les paramètres d'URL au chargement
   useEffect(() => {
@@ -84,6 +189,28 @@ const MembersContent = () => {
   // Déterminer l'onglet actif depuis l'URL
   const activeTab = searchParams.get('tab') || 'annuaire';
 
+  // Fonction de tri
+  const sortMembers = (a: Member, b: Member) => {
+    switch (sortOrder) {
+      case "alphabetical":
+        return a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' });
+      case "date":
+        // Pour la date, on utilise l'index dans le tableau comme proxy (les derniers sont les plus récents)
+        const indexA = membersData.findIndex(m => m.id === a.id);
+        const indexB = membersData.findIndex(m => m.id === b.id);
+        return indexB - indexA; // Plus récent en premier
+      case "badge":
+        const badgeOrder = { "Institutionnel": 4, "Or": 3, "Argent": 2, "Basic": 1 };
+        const badgeA = badgeOrder[a.badge as keyof typeof badgeOrder] || 0;
+        const badgeB = badgeOrder[b.badge as keyof typeof badgeOrder] || 0;
+        return badgeB - badgeA;
+      case "sector":
+        return a.sector.localeCompare(b.sector, 'fr', { sensitivity: 'base' });
+      default:
+        return a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' });
+    }
+  };
+
   const filteredMembers = membersData.filter((member) => {
     const matchesSearch = searchTerm === "" || 
                          member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -91,13 +218,31 @@ const MembersContent = () => {
     const matchesSector = selectedSector === "all" || member.sector === selectedSector;
     const matchesRegion = selectedRegion === "all" || member.region === selectedRegion;
     const matchesMemberType = selectedMemberType === "all" || member.memberType === selectedMemberType;
-    return matchesSearch && matchesSector && matchesRegion && matchesMemberType;
-  }).sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }));
+    const matchesBadge = selectedBadge === "all" || member.badge === selectedBadge;
+    return matchesSearch && matchesSector && matchesRegion && matchesMemberType && matchesBadge;
+  }).sort(sortMembers);
+
+  // Vérifier si des filtres sont actifs
+  const hasActiveFilters = searchTerm !== "" || 
+                           selectedSector !== "all" || 
+                           selectedRegion !== "all" || 
+                           selectedMemberType !== "all" || 
+                           selectedBadge !== "all";
+
+  // Fonction pour réinitialiser tous les filtres
+  const resetFilters = () => {
+    setSearchTerm("");
+    setSelectedSector("all");
+    setSelectedRegion("all");
+    setSelectedMemberType("all");
+    setSelectedBadge("all");
+    setCurrentPage(1);
+  };
 
   // Réinitialiser la page quand les filtres changent
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedSector, selectedRegion, selectedMemberType]);
+  }, [searchTerm, selectedSector, selectedRegion, selectedMemberType, selectedBadge, sortOrder]);
 
   // Calculer la pagination
   const totalPages = Math.ceil(filteredMembers.length / membersPerPage);
@@ -154,12 +299,207 @@ const MembersContent = () => {
     return sectorColors[sector] || "from-gray-500 to-gray-700";
   };
 
+  // Fonction pour obtenir l'icône SVG par secteur
+  const getSectorIcon = (sector: string) => {
+    const sectorIcons: { [key: string]: React.ReactNode } = {
+      "Agriculture & Agroalimentaire": <IconAgriculture className="h-16 w-16 text-white opacity-90" />,
+      "BTP & Construction": <IconBTP className="h-16 w-16 text-white opacity-90" />,
+      "Commerce & Distribution": <IconCommerce className="h-16 w-16 text-white opacity-90" />,
+      "Industrie & Transformation": <IconIndustrie className="h-16 w-16 text-white opacity-90" />,
+      "Services & Conseil": <IconServices className="h-16 w-16 text-white opacity-90" />,
+      "Technologie & Digital": <IconTechnologie className="h-16 w-16 text-white opacity-90" />,
+      "Transport & Logistique": <IconTransport className="h-16 w-16 text-white opacity-90" />,
+      "Tourisme & Hôtellerie": <IconTourisme className="h-16 w-16 text-white opacity-90" />,
+      "Santé & Pharmaceutique": <IconSante className="h-16 w-16 text-white opacity-90" />,
+      "Énergie & Environnement": <IconEnergie className="h-16 w-16 text-white opacity-90" />,
+    };
+    return sectorIcons[sector] || <Building2 className="h-16 w-16 text-white opacity-90" />;
+  };
+
+  // Fonction pour obtenir l'icône et la couleur du badge
+  const getBadgeConfig = (badge?: string) => {
+    switch (badge) {
+      case "Basic":
+        return {
+          icon: <Award className="h-3 w-3" />,
+          className: "bg-blue-600 text-white border-blue-700",
+          bgColor: "bg-blue-600",
+          textColor: "text-white"
+        };
+      case "Argent":
+        return {
+          icon: <Gem className="h-3 w-3" />,
+          className: "bg-cpu-orange text-white border-orange-700",
+          bgColor: "bg-cpu-orange",
+          textColor: "text-white"
+        };
+      case "Or":
+        return {
+          icon: <Crown className="h-3 w-3" />,
+          className: "bg-amber-500 text-white border-amber-600",
+          bgColor: "bg-amber-500",
+          textColor: "text-white"
+        };
+      case "Institutionnel":
+        return {
+          icon: <Building className="h-3 w-3" />,
+          className: "bg-purple-600 text-white border-purple-700",
+          bgColor: "bg-purple-600",
+          textColor: "text-white"
+        };
+      default:
+        return {
+          icon: <Award className="h-3 w-3" />,
+          className: "bg-gray-600 text-white border-gray-700",
+          bgColor: "bg-gray-600",
+          textColor: "text-white"
+        };
+    }
+  };
+
   const handleImageError = (memberId: string) => {
     setFailedImages((prev) => new Set(prev).add(memberId));
   };
 
   const shouldShowImage = (memberId: string) => {
     return !failedImages.has(memberId);
+  };
+
+  // Fonction pour exporter en CSV
+  const exportToCSV = () => {
+    const headers = ['Nom', 'Type', 'Secteur', 'Région', 'Formule', 'Description', 'Site Web'];
+    const rows = filteredMembers.map(member => [
+      member.name,
+      memberTypes.find(t => t.value === member.memberType)?.label || member.memberType,
+      member.sector,
+      member.region,
+      member.badge || 'N/A',
+      member.description.replace(/,/g, ';'), // Remplacer les virgules pour éviter les problèmes CSV
+      member.website || 'N/A'
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `membres-cpu-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Export réussi",
+      description: `Fichier CSV téléchargé avec ${filteredMembers.length} membres.`,
+    });
+  };
+
+  // Fonction pour exporter en PDF (simplifié - génère un HTML imprimable)
+  const exportToPDF = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Membres CPU-PME - ${new Date().toLocaleDateString('fr-FR')}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #F27A20; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #F27A20; color: white; }
+            tr:nth-child(even) { background-color: #f2f2f2; }
+          </style>
+        </head>
+        <body>
+          <h1>Liste des Membres CPU-PME</h1>
+          <p><strong>Date d'export:</strong> ${new Date().toLocaleDateString('fr-FR')}</p>
+          <p><strong>Nombre de membres:</strong> ${filteredMembers.length}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Type</th>
+                <th>Secteur</th>
+                <th>Région</th>
+                <th>Formule</th>
+                <th>Site Web</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredMembers.map(member => `
+                <tr>
+                  <td>${member.name}</td>
+                  <td>${memberTypes.find(t => t.value === member.memberType)?.label || member.memberType}</td>
+                  <td>${member.sector}</td>
+                  <td>${member.region}</td>
+                  <td>${member.badge || 'N/A'}</td>
+                  <td>${member.website || 'N/A'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.print();
+
+    toast({
+      title: "Export PDF",
+      description: "La fenêtre d'impression s'ouvre. Utilisez 'Enregistrer au format PDF' pour sauvegarder.",
+    });
+  };
+
+  // Fonction pour partager la recherche
+  const shareSearch = () => {
+    const params = new URLSearchParams();
+    if (searchTerm) params.set('search', searchTerm);
+    if (selectedSector !== "all") params.set('sector', selectedSector);
+    if (selectedRegion !== "all") params.set('region', selectedRegion);
+    if (selectedMemberType !== "all") params.set('type', selectedMemberType);
+    if (selectedBadge !== "all") params.set('badge', selectedBadge);
+    if (sortOrder !== "alphabetical") params.set('sort', sortOrder);
+    if (viewMode !== "grid") params.set('view', viewMode);
+
+    const url = `${window.location.origin}/membres?${params.toString()}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: 'Recherche de membres CPU-PME',
+        text: `Découvrez ${filteredMembers.length} membres sur CPU-PME`,
+        url: url,
+      }).catch(() => {
+        // Fallback si l'utilisateur annule
+        copyToClipboard(url);
+      });
+    } else {
+      copyToClipboard(url);
+    }
+  };
+
+  // Fonction pour copier dans le presse-papier
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast({
+        title: "Lien copié !",
+        description: "Le lien a été copié dans le presse-papier.",
+      });
+    }).catch(() => {
+      toast({
+        title: "Erreur",
+        description: "Impossible de copier le lien.",
+      });
+    });
   };
 
   return (
@@ -207,7 +547,7 @@ const MembersContent = () => {
                 </div>
                 {recentMembers.length > 0 ? (
                   <div className="relative">
-                    <div className="border border-gray-200 rounded-lg p-6 md:p-8 transition-all overflow-hidden bg-white">
+                    <div className="border border-gray-200 rounded-lg p-6 md:p-8 md:pl-16 md:pr-16 transition-all overflow-hidden bg-white">
                       <div className={`flex flex-col md:flex-row gap-6 md:gap-8 ${featuredIndex % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
                         <div className="flex-shrink-0 bg-[#f0f4f8] rounded-lg w-full md:w-64 h-40 md:h-48 flex items-center justify-center overflow-hidden relative">
                           {shouldShowImage(recentMembers[featuredIndex].id) && recentMembers[featuredIndex].logoUrl ? (
@@ -230,16 +570,15 @@ const MembersContent = () => {
                         <div className="flex-1 flex flex-col justify-between">
                           <div>
                             <div className="flex items-center flex-wrap gap-2 mb-4">
-                              {recentMembers[featuredIndex].badge && (
-                                <Badge className={`text-xs ${
-                                  recentMembers[featuredIndex].badge === "Premium" ? "bg-cpu-orange text-white" :
-                                  recentMembers[featuredIndex].badge === "Ambassadeur" ? "bg-purple-600 text-white" :
-                                  recentMembers[featuredIndex].badge === "Honoraire" ? "bg-amber-600 text-white" :
-                                  "bg-blue-600 text-white"
-                                }`}>
-                                  {recentMembers[featuredIndex].badge}
-                                </Badge>
-                              )}
+                              {recentMembers[featuredIndex].badge && (() => {
+                                const badgeConfig = getBadgeConfig(recentMembers[featuredIndex].badge);
+                                return (
+                                  <Badge className={`text-xs flex items-center gap-1.5 px-2.5 py-1 border ${badgeConfig.className} shadow-sm`}>
+                                    {badgeConfig.icon}
+                                    <span className="font-semibold">{recentMembers[featuredIndex].badge}</span>
+                                  </Badge>
+                                );
+                              })()}
                               <Badge variant="outline" className="text-xs">
                                 {memberTypes.find(t => t.value === recentMembers[featuredIndex].memberType)?.label || recentMembers[featuredIndex].memberType}
                               </Badge>
@@ -298,7 +637,8 @@ const MembersContent = () => {
 
               {/* Search and Filters Bar */}
               <div className="bg-white border border-gray-200 rounded-lg p-6 mb-12 animate-fade-in-up animate-delay-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                {/* Desktop Filters */}
+                <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                   <div className="lg:col-span-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -343,43 +683,329 @@ const MembersContent = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  <Select value={selectedBadge} onValueChange={setSelectedBadge}>
+                    <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                      <SelectValue placeholder="Formule d'adhésion" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes les formules</SelectItem>
+                      {memberBadges.map((badge) => (
+                        <SelectItem key={badge} value={badge}>{badge}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Mobile Filters - Drawer */}
+                <div className="md:hidden space-y-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Rechercher un membre..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 border-gray-300"
+                    />
+                  </div>
+                  <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+                    <SheetTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start">
+                        <Filter className="mr-2 h-4 w-4" />
+                        Filtres
+                        {hasActiveFilters && (
+                          <Badge className="ml-2 bg-cpu-orange text-white">
+                            {[searchTerm, selectedSector, selectedRegion, selectedMemberType, selectedBadge].filter(f => f !== "" && f !== "all").length}
+                          </Badge>
+                        )}
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="h-[85vh]">
+                      <SheetHeader>
+                        <SheetTitle>Filtres de recherche</SheetTitle>
+                      </SheetHeader>
+                      <div className="space-y-6 mt-6">
+                        <div className="space-y-2">
+                          <Label>Type de membre</Label>
+                          <Select value={selectedMemberType} onValueChange={setSelectedMemberType}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Tous les types" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Tous les types</SelectItem>
+                              {memberTypes.map((type) => (
+                                <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Secteur</Label>
+                          <Select value={selectedSector} onValueChange={setSelectedSector}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Tous les secteurs" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Tous les secteurs</SelectItem>
+                              {sectors.map((sector) => (
+                                <SelectItem key={sector} value={sector}>{sector}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Région</Label>
+                          <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Toutes les régions" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Toutes les régions</SelectItem>
+                              {regions.map((region) => (
+                                <SelectItem key={region} value={region}>{region}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Formule d'adhésion</Label>
+                          <Select value={selectedBadge} onValueChange={setSelectedBadge}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Toutes les formules" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Toutes les formules</SelectItem>
+                              {memberBadges.map((badge) => (
+                                <SelectItem key={badge} value={badge}>{badge}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex gap-3 pt-4">
+                          <Button
+                            variant="outline"
+                            onClick={resetFilters}
+                            className="flex-1"
+                          >
+                            Réinitialiser
+                          </Button>
+                          <Button
+                            onClick={() => setIsFiltersOpen(false)}
+                            className="flex-1 bg-cpu-orange hover:bg-orange-700"
+                          >
+                            Appliquer
+                          </Button>
+                        </div>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
                 </div>
               </div>
 
               {/* All Members Grid */}
               <div className="animate-fade-in-up animate-delay-300">
-                <div className="flex items-center justify-between mb-10">
-                  <h2 className="text-3xl font-bold text-[#221F1F]">
-                    {(() => {
-                      const tagParam = searchParams.get('tag');
-                      if (tagParam) {
-                        return `Membres - ${tagParam}`;
-                      }
-                      return selectedSector !== "all" ? `Membres - ${selectedSector}` : "Tous les Membres";
-                    })()}
-                  </h2>
-                  {(selectedSector !== "all" || searchParams.get('tag')) && (
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedSector("all");
-                        window.history.pushState({}, '', '/membres');
-                      }}
-                      className="text-cpu-orange border-cpu-orange hover:bg-cpu-orange hover:text-white"
-                    >
-                      Voir tous les membres
-                    </Button>
+                {/* Header avec titre, compteur et contrôles */}
+                <div className="flex flex-col gap-4 mb-6">
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div className="flex items-center gap-4">
+                      <h2 className="text-3xl font-bold text-[#221F1F]">
+                        {(() => {
+                          const tagParam = searchParams.get('tag');
+                          if (tagParam) {
+                            return `Membres - ${tagParam}`;
+                          }
+                          return selectedSector !== "all" ? `Membres - ${selectedSector}` : "Tous les Membres";
+                        })()}
+                      </h2>
+                      {/* Compteur de résultats */}
+                      <span className="text-sm text-[#6F6F6F] font-medium">
+                        {filteredMembers.length} membre{filteredMembers.length > 1 ? 's' : ''} trouvé{filteredMembers.length > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {/* Toggle vue liste/grille */}
+                      <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+                        <button
+                          onClick={() => setViewMode("grid")}
+                          className={`p-2 transition-all ${
+                            viewMode === "grid" 
+                              ? "bg-cpu-orange text-white" 
+                              : "bg-white text-gray-600 hover:bg-gray-50"
+                          }`}
+                          aria-label="Vue grille"
+                        >
+                          <Grid3x3 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => setViewMode("list")}
+                          className={`p-2 transition-all ${
+                            viewMode === "list" 
+                              ? "bg-cpu-orange text-white" 
+                              : "bg-white text-gray-600 hover:bg-gray-50"
+                          }`}
+                          aria-label="Vue liste"
+                        >
+                          <List className="h-4 w-4" />
+                        </button>
+                      </div>
+                      {/* Select de tri */}
+                      <Select value={sortOrder} onValueChange={setSortOrder}>
+                        <SelectTrigger className="w-[200px] border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                          <SelectValue placeholder="Trier par" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="alphabetical">Alphabétique</SelectItem>
+                          <SelectItem value="date">Date d'inscription</SelectItem>
+                          <SelectItem value="badge">Formule d'adhésion</SelectItem>
+                          <SelectItem value="sector">Secteur</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {/* Boutons Export et Partage */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={shareSearch}
+                          className="border-gray-300 hover:bg-gray-50"
+                          title="Partager cette recherche"
+                        >
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                        <div className="relative group">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-gray-300 hover:bg-gray-50 group"
+                            title="Exporter les résultats"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          {/* Menu déroulant pour CSV/PDF */}
+                          <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[140px]">
+                            <button
+                              onClick={exportToCSV}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-t-md flex items-center gap-2 transition-colors"
+                            >
+                              <Download className="h-3 w-3" />
+                              Exporter CSV
+                            </button>
+                            <button
+                              onClick={exportToPDF}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-b-md flex items-center gap-2 transition-colors"
+                            >
+                              <Download className="h-3 w-3" />
+                              Exporter PDF
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Filtres actifs et bouton réinitialiser */}
+                  {(hasActiveFilters || searchParams.get('tag')) && (
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-sm text-[#6F6F6F] font-medium">Filtres actifs :</span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* Badge recherche */}
+                        {searchTerm !== "" && (
+                          <Badge 
+                            variant="outline" 
+                            className="bg-white border-gray-300 text-[#221F1F] hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
+                            onClick={() => setSearchTerm("")}
+                          >
+                            Recherche: "{searchTerm}"
+                            <X className="h-3 w-3" />
+                          </Badge>
+                        )}
+                        {/* Badge secteur */}
+                        {selectedSector !== "all" && (
+                          <Badge 
+                            variant="outline" 
+                            className="bg-white border-gray-300 text-[#221F1F] hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
+                            onClick={() => setSelectedSector("all")}
+                          >
+                            Secteur: {selectedSector}
+                            <X className="h-3 w-3" />
+                          </Badge>
+                        )}
+                        {/* Badge région */}
+                        {selectedRegion !== "all" && (
+                          <Badge 
+                            variant="outline" 
+                            className="bg-white border-gray-300 text-[#221F1F] hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
+                            onClick={() => setSelectedRegion("all")}
+                          >
+                            Région: {selectedRegion}
+                            <X className="h-3 w-3" />
+                          </Badge>
+                        )}
+                        {/* Badge type de membre */}
+                        {selectedMemberType !== "all" && (
+                          <Badge 
+                            variant="outline" 
+                            className="bg-white border-gray-300 text-[#221F1F] hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
+                            onClick={() => setSelectedMemberType("all")}
+                          >
+                            Type: {memberTypes.find(t => t.value === selectedMemberType)?.label || selectedMemberType}
+                            <X className="h-3 w-3" />
+                          </Badge>
+                        )}
+                        {/* Badge formule */}
+                        {selectedBadge !== "all" && (
+                          <Badge 
+                            variant="outline" 
+                            className="bg-white border-gray-300 text-[#221F1F] hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
+                            onClick={() => setSelectedBadge("all")}
+                          >
+                            Formule: {selectedBadge}
+                            <X className="h-3 w-3" />
+                          </Badge>
+                        )}
+                        {/* Badge tag depuis URL */}
+                        {searchParams.get('tag') && (
+                          <Badge 
+                            variant="outline" 
+                            className="bg-white border-gray-300 text-[#221F1F] hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
+                            onClick={() => {
+                              window.history.pushState({}, '', '/membres');
+                              setSelectedSector("all");
+                            }}
+                          >
+                            Tag: {searchParams.get('tag')}
+                            <X className="h-3 w-3" />
+                          </Badge>
+                        )}
+                      </div>
+                      {/* Bouton réinitialiser tous les filtres */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={resetFilters}
+                        className="text-cpu-orange border-cpu-orange hover:bg-cpu-orange hover:text-white flex items-center gap-2"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        Réinitialiser
+                      </Button>
+                    </div>
                   )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                  {paginatedMembers.map((member, index) => (
+                {/* Vue Grille */}
+                {viewMode === "grid" ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                    {isLoading ? (
+                      // Skeleton Loading
+                      Array.from({ length: membersPerPage }).map((_, index) => (
+                        <MemberCardSkeleton key={`skeleton-${index}`} />
+                      ))
+                    ) : (
+                      paginatedMembers.map((member, index) => (
                     <div
                       key={member.id}
-                      className={`member-card border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 bg-white flex flex-col animate-fade-in-up`}
-                      style={{ animationDelay: `${0.4 + index * 0.1}s`, opacity: 0 }}
+                        className={`member-card border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 bg-white flex flex-col animate-fade-in-up hover:shadow-xl hover:-translate-y-2 hover:scale-[1.02] cursor-pointer`}
+                        style={{ animationDelay: `${0.4 + index * 0.1}s`, opacity: 0 }}
                     >
                       {/* Card Image/Icon Area */}
-                      <div className="member-image bg-gradient-to-br from-[#f0f4f8] to-[#e8ecf1] h-40 flex items-center justify-center border-b border-gray-200 overflow-hidden relative">
+                        <div className="member-image bg-gradient-to-br from-[#f0f4f8] to-[#e8ecf1] h-40 flex items-center justify-center border-b border-gray-200 overflow-hidden relative group">
                         {shouldShowImage(member.id) && member.logoUrl ? (
                           <Image
                             src={member.logoUrl}
@@ -391,38 +1017,51 @@ const MembersContent = () => {
                           />
                         ) : (
                           <div className={`absolute inset-0 bg-gradient-to-br ${getSectorColor(member.sector)} flex items-center justify-center p-4`}>
-                            <div className="text-center text-white">
-                              <p className="text-sm font-semibold line-clamp-2">{member.name}</p>
-                              <p className="text-xs opacity-90 mt-1">{member.sector}</p>
-                            </div>
+                            {getSectorIcon(member.sector)}
                           </div>
                         )}
+                          {/* Bouton Favori */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite(member.id);
+                            }}
+                            className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all z-10 opacity-0 group-hover:opacity-100"
+                            aria-label={favorites.has(member.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+                          >
+                            <Heart
+                              className={`h-4 w-4 transition-all ${
+                                favorites.has(member.id)
+                                  ? "fill-red-500 text-red-500"
+                                  : "text-gray-600 hover:text-red-500"
+                              }`}
+                            />
+                          </button>
                       </div>
 
                       {/* Card Content */}
                       <div className="p-6 flex flex-col flex-1">
-                        <div className="mb-4 flex flex-wrap gap-2">
-                          {member.badge && (
-                            <Badge className={`text-xs ${
-                              member.badge === "Premium" ? "bg-cpu-orange text-white" :
-                              member.badge === "Ambassadeur" ? "bg-purple-600 text-white" :
-                              member.badge === "Honoraire" ? "bg-amber-600 text-white" :
-                              "bg-blue-600 text-white"
-                            }`}>
-                              {member.badge}
+                          <div className="mb-4 flex flex-wrap gap-2">
+                            {member.badge && (() => {
+                              const badgeConfig = getBadgeConfig(member.badge);
+                              return (
+                                <Badge className={`text-xs flex items-center gap-1.5 px-2.5 py-1 border ${badgeConfig.className} shadow-sm`}>
+                                  {badgeConfig.icon}
+                                  <span className="font-semibold">{member.badge}</span>
+                                </Badge>
+                              );
+                            })()}
+                            <Badge variant="outline" className="text-xs">
+                              {memberTypes.find(t => t.value === member.memberType)?.label || member.memberType}
                             </Badge>
-                          )}
-                          <Badge variant="outline" className="text-xs">
-                            {memberTypes.find(t => t.value === member.memberType)?.label || member.memberType}
-                          </Badge>
                           <Badge variant="outline" className="text-xs">{member.sector}</Badge>
                         </div>
 
-                        <h3 className="text-lg font-bold text-[#221F1F] mb-3 line-clamp-2">{member.name}</h3>
+                          <h3 className="text-lg font-bold text-[#221F1F] mb-3 line-clamp-2">{member.name}</h3>
 
-                        <p className="text-sm text-[#6F6F6F] mb-6 flex-1 line-clamp-3 leading-relaxed">{member.description}</p>
+                          <p className="text-sm text-[#6F6F6F] mb-6 flex-1 line-clamp-3 leading-relaxed">{member.description}</p>
 
-                        <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
+                          <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
                           <span className="flex items-center text-xs text-[#6F6F6F]">
                             <MapPin className="h-3 w-3 mr-1" />
                             {member.region}
@@ -436,8 +1075,112 @@ const MembersContent = () => {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  ))
+                    )}
+                  </div>
+                ) : (
+                  /* Vue Liste */
+                  <div className="space-y-4">
+                    {isLoading ? (
+                      // Skeleton Loading pour liste
+                      Array.from({ length: membersPerPage }).map((_, index) => (
+                        <div key={`skeleton-list-${index}`} className="border border-gray-200 rounded-lg bg-white flex flex-row animate-pulse">
+                          <div className="w-32 md:w-40 h-32 md:h-40 bg-gray-200"></div>
+                          <div className="p-4 md:p-6 flex-1 space-y-3">
+                            <div className="h-5 bg-gray-200 rounded w-1/3"></div>
+                            <div className="h-4 bg-gray-200 rounded w-full"></div>
+                            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      paginatedMembers.map((member, index) => (
+                      <div
+                        key={member.id}
+                        className={`member-card border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 bg-white flex flex-row animate-fade-in-up hover:shadow-lg hover:border-cpu-orange/30 cursor-pointer`}
+                        style={{ animationDelay: `${0.4 + index * 0.05}s`, opacity: 0 }}
+                      >
+                        {/* Image compacte */}
+                        <div className="member-image bg-gradient-to-br from-[#f0f4f8] to-[#e8ecf1] w-32 md:w-40 flex-shrink-0 flex items-center justify-center border-r border-gray-200 overflow-hidden relative group">
+                          {shouldShowImage(member.id) && member.logoUrl ? (
+                            <Image
+                              src={member.logoUrl}
+                              alt={member.name}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 768px) 128px, 160px"
+                              onError={() => handleImageError(member.id)}
+                            />
+                          ) : (
+                            <div className={`absolute inset-0 bg-gradient-to-br ${getSectorColor(member.sector)} flex items-center justify-center p-2`}>
+                              <div className="scale-75">
+                                {getSectorIcon(member.sector)}
+                              </div>
+                            </div>
+                          )}
+                          {/* Bouton Favori */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite(member.id);
+                            }}
+                            className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all z-10"
+                            aria-label={favorites.has(member.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+                          >
+                            <Heart
+                              className={`h-3.5 w-3.5 transition-all ${
+                                favorites.has(member.id)
+                                  ? "fill-red-500 text-red-500"
+                                  : "text-gray-600 hover:text-red-500"
+                              }`}
+                            />
+                          </button>
                 </div>
+
+                        {/* Contenu liste */}
+                        <div className="p-4 md:p-6 flex flex-col flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-4 mb-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center flex-wrap gap-2 mb-2">
+                                {member.badge && (() => {
+                                  const badgeConfig = getBadgeConfig(member.badge);
+                                  return (
+                                    <Badge className={`text-xs flex items-center gap-1.5 px-2.5 py-1 border ${badgeConfig.className} shadow-sm`}>
+                                      {badgeConfig.icon}
+                                      <span className="font-semibold">{member.badge}</span>
+                                    </Badge>
+                                  );
+                                })()}
+                                <Badge variant="outline" className="text-xs">
+                                  {memberTypes.find(t => t.value === member.memberType)?.label || member.memberType}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">{member.sector}</Badge>
+                              </div>
+                              <h3 className="text-lg md:text-xl font-bold text-[#221F1F] mb-2">{member.name}</h3>
+                            </div>
+                            {member.website && (
+                              <Button variant="ghost" size="sm" className="text-cpu-orange border border-transparent hover:border-cpu-orange hover:text-cpu-orange hover:bg-orange-50 active:bg-cpu-orange active:text-white active:border-cpu-orange transition-all flex-shrink-0">
+                                <Globe className="h-4 w-4 mr-1" />
+                                Voir
+                              </Button>
+                            )}
+                          </div>
+                          
+                          <p className="text-sm text-[#6F6F6F] mb-4 line-clamp-2 leading-relaxed">{member.description}</p>
+                          
+                          <div className="flex items-center gap-4 mt-auto">
+                            <span className="flex items-center text-xs text-[#6F6F6F]">
+                              <MapPin className="h-3 w-3 mr-1" />
+                              {member.region}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                    )}
+                  </div>
+                )}
 
                 {filteredMembers.length === 0 && (
                   <div className="text-center py-12 border border-gray-200 rounded-lg bg-gray-50 animate-fade-in-up">
@@ -540,11 +1283,11 @@ const MembersContent = () => {
                 )}
 
                 {filteredMembers.length > 0 && totalPages === 1 && (
-                  <div className="text-center mt-12">
-                    <p className="text-[#6F6F6F]">
-                      Plus de <span className="font-bold text-cpu-orange">1000 entreprises</span> nous font confiance
-                    </p>
-                  </div>
+                <div className="text-center mt-12">
+                  <p className="text-[#6F6F6F]">
+                    Plus de <span className="font-bold text-cpu-orange">1000 entreprises</span> nous font confiance
+                  </p>
+                </div>
                 )}
               </div>
             </TabsContent>
@@ -576,21 +1319,21 @@ const MembersContent = () => {
               </div>
 
               {/* Pricing Plans */}
-              <div className="bg-white rounded-lg border border-gray-200 p-8 md:p-12 animate-fade-in-up animate-delay-400">
-                <div className="text-center mb-12">
+              <div className="p-8 md:p-12 animate-fade-in-up animate-delay-400">
+                <div className="text-center mb-20">
                   <h2 className="text-3xl font-bold mb-4 text-[#221F1F]">Nos Formules d'Adhésion</h2>
-                  <p className="text-cpu-darkgray max-w-2xl mx-auto">
+                  <p className="text-cpu-darkgray max-w-2xl mx-auto mb-8">
                     Choisissez la formule qui correspond le mieux à vos besoins
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 pt-4">
                   {membershipPlans.map((plan, index) => (
                     <div
                       key={index} 
                       className={`relative border rounded-lg overflow-visible transition-all animate-fade-in-up ${
                         plan.recommended 
-                          ? 'border-cpu-orange scale-105 bg-white md:scale-110' 
+                          ? 'border-cpu-orange scale-105 bg-white md:scale-110 mt-8' 
                           : 'border-gray-200 bg-white'
                       }`}
                       style={{ animationDelay: `${0.5 + index * 0.15}s`, opacity: 0 }}
@@ -608,10 +1351,26 @@ const MembersContent = () => {
                         <p className="text-cpu-darkgray text-sm mb-6">{plan.description}</p>
                         
                         <div className="mb-6 py-5 border-t border-b border-gray-200">
+                          {plan.isInstitutional ? (
+                            <>
                           <p className="text-3xl font-bold text-cpu-orange mb-1">
-                            {plan.price.toLocaleString('fr-FR')} FCFA
-                          </p>
-                          <p className="text-sm text-cpu-darkgray">par an</p>
+                                Sur devis
+                              </p>
+                              <p className="text-sm text-cpu-darkgray">À partir de {plan.priceYearly.toLocaleString('fr-FR')} FCFA/an</p>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex items-baseline justify-center gap-2 mb-2">
+                                <p className="text-3xl font-bold text-cpu-orange">
+                                  {plan.priceYearly.toLocaleString('fr-FR')} FCFA
+                                </p>
+                                <span className="text-lg text-cpu-darkgray">/an</span>
+                              </div>
+                              <p className="text-sm text-cpu-darkgray text-center">
+                                ou {plan.priceMonthly.toLocaleString('fr-FR')} FCFA/mois
+                              </p>
+                            </>
+                          )}
                         </div>
 
                         <ul className="space-y-3 mb-6 flex-1">

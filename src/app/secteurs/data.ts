@@ -1,23 +1,25 @@
 // app/secteur/data.ts
+// Structure mise à jour selon CPU-PME Organisation sectoriel V4
+// N1: Secteurs → N2: Filières → N3: Sous-filières → N4: Corps de métiers / activités types
 
-// --- DÉFINITION DES TYPES (Rappel pour contexte) ---
+// --- DÉFINITION DES TYPES ---
 
-// Niveau 4 : Les tags individuels
+// Niveau 4 : Les tags individuels (corps de métiers)
 type TagList = string[]; 
 
-// Niveau 3 : Les sections de tags
+// Niveau 3 : Les sections de tags (sous-filières)
 interface TagSection {
   titre: string; 
   tags: TagList;
 }
 
-// Niveau 2 : La sous-catégorie qui s'ouvre
+// Niveau 2 : La sous-catégorie qui s'ouvre (sous-filières regroupées)
 interface SousCategorieDetail {
   nom: string;
   sectionsDeTags: TagSection[]; 
 }
 
-// Niveau 1 : La filière
+// Niveau 1 : La filière (N2)
 interface Filiere {
   id: string;
   nom: string;
@@ -25,7 +27,7 @@ interface Filiere {
 }
 
 interface SecteurData {
-  id: 'primaire' | 'secondaire' | 'tertiaire' | 'quaternaire';
+  id: 'primaire' | 'secondaire' | 'tertiaire' | 'quaternaire' | 'transversales';
   nom: string;
   titreComplet: string;
   filieres: Filiere[];
@@ -36,76 +38,299 @@ interface SecteurData {
 export const secteursData: Record<string, SecteurData> = {
   
   // ========================================================================
-  // SECTEUR PRIMAIRE
+  // N1-PRI — SECTEUR PRIMAIRE : Agriculture, Élevage, Pêche & Aquaculture
   // ========================================================================
   primaire: {
     id: "primaire",
     nom: "Secteur Primaire",
-    titreComplet: "SECTEUR PRIMAIRE : AGRICULTURE & AGRO-INDUSTRIE",
+    titreComplet: "SECTEUR PRIMAIRE : Agriculture, Élevage, Pêche & Aquaculture",
     filieres: [
       {
-        id: "agriculture_agro",
-        nom: "Agriculture & Agro-industrie",
+        id: "pri-agr",
+        nom: "Agriculture végétale",
         sousCategories: [
           {
-            nom: "Productions",
+            nom: "Céréales & légumineuses",
             sectionsDeTags: [
               {
-                titre: "Productions vivrières",
-                tags: ["Manioc", "Riz", "Maïs", "Mil", "Sorgho", "Igname", "Banane plantain", "Patate douce"]
+                titre: "Céréales & légumineuses",
+                tags: ["Riziculture", "Maïsiculture", "Mil/sorgho", "Soja", "Niébé", "Transformation primaire de grains", "Production de semences locales"]
+              }
+            ]
               },
               {
-                titre: "Productions d'exportation",
-                tags: ["Cacao", "Café", "Anacarde", "Hévéa", "Coton", "Palmier à huile", "Canne à sucre"]
+            nom: "Racines, tubercules & plantain",
+            sectionsDeTags: [
+              {
+                titre: "Racines, tubercules & plantain",
+                tags: ["Manioc", "Igname", "Patate douce", "Banane plantain", "Semences/vivriers locaux", "Petites unités de conditionnement"]
               }
             ]
           },
           {
-            nom: "Élevage & Aviculture",
+            nom: "Maraîchage & horticulture",
             sectionsDeTags: [
               {
-                titre: "Élevage",
-                tags: ["Bovins (Viande/Lait)", "Ovins & Caprins", "Porciculture", "Aviculture (Poulet de chair/Pondeuse)", "Cuniculture (Lapin)", "Apiculture (Miel)", "Aulacodiculture (Agouti)"]
+                titre: "Maraîchage & horticulture",
+                tags: ["Production sous serre", "Pépinières", "Légumes frais", "Herbes aromatiques", "Horticulture ornementale", "Irrigation de proximité"]
               }
             ]
-          },
-          {
-            nom: "Pêche & Aquaculture",
-            sectionsDeTags: [
-              {
-                titre: "Pêche",
-                tags: ["Pêche artisanale maritime", "Pêche industrielle", "Pêche continentale (Lagune/Fleuve)"]
               },
               {
-                titre: "Aquaculture",
-                tags: ["Pisciculture (Tilapia/Silure)", "Crevetticulture", "Algoculture"]
-              }
-            ]
-          },
-          {
-            nom: "Agro-transformation",
+            nom: "Fruits tropicaux & export",
             sectionsDeTags: [
               {
-                titre: "Transformation",
-                tags: ["Jus", "Huiles", "Chocolat", "Broyage de cacao", "Huileries (Palme/Coton)", "Meunerie (Farine)", "Conserveries", "Brasseries & Boissons", "Produits laitiers"]
+                titre: "Fruits tropicaux & export",
+                tags: ["Ananas", "Mangue", "Banane dessert", "Agrumes", "Papaye", "Conditionnement", "Stations de lavage", "Certification"]
               }
             ]
           },
           {
-            nom: "Distribution & Logistique Agricoles",
+            nom: "Cultures de rente",
             sectionsDeTags: [
               {
-                titre: "Distribution",
-                tags: ["Distribution agricole", "Logistique agricole", "Commerce de produits agricoles"]
+                titre: "Cultures de rente",
+                tags: ["Cacao", "Café", "Anacarde", "Coton", "Hévéa", "Palmier à huile", "Karité", "Coco", "Coopératives", "Services de collecte"]
               }
             ]
           },
           {
-            nom: "Intrants",
+            nom: "Plantes aromatiques, médicinales & épices",
+            sectionsDeTags: [
+              {
+                titre: "Plantes aromatiques, médicinales & épices",
+                tags: ["Gingembre", "Curcuma", "Piment sec", "Plantes médicinales", "Séchage", "Herboristerie encadrée"]
+              }
+            ]
+          },
+          {
+            nom: "Agriculture durable",
+            sectionsDeTags: [
+              {
+                titre: "Agriculture durable",
+                tags: ["Bio", "Agroforesterie", "Compostage", "Services de conseil climato-intelligent"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "pri-ele",
+        nom: "Élevage & productions animales",
+        sousCategories: [
+          {
+            nom: "Bovin & lait",
+            sectionsDeTags: [
+              {
+                titre: "Bovin & lait",
+                tags: ["Élevage viande", "Mini-laiteries", "Collecte de lait", "Alimentation animale"]
+              }
+            ]
+          },
+          {
+            nom: "Ovin-caprin",
+            sectionsDeTags: [
+              {
+                titre: "Ovin-caprin",
+                tags: ["Élevage", "Engraissement", "Abattage de proximité autorisé", "Boucherie traditionnelle"]
+              }
+            ]
+          },
+          {
+            nom: "Porcin",
+            sectionsDeTags: [
+              {
+                titre: "Porcin",
+                tags: ["Élevage", "Alimentation porcine", "Transformation artisanale"]
+              }
+            ]
+          },
+          {
+            nom: "Aviculture",
+            sectionsDeTags: [
+              {
+                titre: "Aviculture",
+                tags: ["Ponte", "Chair", "Couvoirs", "Aliments volaille", "Distribution d'intrants avicoles"]
+              }
+            ]
+          },
+          {
+            nom: "Élevages alternatifs",
+            sectionsDeTags: [
+              {
+                titre: "Élevages alternatifs",
+                tags: ["Apiculture", "Cuniculture", "Aulacodiculture", "Escargots", "Production de miel et dérivés"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "pri-pec",
+        nom: "Pêche & aquaculture",
+        sousCategories: [
+          {
+            nom: "Pêche artisanale maritime",
+            sectionsDeTags: [
+              {
+                titre: "Pêche artisanale maritime",
+                tags: ["Armement artisanal", "Mareyage", "Fumage et conservation"]
+              }
+            ]
+          },
+          {
+            nom: "Pêche lagunaire & continentale",
+            sectionsDeTags: [
+              {
+                titre: "Pêche lagunaire & continentale",
+                tags: ["Pêche de proximité", "Transformation artisanale"]
+              }
+            ]
+          },
+          {
+            nom: "Aquaculture & pisciculture",
+            sectionsDeTags: [
+              {
+                titre: "Aquaculture & pisciculture",
+                tags: ["Bassins", "Cages", "Écloseries", "Alimentation poisson", "Distribution d'alevins"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "pri-agt",
+        nom: "Services, intrants & AgriTech",
+        sousCategories: [
+          {
+            nom: "Intrants agricoles",
             sectionsDeTags: [
               {
                 titre: "Intrants agricoles",
-                tags: ["Engrais", "Semences", "Pesticides", "Phytosanitaires"]
+                tags: ["Semences", "Engrais", "Phytosanitaires", "Biopesticides", "Distribution locale"]
+              }
+            ]
+          },
+          {
+            nom: "Mécanisation & maintenance",
+            sectionsDeTags: [
+              {
+                titre: "Mécanisation & maintenance",
+                tags: ["Location de tracteurs", "Ateliers de réparation", "Pièces détachées"]
+              }
+            ]
+          },
+          {
+            nom: "Irrigation & eau agricole",
+            sectionsDeTags: [
+              {
+                titre: "Irrigation & eau agricole",
+                tags: ["Pompes", "Goutte-à-goutte", "Forages agricoles (selon agréments)"]
+              }
+            ]
+          },
+          {
+            nom: "AgriTech & données",
+            sectionsDeTags: [
+              {
+                titre: "AgriTech & données",
+                tags: ["Applications coopératives", "Drones", "Services météo/assurance indexée"]
+              }
+            ]
+          },
+          {
+            nom: "Logistique agricole",
+            sectionsDeTags: [
+              {
+                titre: "Logistique agricole",
+                tags: ["Collecte", "Stockage", "Silos", "Chaîne du froid agricole"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "pri-agx",
+        nom: "Agro-transformation & agroalimentaire PME",
+        sousCategories: [
+          {
+            nom: "Manioc & dérivés",
+            sectionsDeTags: [
+              {
+                titre: "Manioc & dérivés",
+                tags: ["Attiéké", "Gari", "Placali", "Amidon", "Emballage"]
+              }
+            ]
+          },
+          {
+            nom: "Céréales & farines",
+            sectionsDeTags: [
+              {
+                titre: "Céréales & farines",
+                tags: ["Minoteries PME", "Farines enrichies", "Semoules"]
+              }
+            ]
+          },
+          {
+            nom: "Fruits & légumes transformés",
+            sectionsDeTags: [
+              {
+                titre: "Fruits & légumes transformés",
+                tags: ["Jus", "Confitures", "Séchage", "Conserves"]
+              }
+            ]
+          },
+          {
+            nom: "Huiles & oléagineux",
+            sectionsDeTags: [
+              {
+                titre: "Huiles & oléagineux",
+                tags: ["Palme", "Coco", "Karité", "Arachide", "Raffinage léger"]
+              }
+            ]
+          },
+          {
+            nom: "Cacao/anacarde transformés",
+            sectionsDeTags: [
+              {
+                titre: "Cacao/anacarde transformés",
+                tags: ["Chocolaterie PME", "Pâte/beurre/poudre", "Décorticage cajou"]
+              }
+            ]
+          },
+          {
+            nom: "Viandes, poissons & produits laitiers",
+            sectionsDeTags: [
+              {
+                titre: "Viandes, poissons & produits laitiers",
+                tags: ["Fumage", "Séchage", "Charcuterie artisanale", "Yaourts locaux"]
+              }
+            ]
+          },
+          {
+            nom: "Boissons locales & artisanales",
+            sectionsDeTags: [
+              {
+                titre: "Boissons locales & artisanales",
+                tags: ["Bissap", "Gnamankoudji", "Bandji", "Conditionnement conforme"]
+              }
+            ]
+          },
+          {
+            nom: "Boulangerie, pâtisserie & confiserie",
+            sectionsDeTags: [
+              {
+                titre: "Boulangerie, pâtisserie & confiserie",
+                tags: ["Boulangeries de quartier", "Pâtisseries", "Snacks structurés"]
+              }
+            ]
+          },
+          {
+            nom: "Aliments pour bétail & volaille",
+            sectionsDeTags: [
+              {
+                titre: "Aliments pour bétail & volaille",
+                tags: ["Unités d'aliments composés", "Distribution"]
               }
             ]
           }
@@ -115,86 +340,314 @@ export const secteursData: Record<string, SecteurData> = {
   },
 
   // ========================================================================
-  // SECTEUR SECONDAIRE
+  // N1-SEC — SECTEUR SECONDAIRE : Industrie, Construction, Énergie, Mines & Industrie verte
   // ========================================================================
   secondaire: {
     id: "secondaire",
     nom: "Secteur Secondaire",
-    titreComplet: "SECTEUR SECONDAIRE : INDUSTRIE & TRANSFORMATION",
+    titreComplet: "SECTEUR SECONDAIRE : Industrie, Construction, Énergie, Mines & Industrie verte",
     filieres: [
       {
-        id: "industrie_transformation",
-        nom: "Industrie & Transformation",
+        id: "sec-ind",
+        nom: "Industrie & transformation",
         sousCategories: [
           {
-            nom: "Manufacture Textile",
+            nom: "Textile, habillement & mode",
             sectionsDeTags: [
               {
-                titre: "Textile",
-                tags: ["Filature & Tissage", "Confection & Couture", "Atelier textile local"]
+                titre: "Textile, habillement & mode",
+                tags: ["Ateliers semi-industriels", "Uniformes", "Tissage moderne", "Teinture", "Confection"]
               }
             ]
           },
           {
-            nom: "Transformation Plastique",
+            nom: "Cuir, chaussure & maroquinerie",
             sectionsDeTags: [
               {
-                titre: "Plastique",
-                tags: ["Plastiques & Emballages", "Transformation plastique"]
+                titre: "Cuir, chaussure & maroquinerie",
+                tags: ["Tannerie légère", "Fabrication de chaussures", "Sacs", "Accessoires"]
               }
             ]
           },
           {
-            nom: "Boissons & Brasseries",
+            nom: "Plasturgie & emballages",
             sectionsDeTags: [
               {
-                titre: "Boissons",
-                tags: ["Brasseries", "Boissons", "Production de boissons"]
+                titre: "Plasturgie & emballages",
+                tags: ["Sacherie", "Bouteilles", "Films", "Recyclage plastique intégré"]
               }
             ]
           },
           {
-            nom: "Matériaux de Construction",
+            nom: "Métallurgie légère & mécanique",
             sectionsDeTags: [
               {
-                titre: "Matériaux",
-                tags: ["Matériaux de construction", "Béton", "Ciment", "Carrelage"]
+                titre: "Métallurgie légère & mécanique",
+                tags: ["Soudure", "Chaudronnerie", "Pièces de rechange", "Ateliers d'usinage"]
               }
             ]
           },
           {
-            nom: "Industrie Métallurgique",
+            nom: "Bois & ameublement",
             sectionsDeTags: [
               {
-                titre: "Métallurgie",
-                tags: ["Métallurgie", "Transformation de métal", "Soudure", "Chaudronnerie", "Ferronnerie"]
+                titre: "Bois & ameublement",
+                tags: ["Menuiserie industrielle", "Meubles", "Panneaux", "Charpente"]
               }
             ]
           },
           {
-            nom: "Imprimerie & Papier",
+            nom: "Imprimerie & packaging",
             sectionsDeTags: [
               {
-                titre: "Imprimerie",
-                tags: ["Imprimerie", "Papier", "Édition"]
+                titre: "Imprimerie & packaging",
+                tags: ["Imprimeries commerciales", "Emballage alimentaire", "Étiquetage"]
+              }
+            ]
+              },
+              {
+            nom: "Chimie légère & hygiène",
+            sectionsDeTags: [
+              {
+                titre: "Chimie légère & hygiène",
+                tags: ["Savonnerie", "Détergents", "Produits d'entretien"]
               }
             ]
           },
           {
-            nom: "Chimie Légère",
+            nom: "Cosmétique & beauté",
             sectionsDeTags: [
               {
-                titre: "Chimie",
-                tags: ["Produits pharmaceutiques", "Cosmétiques", "Peintures & Vernis", "Engrais & Phytosanitaires"]
+                titre: "Cosmétique & beauté",
+                tags: ["Cosmétique locale", "Huiles essentielles", "Laboratoires artisanaux encadrés"]
               }
             ]
           },
           {
-            nom: "Fabrication PME & Transformation Locale",
+            nom: "Matériaux industriels divers",
             sectionsDeTags: [
               {
-                titre: "Fabrication locale",
-                tags: ["Atelier textile local", "Transformation de métal", "Fabrication de meubles semi-industriels"]
+                titre: "Matériaux industriels divers",
+                tags: ["Verre", "Céramique", "Peinture", "Colles", "Petites unités autorisées"]
+              }
+            ]
+          },
+          {
+            nom: "Fabrication/assemblage d'équipements",
+            sectionsDeTags: [
+              {
+                titre: "Fabrication/assemblage d'équipements",
+                tags: ["Équipements agro", "Petits outillages", "Mobilier métallique"]
+              }
+            ]
+          },
+          {
+            nom: "Réparation & reconditionnement industriel",
+            sectionsDeTags: [
+              {
+                titre: "Réparation & reconditionnement industriel",
+                tags: ["Électroménager", "Équipements froid", "Machines d'atelier"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "sec-art",
+        nom: "Artisanat de production & industries du patrimoine",
+        sousCategories: [
+          {
+            nom: "Artisanat d'art",
+            sectionsDeTags: [
+              {
+                titre: "Artisanat d'art",
+                tags: ["Sculpture", "Vannerie", "Poterie", "Bijouterie", "Design d'objets"]
+              }
+            ]
+          },
+          {
+            nom: "Artisanat utilitaire",
+            sectionsDeTags: [
+              {
+                titre: "Artisanat utilitaire",
+                tags: ["Ébénisterie", "Menuiserie alu", "Ferronnerie d'art", "Restauration de meubles"]
+              }
+            ]
+          },
+          {
+            nom: "Mode & textile traditionnel",
+            sectionsDeTags: [
+              {
+                titre: "Mode & textile traditionnel",
+                tags: ["Pagne Baoulé", "Kita", "Batik", "Bazin", "Stylisme"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "sec-btp",
+        nom: "BTP, construction & immobilier",
+        sousCategories: [
+          {
+            nom: "Gros œuvre & génie civil",
+            sectionsDeTags: [
+              {
+                titre: "Gros œuvre & génie civil",
+                tags: ["Maçonnerie", "Béton armé", "Ouvrages de proximité", "VRD"]
+              }
+            ]
+          },
+          {
+            nom: "Second œuvre & finitions",
+            sectionsDeTags: [
+              {
+                titre: "Second œuvre & finitions",
+                tags: ["Électricité bâtiment", "Plomberie", "Carrelage", "Peinture", "HVAC", "Vitrerie"]
+              }
+            ]
+          },
+          {
+            nom: "Études, architecture & ingénierie",
+            sectionsDeTags: [
+              {
+                titre: "Études, architecture & ingénierie",
+                tags: ["Bureaux d'études", "Topographie", "Contrôle qualité chantier"]
+              }
+            ]
+              },
+              {
+            nom: "Promotion & gestion immobilière",
+            sectionsDeTags: [
+              {
+                titre: "Promotion & gestion immobilière",
+                tags: ["Promotion PME", "Agences", "Syndic", "Facility management"]
+              }
+            ]
+          },
+          {
+            nom: "Production & négoce matériaux",
+            sectionsDeTags: [
+              {
+                titre: "Production & négoce matériaux",
+                tags: ["Briques", "Parpaings", "Carrières de granulats", "Quincaillerie"]
+              }
+            ]
+          },
+          {
+            nom: "Éco-construction",
+            sectionsDeTags: [
+              {
+                titre: "Éco-construction",
+                tags: ["Matériaux locaux stabilisés", "Solutions bas carbone"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "sec-ene",
+        nom: "Énergie & services associés",
+        sousCategories: [
+          {
+            nom: "Énergies renouvelables",
+            sectionsDeTags: [
+              {
+                titre: "Énergies renouvelables",
+                tags: ["Installateurs solaires", "Mini-grids", "Maintenance", "Vente d'équipements"]
+              }
+            ]
+          },
+          {
+            nom: "Efficacité énergétique",
+            sectionsDeTags: [
+              {
+                titre: "Efficacité énergétique",
+                tags: ["Audit", "Retrofit", "Solutions LED", "Froid efficient"]
+              }
+            ]
+          },
+          {
+            nom: "Gaz butane & distribution",
+            sectionsDeTags: [
+              {
+                titre: "Gaz butane & distribution",
+                tags: ["Centres de distribution", "Services de sécurité gaz"]
+              }
+            ]
+          },
+          {
+            nom: "Services énergétiques PME",
+            sectionsDeTags: [
+              {
+                titre: "Services énergétiques PME",
+                tags: ["EPC", "Location d'énergie", "Maintenance groupes"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "sec-env",
+        nom: "Environnement industriel & économie circulaire",
+        sousCategories: [
+          {
+            nom: "Déchets & recyclage",
+            sectionsDeTags: [
+              {
+                titre: "Déchets & recyclage",
+                tags: ["Collecte", "Tri", "Recyclage plastique", "Métal", "Électronique", "Compost"]
+              }
+            ]
+              },
+          {
+            nom: "Eau & assainissement",
+            sectionsDeTags: [
+              {
+                titre: "Eau & assainissement",
+                tags: ["Forages (agréments)", "Stations locales", "Vidange structurée"]
+              }
+            ]
+          },
+          {
+            nom: "Services environnementaux",
+            sectionsDeTags: [
+              {
+                titre: "Services environnementaux",
+                tags: ["Audit conformité", "RSE", "Certification environnementale"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "sec-min",
+        nom: "Mines, carrières & sous-traitance",
+        sousCategories: [
+          {
+            nom: "Carrières & granulats",
+            sectionsDeTags: [
+              {
+                titre: "Carrières & granulats",
+                tags: ["Extraction sable/gravier encadrée", "Concassage", "Transport de matériaux"]
+              }
+            ]
+          },
+          {
+            nom: "Sous-traitance minière",
+            sectionsDeTags: [
+              {
+                titre: "Sous-traitance minière",
+                tags: ["Maintenance", "Sécurité", "Catering", "Logistique sites miniers"]
+              }
+            ]
+          },
+          {
+            nom: "Laboratoires & exploration PME",
+            sectionsDeTags: [
+              {
+                titre: "Laboratoires & exploration PME",
+                tags: ["Analyses géologiques", "Services d'exploration"]
               }
             ]
           }
@@ -204,352 +657,371 @@ export const secteursData: Record<string, SecteurData> = {
   },
 
   // ========================================================================
-  // SECTEUR TERTIAIRE
+  // N1-TER — SECTEUR TERTIAIRE : Commerce, Services, Transport, Tourisme, Finance
   // ========================================================================
   tertiaire: {
     id: "tertiaire",
     nom: "Secteur Tertiaire",
-    titreComplet: "SECTEUR TERTIAIRE : SERVICES, COMMERCE & DISTRIBUTION",
+    titreComplet: "SECTEUR TERTIAIRE : Commerce, Services, Transport, Tourisme, Finance",
     filieres: [
       {
-        id: "commerce_distribution",
-        nom: "Commerce & Distribution",
+        id: "ter-com",
+        nom: "Commerce & distribution",
         sousCategories: [
           {
-            nom: "Commerce",
+            nom: "Commerce de détail",
             sectionsDeTags: [
               {
-                titre: "Commerce de gros",
-                tags: ["Commerce de gros", "Grossistes", "Distributeurs"]
-              },
-              {
                 titre: "Commerce de détail",
-                tags: ["Commerce de détail", "Détaillants", "Boutiques"]
-              },
-              {
-                titre: "E-commerce",
-                tags: ["E-commerce", "Vente en ligne", "Marketplace"]
-              },
-              {
-                titre: "Import/Export",
-                tags: ["Import", "Export", "Commerce international"]
-              },
-              {
-                titre: "Distribution générale",
-                tags: ["Distribution générale", "Distribution de produits"]
-              },
-              {
-                titre: "Supermarchés & chaînes",
-                tags: ["Supermarchés", "Chaînes de distribution", "Grande distribution"]
+                tags: ["Supérettes", "Boutiques spécialisées", "Franchises locales"]
               }
             ]
-          }
-        ]
-      },
-      {
-        id: "services",
+          },
+          {
+            nom: "Gros, semi-gros & centrales",
+            sectionsDeTags: [
+              {
+                titre: "Gros, semi-gros & centrales",
+                tags: ["Grossistes", "Entrepôts commerciaux", "Centrales d'achat"]
+              }
+            ]
+          },
+          {
+            nom: "Commerce international",
+            sectionsDeTags: [
+              {
+                titre: "Commerce international",
+                tags: ["Import-export", "Négoce matières premières", "Transit commercial"]
+              }
+            ]
+          },
+          {
+            nom: "E-commerce",
+            sectionsDeTags: [
+              {
+                titre: "E-commerce",
+                tags: ["Marketplaces", "Boutiques en ligne", "Logistique e-com"]
+              }
+            ]
+          },
+          {
+            nom: "Distribution spécialisée",
+            sectionsDeTags: [
+              {
+                titre: "Distribution spécialisée",
+                tags: ["Matériaux", "Agro", "Santé", "Équipements", "Pièces automobiles"]
+              }
+            ]
+              }
+            ]
+          },
+          {
+        id: "ter-ser",
         nom: "Services",
         sousCategories: [
           {
-            nom: "Services Professionnels",
+            nom: "Services professionnels",
             sectionsDeTags: [
               {
-                titre: "Services juridiques",
-                tags: ["Services juridiques", "Avocats", "Conseil juridique"]
-              },
-              {
-                titre: "Services comptables",
-                tags: ["Comptabilité", "Audit", "Expertise comptable"]
-              },
-              {
-                titre: "Ressources Humaines",
-                tags: ["RH", "Recrutement", "Gestion du personnel"]
+                titre: "Services professionnels",
+                tags: ["Juridique", "Comptable", "Fiscal", "Audit", "Conseil", "RH"]
               }
             ]
           },
           {
-            nom: "Services aux Entreprises",
+            nom: "Marketing, communication & design",
             sectionsDeTags: [
               {
-                titre: "Services B2B",
-                tags: ["Nettoyage professionnel", "Sécurité", "Services aux entreprises"]
+                titre: "Marketing, communication & design",
+                tags: ["Agences", "Production de contenus", "Relations publiques", "Événementiel d'affaires"]
               }
             ]
           },
           {
-            nom: "Services aux Particuliers",
+            nom: "BPO & services administratifs",
             sectionsDeTags: [
               {
-                titre: "Services B2C",
-                tags: ["Services aux particuliers", "Services à domicile"]
+                titre: "BPO & services administratifs",
+                tags: ["Call centers", "Back-office", "Numérisation documentaire"]
               }
             ]
           },
           {
-            nom: "Call Centers & BPO",
+            nom: "Services opérationnels",
             sectionsDeTags: [
               {
-                titre: "BPO",
-                tags: ["Call centers", "BPO", "Externalisation"]
+                titre: "Services opérationnels",
+                tags: ["Nettoyage", "Sécurité privée", "Facility management"]
               }
             ]
           },
           {
-            nom: "Marketing, Communication & Publicité",
+            nom: "Services techniques & réparations",
             sectionsDeTags: [
               {
-                titre: "Communication",
-                tags: ["Marketing", "Communication", "Publicité", "Relations publiques"]
+                titre: "Services techniques & réparations",
+                tags: ["Automobile", "Engins", "Électronique", "Froid", "IT", "Maintenance multiservice"]
               }
             ]
           },
           {
-            nom: "Services Techniques & Artisanaux",
+            nom: "Services à la personne",
             sectionsDeTags: [
               {
-                titre: "Automobile & engins",
-                tags: ["Atelier mécanique automobile", "Réparation véhicules lourds", "Électricité auto", "Pneumatique & équilibrage", "Carrosserie & peinture", "Diagnostic embarqué"]
-              },
+                titre: "Services à la personne",
+                tags: ["Pressing", "Garde d'enfants", "Aide à domicile", "Coiffure/esthétique"]
+              }
+            ]
+          },
+          {
+            nom: "Restauration & traiteurs",
+            sectionsDeTags: [
               {
-                titre: "Bois & ameublement",
-                tags: ["Menuiserie générale", "Ébénisterie", "Fabrication de meubles artisanaux", "Restauration de mobilier", "Agencement intérieur"]
-              },
+                titre: "Restauration & traiteurs",
+                tags: ["Maquis", "Restaurants", "Cantines d'entreprise", "Traiteurs"]
+              }
+            ]
+          },
+          {
+            nom: "Économie sociale & solidaire",
+            sectionsDeTags: [
               {
-                titre: "Métallurgie & artisanat",
-                tags: ["Soudure", "Chaudronnerie légère", "Ferronnerie"]
-              },
-              {
-                titre: "Autres services techniques",
-                tags: ["Réparation électronique", "Climatisation & réfrigération", "Maintenance industrielle légère"]
+                titre: "Économie sociale & solidaire",
+                tags: ["Coopératives de services", "Mutuelles", "Associations économiques"]
               }
             ]
           }
         ]
       },
       {
-        id: "transport_logistique",
-        nom: "Transport & Logistique",
+        id: "ter-trl",
+        nom: "Transport, logistique & mobilité",
         sousCategories: [
           {
-            nom: "Transport",
+            nom: "Logistique urbaine & dernier kilomètre",
             sectionsDeTags: [
               {
-                titre: "Messagerie & livraison urbaine",
-                tags: ["Messagerie", "Livraison urbaine", "Livraison express"]
-              },
-              {
-                titre: "Transport routier interurbain",
-                tags: ["Transport routier", "Transport interurbain", "Transport de marchandises"]
-              },
-              {
-                titre: "Transport maritime & portuaire",
-                tags: ["Transport maritime", "Transport portuaire", "Fret maritime"]
-              },
-              {
-                titre: "Transport aérien",
-                tags: ["Transport aérien", "Fret aérien", "Aviation"]
+                titre: "Logistique urbaine & dernier kilomètre",
+                tags: ["Livraison à moto", "Vélos cargo", "Points relais", "Micro-entrepôts"]
               }
             ]
           },
           {
-            nom: "Logistique",
+            nom: "Messagerie & express",
             sectionsDeTags: [
               {
-                titre: "Entreposage & entrepôts",
-                tags: ["Entreposage", "Entrepôts", "Stockage"]
-              },
+                titre: "Messagerie & express",
+                tags: ["Courrier", "Colis national", "Express international"]
+              }
+            ]
+          },
+          {
+            nom: "Transport routier par camion",
+            sectionsDeTags: [
               {
-                titre: "Solutions logicielles logistiques",
-                tags: ["Logiciels logistiques", "Gestion de la chaîne d'approvisionnement", "Supply Chain"]
+                titre: "Transport routier par camion",
+                tags: ["Fret sec", "Bennes matériaux", "Frigorifique", "Hydrocarbures (agréments)"]
+              }
+            ]
+          },
+          {
+            nom: "Transport urbain de personnes",
+            sectionsDeTags: [
+              {
+                titre: "Transport urbain de personnes",
+                tags: ["Taxis compteurs", "Wôrô-wôrô", "Gbaka", "Navettes privées"]
+              }
+            ]
+          },
+          {
+            nom: "Transport par bus",
+            sectionsDeTags: [
+              {
+                titre: "Transport par bus",
+                tags: ["Urbain", "Interurbain", "Scolaire", "Tourisme", "Maintenance flottes bus"]
+              }
+            ]
+          },
+          {
+            nom: "VTC & mobilité à la demande",
+            sectionsDeTags: [
+              {
+                titre: "VTC & mobilité à la demande",
+                tags: ["Plateformes", "Chauffeurs indépendants", "Location avec/sans chauffeur"]
+              }
+            ]
+          },
+          {
+            nom: "Entreposage & plateformes",
+            sectionsDeTags: [
+              {
+                titre: "Entreposage & plateformes",
+                tags: ["Stockage", "Gestion d'entrepôt", "Fulfillment"]
+              }
+            ]
+          },
+          {
+            nom: "Transit, douane, affrètement",
+            sectionsDeTags: [
+              {
+                titre: "Transit, douane, affrètement",
+                tags: ["Déclarants", "Commissionnaires", "Consignation"]
+              }
+            ]
+          },
+          {
+            nom: "Maritime & portuaire",
+            sectionsDeTags: [
+              {
+                titre: "Maritime & portuaire",
+                tags: ["Manutention/acconage", "Agences maritimes", "Sûreté portuaire", "Maintenance navale légère"]
+              }
+            ]
+          },
+          {
+            nom: "Ravitaillement maritime & offshore",
+            sectionsDeTags: [
+              {
+                titre: "Ravitaillement maritime & offshore",
+                tags: ["Shipchandling", "Avitaillement", "Soutage selon agréments"]
+              }
+            ]
+          },
+          {
+            nom: "Lagunaire/fluvial & bateaux-bus",
+            sectionsDeTags: [
+              {
+                titre: "Lagunaire/fluvial & bateaux-bus",
+                tags: ["Navettes lagunaires passagers", "Fret local"]
+              }
+            ]
+          },
+          {
+            nom: "Ferroviaire (services connexes PME)",
+            sectionsDeTags: [
+              {
+                titre: "Ferroviaire (services connexes PME)",
+                tags: ["Maintenance", "Sécurité", "Catering", "Logistique de gare"]
+              }
+            ]
+          },
+          {
+            nom: "Aérien & aéroportuaire",
+            sectionsDeTags: [
+              {
+                titre: "Aérien & aéroportuaire",
+                tags: ["Fret léger", "Handling", "Sûreté", "Maintenance équipements au sol", "Catering aérien", "Commerce aéroportuaire"]
+              }
+            ]
+          },
+          {
+            nom: "LogiTech",
+            sectionsDeTags: [
+              {
+                titre: "LogiTech",
+                tags: ["Logiciels TMS/WMS", "Tracking", "IoT flotte"]
               }
             ]
           }
         ]
       },
       {
-        id: "construction_immobilier",
-        nom: "Construction & Immobilier",
+        id: "ter-tou",
+        nom: "Tourisme, culture & loisirs",
         sousCategories: [
           {
-            nom: "BTP",
+            nom: "Hébergement",
             sectionsDeTags: [
               {
-                titre: "Gros œuvre & Génie Civil",
-                tags: ["Maçonnerie", "Béton armé", "Construction de routes", "Ponts et Chaussées", "Travaux publics"]
-              },
-              {
-                titre: "Second œuvre & métiers du bâtiment",
-                tags: ["Menuiserie bâtiment", "Ébénisterie & boiserie architecturale", "Plomberie", "Électricité bâtiment", "Peinture & revêtement", "Carrelage, parquet, faux plafonds", "Vitrerie & aluminium", "Installation HVAC", "Isolation & étanchéité"]
+                titre: "Hébergement",
+                tags: ["Hôtels", "Résidences meublées", "Auberges", "Éco-lodges"]
               }
             ]
           },
           {
-            nom: "Architecture & Ingénierie",
+            nom: "Restauration touristique",
             sectionsDeTags: [
               {
-                titre: "Architecture",
-                tags: ["Architecture", "Topographie", "Urbanisme", "Dessin BTP"]
+                titre: "Restauration touristique",
+                tags: ["Gastronomie", "Circuits culinaires", "Traiteurs événementiels"]
               }
             ]
           },
           {
-            nom: "Matériaux",
+            nom: "Voyages & guidage",
             sectionsDeTags: [
               {
-                titre: "Matériaux de construction",
-                tags: ["Matériaux", "Fournitures BTP"]
+                titre: "Voyages & guidage",
+                tags: ["Agences", "Tour-opérateurs", "Guides"]
               }
             ]
           },
           {
-            nom: "Immobilier",
+            nom: "Loisirs & sports",
             sectionsDeTags: [
               {
-                titre: "Immobilier résidentiel",
-                tags: ["Immobilier résidentiel", "Vente immobilière", "Location résidentielle"]
-              },
+                titre: "Loisirs & sports",
+                tags: ["Parcs", "Salles de sport", "Attractions", "Événements"]
+              }
+            ]
+          },
+          {
+            nom: "Industries créatives & culturelles",
+            sectionsDeTags: [
               {
-                titre: "Immobilier commercial",
-                tags: ["Immobilier commercial", "Bureaux", "Locaux commerciaux"]
+                titre: "Industries créatives & culturelles",
+                tags: ["Audiovisuel", "Musique", "Mode", "Arts", "Édition", "Jeux/animation"]
               }
             ]
           }
         ]
       },
       {
-        id: "energie_environnement",
-        nom: "Énergie & Environnement",
+        id: "ter-fin",
+        nom: "Finance & assurances",
         sousCategories: [
           {
-            nom: "Énergie",
+            nom: "Microfinance & SFD",
             sectionsDeTags: [
               {
-                titre: "Énergies renouvelables",
-                tags: ["Énergies Renouvelables (Solaire/Biomasse/Hydro)", "Énergie solaire", "Énergie éolienne", "Biomasse"]
-              },
-              {
-                titre: "Hydrocarbures",
-                tags: ["Pétrole & Gaz (Offshore/Onshore)", "Raffinage", "Distribution d'énergie"]
-              },
-              {
-                titre: "Électricité",
-                tags: ["Électricité (Production/Distribution)", "Électrotechnique"]
+                titre: "Microfinance & SFD",
+                tags: ["Institutions de microfinance", "Services d'épargne/crédit de proximité"]
               }
             ]
           },
           {
-            nom: "Environnement",
+            nom: "Assurances & courtage",
             sectionsDeTags: [
               {
-                titre: "Eau & assainissement",
-                tags: ["Eau", "Assainissement", "Traitement des eaux"]
-              },
-              {
-                titre: "Gestion des déchets",
-                tags: ["Gestion des déchets", "Recyclage", "Traitement des déchets"]
-              },
-              {
-                titre: "Agriculture durable",
-                tags: ["Agriculture durable", "Agroforesterie", "Reboisement"]
-              },
-              {
-                titre: "Mines",
-                tags: ["Exploitation minière (Or/Manganèse)", "Géologie"]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        id: "finance_assurances",
-        nom: "Finance & Assurances",
-        sousCategories: [
-          {
-            nom: "Finance",
-            sectionsDeTags: [
-              {
-                titre: "Microfinance",
-                tags: ["Microfinance", "Institutions de microfinance"]
-              },
-              {
-                titre: "Banques",
-                tags: ["Banque de détail", "Banques", "Services bancaires"]
-              },
-              {
-                titre: "FinTech",
-                tags: ["FinTech", "Mobile Money", "Services financiers digitaux"]
-              },
-              {
-                titre: "Coopératives financières",
-                tags: ["Coopératives financières", "Mutualités"]
-              },
-              {
-                titre: "Comptabilité & Audit",
-                tags: ["Comptabilité", "Audit", "Contrôle de gestion"]
+                titre: "Assurances & courtage",
+                tags: ["Assurance PME", "Assurance transport", "Micro-assurance"]
               }
             ]
           },
           {
-            nom: "Assurances",
+            nom: "FinTech & paiements",
             sectionsDeTags: [
               {
-                titre: "Assurances",
-                tags: ["Assurance Vie/Non-Vie", "Courtage", "Gestion des risques", "Actuariat"]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        id: "tourisme_culture_loisirs",
-        nom: "Tourisme, Culture & Loisirs",
-        sousCategories: [
-          {
-            nom: "Hébergement & Accueil",
-            sectionsDeTags: [
-              {
-                titre: "Hôtels",
-                tags: ["Hôtellerie", "Hôtels", "Réception"]
-              },
-              {
-                titre: "Agences de voyages",
-                tags: ["Agences de voyage", "Gestion touristique"]
+                titre: "FinTech & paiements",
+                tags: ["Mobile money", "Agrégation de paiements", "Crowdfunding"]
               }
             ]
           },
           {
-            nom: "Restauration",
+            nom: "Transfert d'argent & change",
             sectionsDeTags: [
               {
-                titre: "Restaurants",
-                tags: ["Restaurants", "Cuisine & Gastronomie", "Pâtisserie", "Service en salle", "Traiteur"]
+                titre: "Transfert d'argent & change",
+                tags: ["Remittances", "Bureaux de change"]
               }
             ]
           },
           {
-            nom: "Transport Touristique",
+            nom: "Services de bancabilité",
             sectionsDeTags: [
               {
-                titre: "Transport touristique",
-                tags: ["Transport touristique", "VTC & Livraison"]
-              }
-            ]
-          },
-          {
-            nom: "Événementiel",
-            sectionsDeTags: [
-              {
-                titre: "Événementiel",
-                tags: ["Événementiel", "Organisation d'événements"]
-              }
-            ]
-          },
-          {
-            nom: "Arts & Médias",
-            sectionsDeTags: [
-              {
-                titre: "Arts & médias",
-                tags: ["Arts", "Médias", "Production audiovisuelle"]
+                titre: "Services de bancabilité",
+                tags: ["Montage de dossiers", "Scoring", "Conseil financier"]
               }
             ]
           }
@@ -559,41 +1031,32 @@ export const secteursData: Record<string, SecteurData> = {
   },
 
   // ========================================================================
-  // SECTEUR QUATERNAIRE
+  // N1-QUA — SECTEUR QUATERNAIRE : Numérique, Éducation, Santé, R&D
   // ========================================================================
   quaternaire: {
     id: "quaternaire",
     nom: "Secteur Quaternaire",
-    titreComplet: "SECTEUR QUATERNAIRE : NUMÉRIQUE, ÉDUCATION & SANTÉ",
+    titreComplet: "SECTEUR QUATERNAIRE : Numérique, Éducation, Santé, R&D",
     filieres: [
       {
-        id: "numerique_technologies",
-        nom: "Numérique & Technologies",
+        id: "qua-num",
+        nom: "Numérique & technologies",
         sousCategories: [
           {
-            nom: "Développement Logiciel",
+            nom: "Développement logiciel",
             sectionsDeTags: [
               {
                 titre: "Développement logiciel",
-                tags: ["Développement Web/Mobile", "Développement logiciel", "UX/UI Design"]
+                tags: ["Web", "Mobile", "Solutions métiers", "SaaS"]
               }
             ]
           },
           {
-            nom: "IA, Data & Robotique",
+            nom: "Infra, cloud & réseaux",
             sectionsDeTags: [
               {
-                titre: "IA & Data",
-                tags: ["Data Science & IA", "Intelligence artificielle", "Robotique"]
-              }
-            ]
-          },
-          {
-            nom: "FinTech",
-            sectionsDeTags: [
-              {
-                titre: "FinTech",
-                tags: ["FinTech", "Services financiers digitaux"]
+                titre: "Infra, cloud & réseaux",
+                tags: ["Hébergement", "Intégration systèmes", "MSP"]
               }
             ]
           },
@@ -602,154 +1065,327 @@ export const secteursData: Record<string, SecteurData> = {
             sectionsDeTags: [
               {
                 titre: "Cybersécurité",
-                tags: ["Cybersécurité", "Sécurité informatique"]
+                tags: ["Audit", "SOC externalisé", "Formation sécurité"]
               }
             ]
           },
           {
-            nom: "SaaS",
+            nom: "Data, IA & IoT",
             sectionsDeTags: [
               {
-                titre: "SaaS",
-                tags: ["SaaS", "Logiciels en tant que service"]
+                titre: "Data, IA & IoT",
+                tags: ["Analytics", "IA appliquée PME", "Capteurs industriels/agro"]
               }
             ]
           },
           {
-            nom: "Telecom & Opérateurs",
+            nom: "Télécoms & services numériques",
             sectionsDeTags: [
               {
-                titre: "Telecom",
-                tags: ["Telecom & opérateurs", "Administration Réseaux", "Fibre optique"]
+                titre: "Télécoms & services numériques",
+                tags: ["FAI locaux", "Services de proximité", "Maintenance réseaux"]
               }
             ]
           },
           {
-            nom: "Infrastructure & Réseaux",
+            nom: "Matériel & réparation",
             sectionsDeTags: [
               {
-                titre: "Infrastructure",
-                tags: ["Cloud Computing", "Maintenance informatique", "Infrastructure IT"]
+                titre: "Matériel & réparation",
+                tags: ["Réparation/assemblage", "Distribution hardware"]
               }
             ]
           },
           {
-            nom: "Marketing Digital",
+            nom: "Services de marketing digital",
             sectionsDeTags: [
               {
-                titre: "Marketing digital",
-                tags: ["Community Management", "SEO/SEA", "E-commerce", "Création de contenu"]
-              }
-            ]
-          },
-          {
-            nom: "Startups Tech",
-            sectionsDeTags: [
-              {
-                titre: "Startups tech",
-                tags: ["Startups tech", "Innovation technologique"]
+                titre: "Services de marketing digital",
+                tags: ["SEO/SEA", "Contenus", "Gestion e-commerce"]
               }
             ]
           }
         ]
       },
       {
-        id: "education_formation",
-        nom: "Éducation & Formation",
+        id: "qua-edu",
+        nom: "Éducation & formation",
         sousCategories: [
           {
-            nom: "Écoles Privées",
+            nom: "Écoles privées",
             sectionsDeTags: [
               {
                 titre: "Écoles privées",
-                tags: ["Enseignement (Primaire/Secondaire/Supérieur)", "Écoles privées"]
+                tags: ["Préscolaire", "Primaire", "Secondaire"]
               }
             ]
           },
           {
-            nom: "Formation Professionnelle",
+            nom: "Enseignement supérieur privé",
             sectionsDeTags: [
               {
-                titre: "Centres de formation professionnelle",
-                tags: ["Formation professionnelle", "Centres de formation"]
+                titre: "Enseignement supérieur privé",
+                tags: ["Instituts spécialisés", "Formations métiers"]
               }
             ]
           },
           {
-            nom: "E-learning",
+            nom: "Formation professionnelle",
             sectionsDeTags: [
               {
-                titre: "E-learning",
-                tags: ["E-learning", "Formation en ligne"]
+                titre: "Formation professionnelle",
+                tags: ["Centres techniques", "Apprentissage", "Certification"]
               }
             ]
           },
           {
-            nom: "Édition Scolaire",
+            nom: "EdTech",
             sectionsDeTags: [
               {
-                titre: "Édition scolaire",
-                tags: ["Édition scolaire", "Manuels scolaires"]
+                titre: "EdTech",
+                tags: ["Plateformes e-learning", "Contenus numériques"]
               }
             ]
           },
           {
-            nom: "Formateurs Indépendants",
+            nom: "Coaching & langues",
             sectionsDeTags: [
               {
-                titre: "Formateurs indépendants",
-                tags: ["Formateurs indépendants", "Coaching scolaire"]
+                titre: "Coaching & langues",
+                tags: ["Centres de langues", "Coaching business"]
               }
             ]
           }
         ]
       },
       {
-        id: "sante_sciences_vie",
-        nom: "Santé & Sciences de la Vie",
+        id: "qua-san",
+        nom: "Santé & sciences de la vie",
         sousCategories: [
           {
-            nom: "Cliniques Privées",
+            nom: "Cliniques & cabinets",
             sectionsDeTags: [
               {
-                titre: "Cliniques privées",
-                tags: ["Soins infirmiers", "Médecine", "Cliniques privées"]
+                titre: "Cliniques & cabinets",
+                tags: ["Médecine générale", "Spécialités", "Santé de proximité"]
               }
             ]
           },
           {
-            nom: "Pharmacies",
+            nom: "Laboratoires & imagerie",
             sectionsDeTags: [
               {
-                titre: "Pharmacies",
-                tags: ["Pharmacie d'officine", "Pharmacies"]
+                titre: "Laboratoires & imagerie",
+                tags: ["Analyses", "Radiologie", "Diagnostics mobiles"]
               }
             ]
           },
           {
-            nom: "Laboratoires d'Analyse",
+            nom: "Pharmacies & distribution",
             sectionsDeTags: [
               {
-                titre: "Laboratoires d'analyse",
-                tags: ["Biologie médicale", "Laboratoires d'analyse"]
+                titre: "Pharmacies & distribution",
+                tags: ["Pharmacies", "Dépôts", "Logistique santé"]
               }
             ]
           },
           {
-            nom: "Fournisseurs de Matériel Médical",
+            nom: "Dispositifs médicaux",
             sectionsDeTags: [
               {
-                titre: "Fournisseurs de matériel médical",
-                tags: ["Fournisseurs de matériel médical", "Équipements médicaux"]
+                titre: "Dispositifs médicaux",
+                tags: ["Vente", "Maintenance biomédicale", "Consommables"]
               }
             ]
           },
           {
-            nom: "Agro-pharmacie",
+            nom: "HealthTech",
             sectionsDeTags: [
               {
-                titre: "Agro-pharmacie",
-                tags: ["Agro-pharmacie", "Santé publique"]
+                titre: "HealthTech",
+                tags: ["Télémédecine", "Dossiers médicaux numériques"]
+              }
+            ]
+          },
+          {
+            nom: "Phytothérapie modernisée",
+            sectionsDeTags: [
+              {
+                titre: "Phytothérapie modernisée",
+                tags: ["Produits naturels encadrés", "Nutrition et bien-être"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "qua-rdi",
+        nom: "Recherche, ingénierie & qualité",
+        sousCategories: [
+          {
+            nom: "Bureaux d'ingénierie avancée",
+            sectionsDeTags: [
+              {
+                titre: "Bureaux d'ingénierie avancée",
+                tags: ["Ingénierie industrielle", "Agro", "BTP"]
+              }
+            ]
+          },
+          {
+            nom: "Laboratoires d'essais & contrôle qualité",
+            sectionsDeTags: [
+              {
+                titre: "Laboratoires d'essais & contrôle qualité",
+                tags: ["Tests matériaux", "Agroalimentaire", "Métrologie"]
+              }
+            ]
+          },
+          {
+            nom: "Normalisation & certification",
+            sectionsDeTags: [
+              {
+                titre: "Normalisation & certification",
+                tags: ["ISO", "HACCP", "Accompagnement conformité"]
+              }
+            ]
+          },
+          {
+            nom: "Propriété intellectuelle & transfert",
+            sectionsDeTags: [
+              {
+                titre: "Propriété intellectuelle & transfert",
+                tags: ["Brevets", "Marques", "Licences"]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+
+  // ========================================================================
+  // N1-TRV — FILIÈRES TRANSVERSALES HUB (services communs)
+  // ========================================================================
+  transversales: {
+    id: "transversales",
+    nom: "Filières Transversales",
+    titreComplet: "FILIÈRES TRANSVERSALES HUB : Services communs",
+    filieres: [
+      {
+        id: "trv-fin",
+        nom: "Financement & accès au crédit",
+        sousCategories: [
+          {
+            nom: "Garanties & fonds",
+            sectionsDeTags: [
+              {
+                titre: "Garanties & fonds",
+                tags: ["Fonds de garantie", "Lignes de crédit", "Instruments mixtes"]
+              }
+            ]
+          },
+          {
+            nom: "Bancabilité & préparation",
+            sectionsDeTags: [
+              {
+                titre: "Bancabilité & préparation",
+                tags: ["Diagnostic financier", "Coaching CFO PME", "Scoring"]
+              }
+            ]
+              }
+            ]
+          },
+          {
+        id: "trv-exp",
+        nom: "Exportation & internationalisation",
+        sousCategories: [
+          {
+            nom: "Normes & certification export",
+            sectionsDeTags: [
+              {
+                titre: "Normes & certification export",
+                tags: ["Qualité", "Emballage", "Traçabilité"]
+              }
+            ]
+          },
+          {
+            nom: "Accès marchés CEDEAO/UEMOA/ZLECAf",
+            sectionsDeTags: [
+              {
+                titre: "Accès marchés CEDEAO/UEMOA/ZLECAf",
+                tags: ["Missions B2B", "Foire export", "Intelligence marchés"]
+              }
+            ]
+              }
+            ]
+          },
+          {
+        id: "trv-dig",
+        nom: "Transformation digitale des PME",
+        sousCategories: [
+          {
+            nom: "Outils de gestion",
+            sectionsDeTags: [
+              {
+                titre: "Outils de gestion",
+                tags: ["Compta", "Facturation", "CRM", "ERP légers"]
+              }
+            ]
+          },
+          {
+            nom: "Commerce digital",
+            sectionsDeTags: [
+              {
+                titre: "Commerce digital",
+                tags: ["Boutique en ligne", "Paiement", "Logistique connectée"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "trv-esg",
+        nom: "Développement durable & RSE",
+        sousCategories: [
+          {
+            nom: "Conformité environnementale",
+            sectionsDeTags: [
+              {
+                titre: "Conformité environnementale",
+                tags: ["Audit", "Plans d'amélioration", "Reporting"]
+              }
+            ]
+              },
+              {
+            nom: "Valorisation déchets & économie circulaire",
+            sectionsDeTags: [
+              {
+                titre: "Valorisation déchets & économie circulaire",
+                tags: ["Chaînes de valeur vertes", "Business inclusif"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "trv-inn",
+        nom: "Innovation, incubation & accélération",
+        sousCategories: [
+          {
+            nom: "Incubateurs & hubs",
+            sectionsDeTags: [
+              {
+                titre: "Incubateurs & hubs",
+                tags: ["Programmes startups", "Corporate innovation"]
+              }
+            ]
+          },
+          {
+            nom: "Propriété intellectuelle",
+            sectionsDeTags: [
+              {
+                titre: "Propriété intellectuelle",
+                tags: ["Appui marques/brevets"]
               }
             ]
           }

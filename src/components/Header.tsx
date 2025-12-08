@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
-import { LogIn, UserPlus, Menu, X, Users, Award, Building2, ChevronDown, Factory, Building, Briefcase, Network } from "lucide-react";
+import { LogIn, UserPlus, Menu, X, Users, Award, Building2, ChevronDown, ChevronRight, Factory, Building, Briefcase, Network, Layers } from "lucide-react";
 
 function HeaderContent() {
   const pathname = usePathname();
@@ -14,6 +14,9 @@ function HeaderContent() {
   const [membersMenuTimeout, setMembersMenuTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isSecteursMenuOpen, setIsSecteursMenuOpen] = useState(false);
   const [secteursMenuTimeout, setSecteursMenuTimeout] = useState<NodeJS.Timeout | null>(null);
+  // États pour les sous-menus dans le drawer mobile
+  const [isSecteursDrawerOpen, setIsSecteursDrawerOpen] = useState(false);
+  const [isMembersDrawerOpen, setIsMembersDrawerOpen] = useState(false);
 
   // Empêcher le scroll quand le drawer est ouvert
   useEffect(() => {
@@ -137,12 +140,12 @@ function HeaderContent() {
               >
                 <button
                   className={`font-inter text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1 ${
-                    isActive("/secteurs")
-                      ? "text-[#F08223] hover:text-[#D97420]"
-                      : "text-[#6F6F6F] hover:text-[#221F1F]"
-                  }`}
-                >
-                  Secteurs & Filières
+                  isActive("/secteurs")
+                    ? "text-[#F08223] hover:text-[#D97420]"
+                    : "text-[#6F6F6F] hover:text-[#221F1F]"
+                }`}
+              >
+                Secteurs & Filières
                   <ChevronDown className={`w-3 h-3 transition-transform ${isSecteursMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
                 
@@ -166,6 +169,7 @@ function HeaderContent() {
                   >
                     <Link
                       href="/secteurs?tab=primaire"
+                      onClick={() => setIsSecteursMenuOpen(false)}
                       className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-t-lg mx-2 ${
                         activeSecteurTab === 'primaire'
                           ? "text-white bg-[#F08223] border-b-[#F08223]"
@@ -177,6 +181,7 @@ function HeaderContent() {
                     </Link>
                     <Link
                       href="/secteurs?tab=secondaire"
+                      onClick={() => setIsSecteursMenuOpen(false)}
                       className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
                         activeSecteurTab === 'secondaire'
                           ? "text-white bg-[#F08223] border-b-[#F08223]"
@@ -188,6 +193,7 @@ function HeaderContent() {
                     </Link>
                     <Link
                       href="/secteurs?tab=tertiaire"
+                      onClick={() => setIsSecteursMenuOpen(false)}
                       className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
                         activeSecteurTab === 'tertiaire'
                           ? "text-white bg-[#F08223] border-b-[#F08223]"
@@ -196,17 +202,30 @@ function HeaderContent() {
                     >
                       <Briefcase className="w-4 h-4" />
                       Tertiaire
-                    </Link>
+              </Link>
                     <Link
                       href="/secteurs?tab=quaternaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
+                      onClick={() => setIsSecteursMenuOpen(false)}
+                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
                         activeSecteurTab === 'quaternaire'
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
+                          ? "text-white bg-[#F08223] border-b-[#F08223]"
+                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
                       }`}
                     >
                       <Network className="w-4 h-4" />
                       Quaternaire
+                    </Link>
+                    <Link
+                      href="/secteurs?tab=transversales"
+                      onClick={() => setIsSecteursMenuOpen(false)}
+                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
+                        activeSecteurTab === 'transversales'
+                          ? "text-white bg-[#F08223]"
+                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
+                      }`}
+                    >
+                      <Layers className="w-4 h-4" />
+                      Transversales
                     </Link>
                   </div>
                 )}
@@ -233,12 +252,12 @@ function HeaderContent() {
               >
                 <button
                   className={`font-inter text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1 ${
-                    isActive("/membres")
-                      ? "text-[#F08223] hover:text-[#D97420]"
-                      : "text-[#6F6F6F] hover:text-[#221F1F]"
-                  }`}
-                >
-                  Membres
+                  isActive("/membres")
+                    ? "text-[#F08223] hover:text-[#D97420]"
+                    : "text-[#6F6F6F] hover:text-[#221F1F]"
+                }`}
+              >
+                Membres
                   <ChevronDown className={`w-3 h-3 transition-transform ${isMembersMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
                 
@@ -264,6 +283,7 @@ function HeaderContent() {
                   >
                     <Link
                       href="/membres?tab=annuaire"
+                      onClick={() => setIsMembersMenuOpen(false)}
                       className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-t-lg mx-2 ${
                         activeMemberTab === 'annuaire'
                           ? "text-white bg-[#F08223] border-b-[#F08223]"
@@ -275,6 +295,7 @@ function HeaderContent() {
                     </Link>
                     <Link
                       href="/membres?tab=avantages"
+                      onClick={() => setIsMembersMenuOpen(false)}
                       className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
                         activeMemberTab === 'avantages'
                           ? "text-white bg-[#F08223] border-b-[#F08223]"
@@ -286,6 +307,7 @@ function HeaderContent() {
                     </Link>
                     <Link
                       href="/membres?tab=adhesion"
+                      onClick={() => setIsMembersMenuOpen(false)}
                       className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
                         activeMemberTab === 'adhesion'
                           ? "text-white bg-[#F08223]"
@@ -424,17 +446,30 @@ function HeaderContent() {
               </Link>
               {/* Sous-menu Secteurs dans le drawer mobile */}
               <div className="space-y-1">
-                <div className={`font-inter text-sm font-medium px-4 py-2 text-[#6F6F6F]`}>
-                  Secteurs & Filières
-                </div>
-                <Link
+                <button
+                  onClick={() => setIsSecteursDrawerOpen(!isSecteursDrawerOpen)}
+                  className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors w-full flex items-center justify-between ${
+                    isActive("/secteurs")
+                      ? "text-[#F08223] bg-orange-50"
+                      : "text-[#6F6F6F] hover:bg-gray-50"
+                  }`}
+                >
+                  <span>Secteurs & Filières</span>
+                  <ChevronRight className={`w-4 h-4 transition-transform ${isSecteursDrawerOpen ? 'rotate-90' : ''}`} />
+                </button>
+                {isSecteursDrawerOpen && (
+                  <div className="pl-4 space-y-1">
+                    <Link
                   href="/secteurs?tab=primaire"
                   className={`font-inter text-sm font-medium px-8 py-2 rounded-lg transition-all duration-200 block ${
                     activeSecteurTab === 'primaire'
                       ? "text-white bg-[#F08223]"
                       : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
                   }`}
-                  onClick={() => setIsDrawerOpen(false)}
+                  onClick={() => {
+                    setIsDrawerOpen(false);
+                    setIsSecteursMenuOpen(false);
+                  }}
                 >
                   <div className="flex items-center gap-2">
                     <Factory className="w-4 h-4" />
@@ -448,56 +483,97 @@ function HeaderContent() {
                       ? "text-white bg-[#F08223]"
                       : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
                   }`}
-                  onClick={() => setIsDrawerOpen(false)}
+                  onClick={() => {
+                    setIsDrawerOpen(false);
+                    setIsSecteursMenuOpen(false);
+                  }}
                 >
                   <div className="flex items-center gap-2">
                     <Building className="w-4 h-4" />
                     Secondaire
                   </div>
-                </Link>
+              </Link>
                 <Link
                   href="/secteurs?tab=tertiaire"
                   className={`font-inter text-sm font-medium px-8 py-2 rounded-lg transition-all duration-200 block ${
                     activeSecteurTab === 'tertiaire'
                       ? "text-white bg-[#F08223]"
                       : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                  }`}
-                  onClick={() => setIsDrawerOpen(false)}
-                >
+                }`}
+                onClick={() => {
+                  setIsDrawerOpen(false);
+                  setIsSecteursMenuOpen(false);
+                }}
+              >
                   <div className="flex items-center gap-2">
                     <Briefcase className="w-4 h-4" />
                     Tertiaire
                   </div>
-                </Link>
-                <Link
+              </Link>
+              <Link
                   href="/secteurs?tab=quaternaire"
                   className={`font-inter text-sm font-medium px-8 py-2 rounded-lg transition-all duration-200 block ${
                     activeSecteurTab === 'quaternaire'
                       ? "text-white bg-[#F08223]"
                       : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
                   }`}
-                  onClick={() => setIsDrawerOpen(false)}
+                  onClick={() => {
+                    setIsDrawerOpen(false);
+                    setIsSecteursMenuOpen(false);
+                  }}
                 >
                   <div className="flex items-center gap-2">
                     <Network className="w-4 h-4" />
                     Quaternaire
                   </div>
                 </Link>
+                <Link
+                  href="/secteurs?tab=transversales"
+                  className={`font-inter text-sm font-medium px-8 py-2 rounded-lg transition-all duration-200 block ${
+                    activeSecteurTab === 'transversales'
+                      ? "text-white bg-[#F08223]"
+                      : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
+                  }`}
+                  onClick={() => {
+                    setIsDrawerOpen(false);
+                    setIsSecteursMenuOpen(false);
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4" />
+                    Transversales
+                  </div>
+                </Link>
+                  </div>
+                )}
               </div>
               
               {/* Sous-menu Membres dans le drawer mobile */}
               <div className="space-y-1">
-                <div className={`font-inter text-sm font-medium px-4 py-2 text-[#6F6F6F]`}>
-                  Membres
-                </div>
-                <Link
+                <button
+                  onClick={() => setIsMembersDrawerOpen(!isMembersDrawerOpen)}
+                  className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors w-full flex items-center justify-between ${
+                    isActive("/membres")
+                      ? "text-[#F08223] bg-orange-50"
+                      : "text-[#6F6F6F] hover:bg-gray-50"
+                  }`}
+                >
+                  <span>Membres</span>
+                  <ChevronRight className={`w-4 h-4 transition-transform ${isMembersDrawerOpen ? 'rotate-90' : ''}`} />
+                </button>
+                {isMembersDrawerOpen && (
+                  <div className="pl-4 space-y-1">
+                    <Link
                   href="/membres?tab=annuaire"
                   className={`font-inter text-sm font-medium px-8 py-2 rounded-lg transition-all duration-200 block ${
                     activeMemberTab === 'annuaire'
                       ? "text-white bg-[#F08223]"
                       : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
                   }`}
-                  onClick={() => setIsDrawerOpen(false)}
+                  onClick={() => {
+                    setIsDrawerOpen(false);
+                    setIsMembersMenuOpen(false);
+                  }}
                 >
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4" />
@@ -511,13 +587,16 @@ function HeaderContent() {
                       ? "text-white bg-[#F08223]"
                       : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
                   }`}
-                  onClick={() => setIsDrawerOpen(false)}
+                  onClick={() => {
+                    setIsDrawerOpen(false);
+                    setIsMembersMenuOpen(false);
+                  }}
                 >
                   <div className="flex items-center gap-2">
                     <Award className="w-4 h-4" />
                     Avantages
                   </div>
-                </Link>
+              </Link>
                 <Link
                   href="/membres?tab=adhesion"
                   className={`font-inter text-sm font-medium px-8 py-2 rounded-lg transition-all duration-200 block ${
@@ -525,13 +604,18 @@ function HeaderContent() {
                       ? "text-white bg-[#F08223]"
                       : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
                   }`}
-                  onClick={() => setIsDrawerOpen(false)}
+                  onClick={() => {
+                    setIsDrawerOpen(false);
+                    setIsMembersMenuOpen(false);
+                  }}
                 >
                   <div className="flex items-center gap-2">
                     <Building2 className="w-4 h-4" />
                     Adhérer
                   </div>
                 </Link>
+                  </div>
+                )}
               </div>
               
               <Link

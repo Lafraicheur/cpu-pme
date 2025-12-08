@@ -1,53 +1,73 @@
+// Types de membres selon la nouvelle structure (4 types principaux)
 export type MemberType = 
-  | "pme" 
-  | "corporate" 
-  | "institutionnel" 
-  | "partenaire" 
-  | "expert" 
-  | "diaspora" 
-  | "jeune" 
-  | "association" 
-  | "premium" 
-  | "honoraire";
+  | "individuel"      // Membre Individuel (personne physique)
+  | "entreprise"      // Membre Entreprise (PME)
+  | "associatif"      // Membre Associatif / Organisation Collective
+  | "institutionnel"; // Membre Institutionnel
+
+// Sous-profils pour segmentation interne (non visibles comme types)
+export type IndividualSubProfile = 
+  | "jeune_etudiant"
+  | "entrepreneur_projet"
+  | "professionnel_expert"
+  | "salarie_cadre";
+
+export type EnterpriseSubProfile = 
+  | "micro_entreprise"
+  | "petite_entreprise"
+  | "moyenne_entreprise"
+  | "startup";
+
+export type AssociativeSubProfile = 
+  | "cooperative"
+  | "federation_filiere"
+  | "association_professionnelle"
+  | "groupement_gie";
+
+export type InstitutionalSubProfile = 
+  | "grande_entreprise"
+  | "banque"
+  | "assureur"
+  | "bailleur"
+  | "agence_publique"
+  | "collectivite"
+  | "programme_international";
 
 export type MemberBadge = 
-  | "Membre" 
-  | "Premium" 
-  | "Ambassadeur" 
-  | "Honoraire";
+  | "Basic" 
+  | "Argent" 
+  | "Or" 
+  | "Institutionnel";
 
 export interface Member {
     id: string;
     name: string;
     logo?: string;
     logoUrl?: string;
-    sector: string;
+    sector: string; // Chaque membre appartient à UN SEUL secteur
     region: string;
     description: string;
     website?: string;
     featured?: boolean;
-    memberType: MemberType;
+    memberType: MemberType; // Chaque membre a UN SEUL type de membre (individuel, entreprise, associatif, ou institutionnel)
     badge?: MemberBadge;
+    // Champs pour la chaîne d'appartenance (relations)
+    affiliatedTo?: string; // ID de l'organisation à laquelle le membre est affilié
+    subProfile?: IndividualSubProfile | EnterpriseSubProfile | AssociativeSubProfile | InstitutionalSubProfile;
   }
   
   export const memberTypes: { value: MemberType; label: string }[] = [
-    { value: "pme", label: "Entrepreneur & PME" },
-    { value: "corporate", label: "Corporate & Grandes Entreprises" },
-    { value: "institutionnel", label: "Institutionnel" },
-    { value: "partenaire", label: "Partenaire Stratégique" },
-    { value: "expert", label: "Expert & Consultant" },
-    { value: "diaspora", label: "Diaspora" },
-    { value: "jeune", label: "Jeune & Étudiant" },
-    { value: "association", label: "Association & Coopérative" },
-    { value: "premium", label: "Premium / Ambassadeur" },
-    { value: "honoraire", label: "Honoraire" },
+    { value: "individuel", label: "Membre Individuel" },
+    { value: "entreprise", label: "Membre Entreprise" },
+    { value: "associatif", label: "Membre Associatif / Organisation Collective" },
+    { value: "institutionnel", label: "Membre Institutionnel" },
   ];
   
   export const memberBadges: MemberBadge[] = [
-    "Membre",
-    "Premium",
-    "Ambassadeur",
-    "Honoraire",
+    "Basic",
+    "Argent",
+    "Or",
+    "Institutionnel",
   ];
   
   export const sectors = [
@@ -77,7 +97,7 @@ export interface Member {
   ];
   
   export const membersData: Member[] = [
-    // ========== ENTREPRENEURS & PME ==========
+    // ========== MEMBRES ENTREPRISE ==========
     {
       id: "1",
       name: "Agro-Solutions CI",
@@ -86,8 +106,9 @@ export interface Member {
       description: "Entreprise spécialisée dans la transformation de produits agricoles locaux et l'exportation de cacao et café de qualité premium.",
       logoUrl: "https://images.pexels.com/photos/174937/pexels-photo-174937.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
-      memberType: "pme",
-      badge: "Membre"
+      memberType: "entreprise",
+      subProfile: "moyenne_entreprise",
+      badge: "Basic"
     },
     {
       id: "2",
@@ -97,8 +118,9 @@ export interface Member {
       description: "Société de construction et de génie civil intervenant sur des projets d'infrastructure publique et privée.",
       logoUrl: "https://images.pexels.com/photos/3935683/pexels-photo-3935683.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
-      memberType: "pme",
-      badge: "Premium"
+      memberType: "entreprise",
+      subProfile: "moyenne_entreprise",
+      badge: "Argent"
     },
     {
       id: "3",
@@ -108,8 +130,9 @@ export interface Member {
       description: "Startup innovante dans le développement de solutions digitales pour les entreprises africaines.",
       logoUrl: "https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
-      memberType: "pme",
-      badge: "Membre"
+      memberType: "entreprise",
+      subProfile: "startup",
+      badge: "Basic"
     },
     {
       id: "4",
@@ -119,8 +142,9 @@ export interface Member {
       description: "Entreprise de transport et logistique spécialisée dans le fret maritime et terrestre.",
       logoUrl: "https://images.pexels.com/photos/3952634/pexels-photo-3952634.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "pme",
-      badge: "Membre"
+      memberType: "entreprise",
+      subProfile: "petite_entreprise",
+      badge: "Basic"
     },
     {
       id: "5",
@@ -130,8 +154,9 @@ export interface Member {
       description: "Distributeur de produits alimentaires locaux avec un réseau de points de vente dans tout le pays.",
       logoUrl: "https://images.pexels.com/photos/2531384/pexels-photo-2531384.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "pme",
-      badge: "Membre"
+      memberType: "entreprise",
+      subProfile: "petite_entreprise",
+      badge: "Basic"
     },
     {
       id: "7",
@@ -141,8 +166,9 @@ export interface Member {
       description: "Réseau de pharmacies et distribution de produits pharmaceutiques dans le nord du pays.",
       logoUrl: "https://images.pexels.com/photos/5632400/pexels-photo-5632400.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "pme",
-      badge: "Membre"
+      memberType: "entreprise",
+      subProfile: "petite_entreprise",
+      badge: "Basic"
     },
     {
       id: "8",
@@ -152,8 +178,9 @@ export interface Member {
       description: "Établissement hôtelier haut de gamme offrant des services touristiques dans la région des montagnes.",
       logoUrl: "https://images.pexels.com/photos/3629547/pexels-photo-3629547.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "pme",
-      badge: "Membre"
+      memberType: "entreprise",
+      subProfile: "petite_entreprise",
+      badge: "Basic"
     },
     {
       id: "11",
@@ -163,8 +190,9 @@ export interface Member {
       description: "Solutions technologiques pour l'agriculture moderne et la gestion des exploitations agricoles.",
       logoUrl: "https://images.pexels.com/photos/5632400/pexels-photo-5632400.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "pme",
-      badge: "Membre"
+      memberType: "entreprise",
+      subProfile: "petite_entreprise",
+      badge: "Basic"
     },
     {
       id: "12",
@@ -174,8 +202,9 @@ export interface Member {
       description: "Entreprise de promotion immobilière et construction de logements sociaux et commerciaux.",
       logoUrl: "https://images.pexels.com/photos/1454496/pexels-photo-1454496.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "pme",
-      badge: "Membre"
+      memberType: "entreprise",
+      subProfile: "petite_entreprise",
+      badge: "Basic"
     },
     {
       id: "13",
@@ -185,8 +214,9 @@ export interface Member {
       description: "Fabrication de textiles et vêtements locaux avec une approche éco-responsable.",
       logoUrl: "https://images.pexels.com/photos/2531384/pexels-photo-2531384.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "pme",
-      badge: "Membre"
+      memberType: "entreprise",
+      subProfile: "petite_entreprise",
+      badge: "Basic"
     },
     {
       id: "14",
@@ -196,11 +226,12 @@ export interface Member {
       description: "Torréfaction artisanale et exportation de café de spécialité ivoirien.",
       logoUrl: "https://images.pexels.com/photos/174937/pexels-photo-174937.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "pme",
-      badge: "Membre"
+      memberType: "entreprise",
+      subProfile: "petite_entreprise",
+      badge: "Basic"
     },
 
-    // ========== CORPORATE & GRANDES ENTREPRISES ==========
+    // ========== MEMBRES INSTITUTIONNELS ==========
     {
       id: "6",
       name: "EcoEnergy CI",
@@ -209,8 +240,9 @@ export interface Member {
       description: "Entreprise pionnière dans les énergies renouvelables et les solutions solaires pour entreprises et particuliers.",
       logoUrl: "https://images.pexels.com/photos/60561/solar-panel-array-sun-power-60561.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
-      memberType: "corporate",
-      badge: "Premium"
+      memberType: "institutionnel",
+      subProfile: "grande_entreprise",
+      badge: "Argent"
     },
     {
       id: "10",
@@ -220,8 +252,9 @@ export interface Member {
       description: "Unité industrielle de transformation de matières premières agricoles en produits finis.",
       logoUrl: "https://images.pexels.com/photos/2371555/pexels-photo-2371555.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "corporate",
-      badge: "Membre"
+      memberType: "institutionnel",
+      subProfile: "grande_entreprise",
+      badge: "Basic"
     },
     {
       id: "15",
@@ -231,8 +264,9 @@ export interface Member {
       description: "Leader dans la transformation céréalière et la production de farine pour le marché ivoirien et régional.",
       logoUrl: "https://images.pexels.com/photos/2371555/pexels-photo-2371555.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
-      memberType: "corporate",
-      badge: "Premium"
+      memberType: "institutionnel",
+      subProfile: "grande_entreprise",
+      badge: "Argent"
     },
     {
       id: "16",
@@ -242,8 +276,9 @@ export interface Member {
       description: "Institution bancaire majeure soutenant le développement des PME ivoiriennes.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "corporate",
-      badge: "Premium"
+      memberType: "institutionnel",
+      subProfile: "banque",
+      badge: "Argent"
     },
     {
       id: "17",
@@ -253,8 +288,9 @@ export interface Member {
       description: "Réseau de distribution majeur avec présence dans toute la Côte d'Ivoire et la sous-région.",
       logoUrl: "https://images.pexels.com/photos/2531384/pexels-photo-2531384.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "corporate",
-      badge: "Membre"
+      memberType: "institutionnel",
+      subProfile: "grande_entreprise",
+      badge: "Basic"
     },
 
     // ========== INSTITUTIONNELS ==========
@@ -267,7 +303,7 @@ export interface Member {
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
       memberType: "institutionnel",
-      badge: "Membre"
+      badge: "Basic"
     },
     {
       id: "19",
@@ -278,7 +314,7 @@ export interface Member {
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
       memberType: "institutionnel",
-      badge: "Membre"
+      badge: "Basic"
     },
     {
       id: "20",
@@ -289,7 +325,7 @@ export interface Member {
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
       memberType: "institutionnel",
-      badge: "Membre"
+      badge: "Basic"
     },
     {
       id: "21",
@@ -300,7 +336,7 @@ export interface Member {
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
       memberType: "institutionnel",
-      badge: "Premium"
+      badge: "Argent"
     },
 
     // ========== PARTENAIRES STRATÉGIQUES ==========
@@ -312,8 +348,9 @@ export interface Member {
       description: "Institution représentative des entreprises ivoiriennes, partenaire clé pour le développement économique.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
-      memberType: "partenaire",
-      badge: "Premium"
+      memberType: "associatif",
+      subProfile: "association_professionnelle",
+      badge: "Argent"
     },
     {
       id: "23",
@@ -323,8 +360,9 @@ export interface Member {
       description: "Réseau d'entrepreneurs expérimentés accompagnant les jeunes entreprises dans leur développement.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "partenaire",
-      badge: "Membre"
+      memberType: "associatif",
+      subProfile: "association_professionnelle",
+      badge: "Basic"
     },
     {
       id: "24",
@@ -334,8 +372,9 @@ export interface Member {
       description: "Organisation non gouvernementale spécialisée dans l'accompagnement des entreprises sociales et durables.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "partenaire",
-      badge: "Membre"
+      memberType: "associatif",
+      subProfile: "association_professionnelle",
+      badge: "Basic"
     },
     {
       id: "25",
@@ -345,11 +384,12 @@ export interface Member {
       description: "Organisation patronale majeure représentant les intérêts des entreprises ivoiriennes.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "partenaire",
-      badge: "Premium"
+      memberType: "associatif",
+      subProfile: "association_professionnelle",
+      badge: "Argent"
     },
 
-    // ========== EXPERTS & CONSULTANTS ==========
+    // ========== MEMBRES INDIVIDUELS ==========
     {
       id: "9",
       name: "ConseilPro Afrique",
@@ -358,8 +398,9 @@ export interface Member {
       description: "Cabinet de conseil en stratégie et gestion d'entreprise pour PME et grandes entreprises.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
-      memberType: "expert",
-      badge: "Membre"
+      memberType: "individuel",
+      subProfile: "professionnel_expert",
+      badge: "Basic"
     },
     {
       id: "26",
@@ -369,8 +410,9 @@ export interface Member {
       description: "Cabinet d'expertise comptable et de conseil fiscal pour entreprises et entrepreneurs.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "expert",
-      badge: "Membre"
+      memberType: "individuel",
+      subProfile: "professionnel_expert",
+      badge: "Basic"
     },
     {
       id: "27",
@@ -380,8 +422,9 @@ export interface Member {
       description: "Cabinet spécialisé dans l'innovation, la transformation digitale et la stratégie d'entreprise.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "expert",
-      badge: "Premium"
+      memberType: "individuel",
+      subProfile: "professionnel_expert",
+      badge: "Argent"
     },
     {
       id: "28",
@@ -391,8 +434,9 @@ export interface Member {
       description: "Organisme de formation professionnelle et développement des compétences managériales.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "expert",
-      badge: "Membre"
+      memberType: "individuel",
+      subProfile: "professionnel_expert",
+      badge: "Basic"
     },
 
     // ========== DIASPORA ==========
@@ -404,8 +448,9 @@ export interface Member {
       description: "Réseau de membres de la diaspora investissant dans des projets entrepreneuriaux en Côte d'Ivoire.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
-      memberType: "diaspora",
-      badge: "Membre"
+      memberType: "individuel",
+      subProfile: "professionnel_expert",
+      badge: "Basic"
     },
     {
       id: "30",
@@ -415,8 +460,9 @@ export interface Member {
       description: "Entrepreneurs de la diaspora spécialisés dans les technologies et l'innovation digitale.",
       logoUrl: "https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "diaspora",
-      badge: "Premium"
+      memberType: "individuel",
+      subProfile: "professionnel_expert",
+      badge: "Argent"
     },
     {
       id: "31",
@@ -426,8 +472,9 @@ export interface Member {
       description: "Plateforme de mise en relation entre entrepreneurs de la diaspora et PME locales.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "diaspora",
-      badge: "Membre"
+      memberType: "individuel",
+      subProfile: "professionnel_expert",
+      badge: "Basic"
     },
     {
       id: "32",
@@ -437,11 +484,11 @@ export interface Member {
       description: "Programme de mentorat par des professionnels de la diaspora pour jeunes entrepreneurs ivoiriens.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "diaspora",
-      badge: "Membre"
+      memberType: "individuel",
+      subProfile: "professionnel_expert",
+      badge: "Basic"
     },
 
-    // ========== JEUNES & ÉTUDIANTS ==========
     {
       id: "33",
       name: "Junior Entreprise Université Félix Houphouët-Boigny",
@@ -450,8 +497,9 @@ export interface Member {
       description: "Association étudiante proposant des services de conseil et études aux entreprises.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "jeune",
-      badge: "Membre"
+      memberType: "individuel",
+      subProfile: "jeune_etudiant",
+      badge: "Basic"
     },
     {
       id: "34",
@@ -461,8 +509,9 @@ export interface Member {
       description: "Programme d'incubation pour jeunes entrepreneurs et étudiants porteurs de projets innovants.",
       logoUrl: "https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
-      memberType: "jeune",
-      badge: "Membre"
+      memberType: "individuel",
+      subProfile: "entrepreneur_projet",
+      badge: "Basic"
     },
     {
       id: "35",
@@ -472,8 +521,9 @@ export interface Member {
       description: "Association étudiante promouvant l'entrepreneuriat et organisant des événements de networking.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "jeune",
-      badge: "Membre"
+      memberType: "individuel",
+      subProfile: "jeune_etudiant",
+      badge: "Basic"
     },
     {
       id: "36",
@@ -483,11 +533,12 @@ export interface Member {
       description: "Collectif de jeunes développeurs et entrepreneurs tech créant des solutions innovantes.",
       logoUrl: "https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "jeune",
-      badge: "Membre"
+      memberType: "individuel",
+      subProfile: "jeune_etudiant",
+      badge: "Basic"
     },
 
-    // ========== ASSOCIATIONS & COOPÉRATIVES ==========
+    // ========== MEMBRES ASSOCIATIFS / ORGANISATIONS COLLECTIVES ==========
     {
       id: "37",
       name: "Coopérative Agricole du Centre",
@@ -496,8 +547,9 @@ export interface Member {
       description: "Coopérative regroupant des producteurs agricoles pour la commercialisation collective de leurs produits.",
       logoUrl: "https://images.pexels.com/photos/174937/pexels-photo-174937.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
-      memberType: "association",
-      badge: "Membre"
+      memberType: "associatif",
+      subProfile: "cooperative",
+      badge: "Basic"
     },
     {
       id: "38",
@@ -507,8 +559,9 @@ export interface Member {
       description: "Association fédérant les artisans et promoteurs de l'artisanat traditionnel et moderne.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "association",
-      badge: "Membre"
+      memberType: "associatif",
+      subProfile: "association_professionnelle",
+      badge: "Basic"
     },
     {
       id: "39",
@@ -518,8 +571,9 @@ export interface Member {
       description: "Réseau de femmes entrepreneures mutualisant leurs ressources et compétences pour développer leurs activités.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "association",
-      badge: "Premium"
+      memberType: "associatif",
+      subProfile: "cooperative",
+      badge: "Argent"
     },
     {
       id: "40",
@@ -529,8 +583,9 @@ export interface Member {
       description: "Organisation défendant les intérêts des petits commerçants et facilitant leur structuration.",
       logoUrl: "https://images.pexels.com/photos/2531384/pexels-photo-2531384.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "association",
-      badge: "Membre"
+      memberType: "associatif",
+      subProfile: "cooperative",
+      badge: "Basic"
     },
 
     // ========== PREMIUM / AMBASSADEURS ==========
@@ -542,8 +597,9 @@ export interface Member {
       description: "Personnalité reconnue du monde entrepreneurial, ambassadeur de l'écosystème PME ivoirien.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
-      memberType: "premium",
-      badge: "Ambassadeur"
+      memberType: "entreprise",
+      subProfile: "moyenne_entreprise",
+      badge: "Or"
     },
     {
       id: "42",
@@ -553,8 +609,9 @@ export interface Member {
       description: "Entrepreneur innovant reconnu pour ses contributions au développement de l'écosystème tech ivoirien.",
       logoUrl: "https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
-      memberType: "premium",
-      badge: "Ambassadeur"
+      memberType: "entreprise",
+      subProfile: "moyenne_entreprise",
+      badge: "Or"
     },
     {
       id: "43",
@@ -564,8 +621,9 @@ export interface Member {
       description: "Dirigeant d'entreprise majeur, partenaire stratégique et ambassadeur de la CPU-PME.",
       logoUrl: "https://images.pexels.com/photos/2371555/pexels-photo-2371555.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "premium",
-      badge: "Premium"
+      memberType: "entreprise",
+      subProfile: "moyenne_entreprise",
+      badge: "Argent"
     },
     {
       id: "44",
@@ -575,8 +633,9 @@ export interface Member {
       description: "Expert reconnu accompagnant activement les PME membres et portant les valeurs de la CPU-PME.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "premium",
-      badge: "Ambassadeur"
+      memberType: "entreprise",
+      subProfile: "moyenne_entreprise",
+      badge: "Or"
     },
 
     // ========== HONORAIRES ==========
@@ -588,8 +647,9 @@ export interface Member {
       description: "Personnalité éminente reconnue pour son engagement exceptionnel en faveur de l'entrepreneuriat ivoirien.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: true,
-      memberType: "honoraire",
-      badge: "Honoraire"
+      memberType: "individuel",
+      subProfile: "professionnel_expert",
+      badge: "Institutionnel"
     },
     {
       id: "46",
@@ -599,8 +659,9 @@ export interface Member {
       description: "Figure historique de l'entrepreneuriat ivoirien, membre d'honneur de la CPU-PME.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "honoraire",
-      badge: "Honoraire"
+      memberType: "individuel",
+      subProfile: "professionnel_expert",
+      badge: "Institutionnel"
     },
     {
       id: "47",
@@ -610,8 +671,9 @@ export interface Member {
       description: "Personnalité publique reconnue pour son engagement et son soutien à la cause des PME ivoiriennes.",
       logoUrl: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400",
       featured: false,
-      memberType: "honoraire",
-      badge: "Honoraire"
+      memberType: "individuel",
+      subProfile: "professionnel_expert",
+      badge: "Institutionnel"
     }
   ];
   
@@ -657,55 +719,81 @@ export interface Member {
   export interface MembershipPlan {
     name: string;
     description: string;
-    price: number;
+    priceMonthly: number;
+    priceYearly: number;
     period: string;
     features: string[];
     recommended?: boolean;
+    isInstitutional?: boolean; // Pour le plan Institutionnel (sur devis)
   }
   
   export const membershipPlans: MembershipPlan[] = [
     {
-      name: "Starter",
-      description: "Idéal pour les petites entreprises qui découvrent le réseau.",
-      price: 50000,
-      period: "FCFA/an",
+      name: "Basic",
+      description: "Accès de base au réseau et aux services essentiels.",
+      priceMonthly: 1000,
+      priceYearly: 10000,
+      period: "FCFA",
       features: [
         "Accès au réseau de base",
         "Newsletter mensuelle",
         "Participation aux événements",
         "Annuaire des membres",
-        "Support par email"
+        "Support par email",
+        "Accès aux formations de base"
       ]
     },
     {
-      name: "Business",
-      description: "Notre formule recommandée pour la plupart des PME.",
-      price: 150000,
-      period: "FCFA/an",
+      name: "Argent",
+      description: "Notre formule recommandée pour la plupart des membres.",
+      priceMonthly: 5000,
+      priceYearly: 50000,
+      period: "FCFA",
       features: [
-        "Tous les avantages Starter",
+        "Tous les avantages Basic",
         "Formations gratuites (2/an)",
         "Accès Marketplace B2B",
         "Visibilité sur le site web",
         "Accompagnement financement",
-        "Support prioritaire"
+        "Support prioritaire",
+        "Accès aux webinaires exclusifs"
       ],
       recommended: true
     },
     {
-      name: "Premium",
-      description: "L'offre complète pour les grandes entreprises ou les partenaires stratégiques.",
-      price: 300000,
-      period: "FCFA/an",
+      name: "Or",
+      description: "L'offre complète pour les membres actifs et les organisations.",
+      priceMonthly: 10000,
+      priceYearly: 100000,
+      period: "FCFA",
       features: [
-        "Tous les avantages Business",
+        "Tous les avantages Argent",
         "Formations illimitées",
         "Mise en avant premium",
         "Accès aux appels d'offres",
         "Conseil juridique inclus",
         "Accompagnement VIP",
-        "Événements exclusifs"
+        "Événements exclusifs",
+        "Accès aux outils de gestion avancés"
       ]
+    },
+    {
+      name: "Institutionnel",
+      description: "Solution sur mesure pour les grandes organisations et institutions.",
+      priceMonthly: 0,
+      priceYearly: 5000000, // À partir de 5 000 000 FCFA/an
+      period: "FCFA/an (sur devis)",
+      features: [
+        "Tous les avantages Or",
+        "Accès multi-utilisateurs",
+        "Formations sur mesure",
+        "Accompagnement dédié",
+        "Statistiques et reporting avancés",
+        "Intégration API",
+        "Support 24/7",
+        "Événements privés"
+      ],
+      isInstitutional: true
     }
   ];
   
