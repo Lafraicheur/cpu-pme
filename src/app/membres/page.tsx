@@ -37,7 +37,6 @@ import {
   RotateCcw,
   Download,
   Share2,
-  Heart,
   Factory,
   Wrench,
   Store,
@@ -45,7 +44,6 @@ import {
   Laptop,
   Truck,
   Hotel,
-  Heart as HeartIcon,
   Zap,
   Gem,
   Crown,
@@ -105,7 +103,6 @@ const MembersContent = () => {
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const membersPerPage = 9;
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const { toast } = useToast();
@@ -117,40 +114,6 @@ const MembersContent = () => {
     }, 1000);
     return () => clearTimeout(timer);
   }, []);
-
-  // Charger les favoris depuis localStorage au montage
-  useEffect(() => {
-    const savedFavorites = localStorage.getItem('memberFavorites');
-    if (savedFavorites) {
-      try {
-        setFavorites(new Set(JSON.parse(savedFavorites)));
-      } catch (e) {
-        console.error('Error loading favorites:', e);
-      }
-    }
-  }, []);
-
-  // Sauvegarder les favoris dans localStorage
-  const toggleFavorite = (memberId: string) => {
-    setFavorites(prev => {
-      const newFavorites = new Set(prev);
-      if (newFavorites.has(memberId)) {
-        newFavorites.delete(memberId);
-        toast({
-          title: "Favori retiré",
-          description: "Ce membre a été retiré de vos favoris.",
-        });
-      } else {
-        newFavorites.add(memberId);
-        toast({
-          title: "Ajouté aux favoris",
-          description: "Ce membre a été ajouté à vos favoris.",
-        });
-      }
-      localStorage.setItem('memberFavorites', JSON.stringify(Array.from(newFavorites)));
-      return newFavorites;
-    });
-  };
 
   // Récupérer les paramètres d'URL au chargement
   useEffect(() => {
@@ -322,9 +285,9 @@ const MembersContent = () => {
       case "Basic":
         return {
           icon: <Award className="h-3 w-3" />,
-          className: "bg-blue-600 text-white border-blue-700",
-          bgColor: "bg-blue-600",
-          textColor: "text-white"
+          className: "bg-yellow-100 text-yellow-800 border-yellow-300",
+          bgColor: "bg-yellow-100",
+          textColor: "text-yellow-800"
         };
       case "Argent":
         return {
@@ -336,23 +299,23 @@ const MembersContent = () => {
       case "Or":
         return {
           icon: <Crown className="h-3 w-3" />,
-          className: "bg-amber-500 text-white border-amber-600",
-          bgColor: "bg-amber-500",
-          textColor: "text-white"
+          className: "bg-amber-400 text-gray-800 border-amber-500",
+          bgColor: "bg-amber-400",
+          textColor: "text-gray-800"
         };
       case "Institutionnel":
         return {
           icon: <Building className="h-3 w-3" />,
-          className: "bg-purple-600 text-white border-purple-700",
-          bgColor: "bg-purple-600",
+          className: "bg-green-600 text-white border-green-700",
+          bgColor: "bg-green-600",
           textColor: "text-white"
         };
       default:
         return {
           icon: <Award className="h-3 w-3" />,
-          className: "bg-gray-600 text-white border-gray-700",
-          bgColor: "bg-gray-600",
-          textColor: "text-white"
+          className: "bg-white text-gray-700 border-gray-200",
+          bgColor: "bg-white",
+          textColor: "text-gray-700"
         };
     }
   };
@@ -817,9 +780,19 @@ const MembersContent = () => {
                         })()}
                       </h2>
                       {/* Compteur de résultats */}
-                      <span className="text-sm text-[#6F6F6F] font-medium">
-                        {filteredMembers.length} membre{filteredMembers.length > 1 ? 's' : ''} trouvé{filteredMembers.length > 1 ? 's' : ''}
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2.5 px-3 py-2 bg-white border-l-4 border-cpu-orange rounded-r-md shadow-sm">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-cpu-orange/10">
+                            <Users className="h-4 w-4 text-cpu-orange" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Résultats</span>
+                            <span className="text-lg font-bold text-[#221F1F]">
+                              {filteredMembers.length} <span className="text-sm font-normal text-gray-600">membre{filteredMembers.length > 1 ? 's' : ''}</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     <div className="flex items-center gap-3">
                       {/* Toggle vue liste/grille */}
@@ -1020,23 +993,6 @@ const MembersContent = () => {
                             {getSectorIcon(member.sector)}
                           </div>
                         )}
-                          {/* Bouton Favori */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleFavorite(member.id);
-                            }}
-                            className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all z-10 opacity-0 group-hover:opacity-100"
-                            aria-label={favorites.has(member.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
-                          >
-                            <Heart
-                              className={`h-4 w-4 transition-all ${
-                                favorites.has(member.id)
-                                  ? "fill-red-500 text-red-500"
-                                  : "text-gray-600 hover:text-red-500"
-                              }`}
-                            />
-                          </button>
                       </div>
 
                       {/* Card Content */}
@@ -1119,23 +1075,6 @@ const MembersContent = () => {
                               </div>
                             </div>
                           )}
-                          {/* Bouton Favori */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleFavorite(member.id);
-                            }}
-                            className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all z-10"
-                            aria-label={favorites.has(member.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
-                          >
-                            <Heart
-                              className={`h-3.5 w-3.5 transition-all ${
-                                favorites.has(member.id)
-                                  ? "fill-red-500 text-red-500"
-                                  : "text-gray-600 hover:text-red-500"
-                              }`}
-                            />
-                          </button>
                 </div>
 
                         {/* Contenu liste */}
