@@ -125,6 +125,14 @@ function HeaderContent() {
               <div 
                 className="relative"
                 onMouseEnter={() => {
+                  // Fermer le menu Membres si ouvert
+                  if (isMembersMenuOpen) {
+                    setIsMembersMenuOpen(false);
+                    if (membersMenuTimeout) {
+                      clearTimeout(membersMenuTimeout);
+                      setMembersMenuTimeout(null);
+                    }
+                  }
                   if (secteursMenuTimeout) {
                     clearTimeout(secteursMenuTimeout);
                     setSecteursMenuTimeout(null);
@@ -235,6 +243,14 @@ function HeaderContent() {
               <div 
                 className="relative"
                 onMouseEnter={() => {
+                  // Fermer le menu Secteurs si ouvert
+                  if (isSecteursMenuOpen) {
+                    setIsSecteursMenuOpen(false);
+                    if (secteursMenuTimeout) {
+                      clearTimeout(secteursMenuTimeout);
+                      setSecteursMenuTimeout(null);
+                    }
+                  }
                   // Annuler le timeout si on revient sur le menu
                   if (membersMenuTimeout) {
                     clearTimeout(membersMenuTimeout);
@@ -322,26 +338,6 @@ function HeaderContent() {
               </div>
               
               <Link
-                href="/plaidoyer"
-                className={`font-inter text-xs font-medium transition-colors whitespace-nowrap ${
-                  isActive("/plaidoyer")
-                    ? "text-[#F08223] hover:text-[#D97420]"
-                    : "text-[#6F6F6F] hover:text-[#221F1F]"
-                }`}
-              >
-                Plaidoyer & Influence
-              </Link>
-              <Link
-                href="/crm"
-                className={`font-inter text-xs font-medium transition-colors whitespace-nowrap ${
-                  isActive("/crm")
-                    ? "text-[#F08223] hover:text-[#D97420]"
-                    : "text-[#6F6F6F] hover:text-[#221F1F]"
-                }`}
-              >
-                CRM & Réseautage
-              </Link>
-              <Link
                 href="/contact"
                 className={`font-inter text-xs font-medium transition-colors whitespace-nowrap ${
                   isActive("/contact")
@@ -355,15 +351,18 @@ function HeaderContent() {
 
             {/* CTA Buttons */}
             <div className="hidden md:flex items-center gap-2 lg:gap-3 shrink-0">
-              <button className="flex items-center gap-1.5 lg:gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-xs font-semibold px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg transition-all">
+              <button className="flex items-center gap-1.5 lg:gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-xs font-semibold px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg transition-all cursor-pointer">
                 <LogIn className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 <span className="hidden lg:inline">Connexion</span>
                 <span className="lg:hidden">Se connecter</span>
               </button>
-              <button className="flex items-center gap-1.5 lg:gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-xs font-semibold px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg">
+              <Link 
+                href="/membres?tab=adhesion"
+                className="flex items-center gap-1.5 lg:gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-xs font-semibold px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg cursor-pointer"
+              >
                 <UserPlus className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 Adhérer
-              </button>
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}
@@ -619,28 +618,6 @@ function HeaderContent() {
               </div>
               
               <Link
-                href="/plaidoyer"
-                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                  isActive("/plaidoyer")
-                    ? "text-[#F08223] bg-orange-50"
-                    : "text-[#6F6F6F] hover:bg-gray-50"
-                }`}
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                Plaidoyer & Influence
-              </Link>
-              <Link
-                href="/crm"
-                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                  isActive("/crm")
-                    ? "text-[#F08223] bg-orange-50"
-                    : "text-[#6F6F6F] hover:bg-gray-50"
-                }`}
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                CRM & Réseautage
-              </Link>
-              <Link
                 href="/contact"
                 className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
                   isActive("/contact")
@@ -656,19 +633,20 @@ function HeaderContent() {
             {/* CTA Buttons dans le drawer */}
             <div className="flex flex-col gap-3 p-4 border-t border-gray-200 mt-auto">
               <button
-                className="flex items-center justify-center gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all"
+                className="flex items-center justify-center gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all cursor-pointer"
                 onClick={() => setIsDrawerOpen(false)}
               >
                 <LogIn className="w-4 h-4" />
                 Connexion
               </button>
-              <button
-                className="flex items-center justify-center gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
+              <Link
+                href="/membres?tab=adhesion"
+                className="flex items-center justify-center gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all shadow-md hover:shadow-lg cursor-pointer"
                 onClick={() => setIsDrawerOpen(false)}
               >
                 <UserPlus className="w-4 h-4" />
                 Adhérer
-              </button>
+              </Link>
             </div>
           </div>
         </>

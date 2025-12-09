@@ -52,6 +52,7 @@ import {
   Menu
 } from "lucide-react";
 import { membersData, sectors, regions, membershipBenefits, membershipPlans, Member, memberTypes, MemberType, memberBadges } from "./data";
+import { secteursData } from "../secteurs/data";
 import { useToast } from "@/components/ui/use-toast";
 import { 
   IconBTP, 
@@ -105,6 +106,13 @@ const MembersContent = () => {
   const membersPerPage = 9;
   const [isLoading, setIsLoading] = useState(true);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [selectedAdhesionType, setSelectedAdhesionType] = useState<MemberType | "">("");
+  const [hasAffiliation, setHasAffiliation] = useState<boolean>(false);
+  const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
+  const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
+  const [selectedMainSector, setSelectedMainSector] = useState<string>("");
+  const [selectedFiliere, setSelectedFiliere] = useState<string>("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
   const { toast } = useToast();
 
   // Simuler le chargement initial
@@ -114,6 +122,41 @@ const MembersContent = () => {
     }, 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Réinitialiser les états quand le type de membre change
+  useEffect(() => {
+    setHasAffiliation(false);
+    setSelectedPriorities([]);
+    setSelectedSectors([]);
+    setSelectedMainSector("");
+    setSelectedFiliere("");
+    setSelectedSubCategory("");
+  }, [selectedAdhesionType]);
+
+  // Réinitialiser filière et sous-catégorie quand le secteur principal change
+  useEffect(() => {
+    setSelectedFiliere("");
+    setSelectedSubCategory("");
+  }, [selectedMainSector]);
+
+  // Réinitialiser sous-catégorie quand la filière change
+  useEffect(() => {
+    setSelectedSubCategory("");
+  }, [selectedFiliere]);
+
+  // Obtenir les filières du secteur sélectionné
+  const getFilieresForSector = () => {
+    if (!selectedMainSector || !secteursData[selectedMainSector]) return [];
+    return secteursData[selectedMainSector].filieres;
+  };
+
+  // Obtenir les sous-catégories de la filière sélectionnée
+  const getSubCategoriesForFiliere = () => {
+    if (!selectedMainSector || !selectedFiliere) return [];
+    const filieres = getFilieresForSector();
+    const filiere = filieres.find(f => f.id === selectedFiliere);
+    return filiere ? filiere.sousCategories : [];
+  };
 
   // Récupérer les paramètres d'URL au chargement
   useEffect(() => {
@@ -569,13 +612,13 @@ const MembersContent = () => {
                     {/* Navigation Arrows */}
                     <button
                       onClick={() => setFeaturedIndex((prev) => (prev - 1 + recentMembers.length) % recentMembers.length)}
-                      className="hidden md:absolute md:block left-4 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-3 rounded-full hover:bg-orange-700 transition-all hover:scale-110 z-10"
+                      className="hidden md:absolute md:block left-4 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-3 rounded-full hover:bg-orange-700 transition-all hover:scale-110 z-10 cursor-pointer"
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => setFeaturedIndex((prev) => (prev + 1) % recentMembers.length)}
-                      className="hidden md:absolute md:block right-4 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-3 rounded-full hover:bg-orange-700 transition-all hover:scale-110 z-10"
+                      className="hidden md:absolute md:block right-4 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-3 rounded-full hover:bg-orange-700 transition-all hover:scale-110 z-10 cursor-pointer"
                     >
                       <ChevronRight className="h-5 w-5" />
                     </button>
@@ -586,7 +629,7 @@ const MembersContent = () => {
                         <button
                           key={idx}
                           onClick={() => setFeaturedIndex(idx)}
-                          className={`h-2 rounded-full transition-all ${
+                          className={`h-2 rounded-full transition-all cursor-pointer ${
                             idx === featuredIndex ? 'bg-cpu-orange w-6' : 'bg-gray-300 w-2'
                           }`}
                         />
@@ -799,7 +842,7 @@ const MembersContent = () => {
                       <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
                         <button
                           onClick={() => setViewMode("grid")}
-                          className={`p-2 transition-all ${
+                          className={`p-2 transition-all cursor-pointer ${
                             viewMode === "grid" 
                               ? "bg-cpu-orange text-white" 
                               : "bg-white text-gray-600 hover:bg-gray-50"
@@ -810,7 +853,7 @@ const MembersContent = () => {
                         </button>
                         <button
                           onClick={() => setViewMode("list")}
-                          className={`p-2 transition-all ${
+                          className={`p-2 transition-all cursor-pointer ${
                             viewMode === "list" 
                               ? "bg-cpu-orange text-white" 
                               : "bg-white text-gray-600 hover:bg-gray-50"
@@ -856,14 +899,14 @@ const MembersContent = () => {
                           <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[140px]">
                             <button
                               onClick={exportToCSV}
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-t-md flex items-center gap-2 transition-colors"
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-t-md flex items-center gap-2 transition-colors cursor-pointer"
                             >
                               <Download className="h-3 w-3" />
                               Exporter CSV
                             </button>
                             <button
                               onClick={exportToPDF}
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-b-md flex items-center gap-2 transition-colors"
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-b-md flex items-center gap-2 transition-colors cursor-pointer"
                             >
                               <Download className="h-3 w-3" />
                               Exporter PDF
@@ -1362,7 +1405,7 @@ const MembersContent = () => {
                         
                         <div className="md:col-span-2 space-y-2">
                           <Label htmlFor="memberType">Je souhaite adhérer en tant que *</Label>
-                          <Select required>
+                          <Select value={selectedAdhesionType} onValueChange={(value) => setSelectedAdhesionType(value as MemberType)} required>
                             <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange focus:border-cpu-orange">
                               <SelectValue placeholder="Sélectionnez votre type de membre" />
                             </SelectTrigger>
@@ -1374,89 +1417,620 @@ const MembersContent = () => {
                           </Select>
                         </div>
 
-                        {/* Company Info */}
-                        <div className="md:col-span-2 pt-4 border-t border-gray-200">
-                          <h3 className="text-lg font-semibold mb-4 text-cpu-green flex items-center">
-                            <Building2 className="h-5 w-5 mr-2" />
-                            Informations sur l'organisation
-                          </h3>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="companyName">Nom de l'organisation *</Label>
-                          <Input id="companyName" placeholder="Ex: Ma Société SARL" required className="border-gray-300" />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="sector">Secteur d'activité *</Label>
-                          <Select required>
-                            <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange focus:border-cpu-orange">
-                              <SelectValue placeholder="Sélectionnez un secteur" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {sectors.map((sector) => (
-                                <SelectItem key={sector} value={sector}>{sector}</SelectItem>
+                        {/* Champs conditionnels selon le type de membre */}
+                        {selectedAdhesionType === "individuel" && (
+                          <>
+                            <div className="md:col-span-2 pt-4 border-t border-gray-200">
+                              <h3 className="text-lg font-semibold mb-4 text-cpu-green flex items-center">
+                                <Users className="h-5 w-5 mr-2" />
+                                Informations personnelles
+                              </h3>
+                            </div>
+                            
+                            <div className="md:col-span-2 space-y-2">
+                              <Label htmlFor="fullName">Nom & Prénoms *</Label>
+                              <Input id="fullName" placeholder="Prénom et Nom" required className="border-gray-300" />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="phone">Téléphone *</Label>
+                              <Input id="phone" type="tel" placeholder="+225 XX XX XX XX XX" required className="border-gray-300" />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="email">Email *</Label>
+                              <Input id="email" type="email" placeholder="email@exemple.ci" required className="border-gray-300" />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="city">Ville / Région *</Label>
+                              <Select required>
+                                <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                                  <SelectValue placeholder="Sélectionnez une région" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {regions.map((region) => (
+                                    <SelectItem key={region} value={region}>{region}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="status">Statut *</Label>
+                              <Select required>
+                                <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                                  <SelectValue placeholder="Sélectionnez votre statut" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="jeune_etudiant">Jeune/Étudiant</SelectItem>
+                                  <SelectItem value="entrepreneur_projet">Entrepreneur en projet</SelectItem>
+                                  <SelectItem value="professionnel_expert">Professionnel/Expert</SelectItem>
+                                  <SelectItem value="salarie">Salarié</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="md:col-span-2 space-y-2">
+                              <Label>Secteurs d'intérêt (multi-choix) *</Label>
+                              <div className="text-sm text-gray-600 mb-2">Sélectionnez un ou plusieurs secteurs d'intérêt</div>
+                              {Object.entries(secteursData).map(([secteurKey, secteur]) => (
+                                <div key={secteurKey} className="mb-4">
+                                  <div className="font-medium text-sm text-gray-700 mb-2">{secteur.nom}</div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    {secteur.filieres.map((filiere) => (
+                                      <div key={filiere.id} className="flex items-center space-x-2">
+                                        <input
+                                          type="checkbox"
+                                          id={`interest-filiere-${filiere.id}`}
+                                          checked={selectedSectors.includes(filiere.id)}
+                                          onChange={(e) => {
+                                            if (e.target.checked) {
+                                              setSelectedSectors([...selectedSectors, filiere.id]);
+                                            } else {
+                                              setSelectedSectors(selectedSectors.filter(s => s !== filiere.id));
+                                            }
+                                          }}
+                                          className="h-4 w-4 text-cpu-orange focus:ring-cpu-orange border-gray-300 rounded"
+                                        />
+                                        <Label htmlFor={`interest-filiere-${filiere.id}`} className="text-sm font-normal cursor-pointer">{filiere.nom}</Label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                               ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                            </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="region">Région *</Label>
-                          <Select required>
-                            <SelectTrigger className="bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
-                              <SelectValue placeholder="Sélectionnez une région" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {regions.map((region) => (
-                                <SelectItem key={region} value={region}>{region}</SelectItem>
+                            <div className="md:col-span-2 space-y-2">
+                              <Label>Affiliation organisationnelle *</Label>
+                              <div className="flex gap-4">
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    id="affiliation-yes"
+                                    name="affiliation"
+                                    checked={hasAffiliation === true}
+                                    onChange={() => setHasAffiliation(true)}
+                                    className="h-4 w-4 text-cpu-orange focus:ring-cpu-orange"
+                                  />
+                                  <Label htmlFor="affiliation-yes" className="font-normal cursor-pointer">Oui</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    id="affiliation-no"
+                                    name="affiliation"
+                                    checked={hasAffiliation === false}
+                                    onChange={() => setHasAffiliation(false)}
+                                    className="h-4 w-4 text-cpu-orange focus:ring-cpu-orange"
+                                  />
+                                  <Label htmlFor="affiliation-no" className="font-normal cursor-pointer">Non</Label>
+                                </div>
+                              </div>
+                            </div>
+
+                            {hasAffiliation && (
+                              <div className="md:col-span-2 space-y-2">
+                                <Label htmlFor="affiliationType">Type d'organisation *</Label>
+                                <Select required>
+                                  <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                                    <SelectValue placeholder="Rechercher ou sélectionner" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="cooperative">Coopérative</SelectItem>
+                                    <SelectItem value="association">Association</SelectItem>
+                                    <SelectItem value="federation">Fédération</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
+                          </>
+                        )}
+
+                        {selectedAdhesionType === "entreprise" && (
+                          <>
+                            <div className="md:col-span-2 pt-4 border-t border-gray-200">
+                              <h3 className="text-lg font-semibold mb-4 text-cpu-green flex items-center">
+                                <Building2 className="h-5 w-5 mr-2" />
+                                Informations sur l'entreprise
+                              </h3>
+                            </div>
+                            
+                            <div className="md:col-span-2 space-y-2">
+                              <Label htmlFor="companyName">Raison sociale *</Label>
+                              <Input id="companyName" placeholder="Ex: Ma Société SARL" required className="border-gray-300" />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="rccm">N° RCCM / Identifiant fiscal</Label>
+                              <Input id="rccm" placeholder="N° RCCM ou identifiant fiscal" className="border-gray-300" />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="formalizationStatus">Statut de formalisation</Label>
+                              <Select>
+                                <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                                  <SelectValue placeholder="Sélectionnez" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="formalise">Formalisé</SelectItem>
+                                  <SelectItem value="en_cours">En cours de formalisation</SelectItem>
+                                  <SelectItem value="non_formalise">Non formalisé</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="mainSector">Secteur principal *</Label>
+                              <Select value={selectedMainSector} onValueChange={setSelectedMainSector} required>
+                                <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                                  <SelectValue placeholder="Sélectionnez un secteur" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Object.values(secteursData).map((secteur) => (
+                                    <SelectItem key={secteur.id} value={secteur.id}>{secteur.nom}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {selectedMainSector && (
+                              <div className="space-y-2">
+                                <Label htmlFor="filiere">Filière *</Label>
+                                <Select value={selectedFiliere} onValueChange={setSelectedFiliere} required>
+                                  <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                                    <SelectValue placeholder="Sélectionnez une filière" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {getFilieresForSector().map((filiere) => (
+                                      <SelectItem key={filiere.id} value={filiere.id}>{filiere.nom}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
+
+                            {selectedFiliere && (
+                              <div className="space-y-2">
+                                <Label htmlFor="subCategory">Sous-filière</Label>
+                                <Select value={selectedSubCategory} onValueChange={setSelectedSubCategory}>
+                                  <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                                    <SelectValue placeholder="Sélectionnez une sous-filière (optionnel)" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {getSubCategoriesForFiliere().map((subCat) => (
+                                      <SelectItem key={subCat.nom} value={subCat.nom}>{subCat.nom}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
+
+                            <div className="space-y-2">
+                              <Label htmlFor="size">Taille *</Label>
+                              <Select required>
+                                <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                                  <SelectValue placeholder="Sélectionnez" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="micro">Micro</SelectItem>
+                                  <SelectItem value="petite">Petite</SelectItem>
+                                  <SelectItem value="moyenne">Moyenne</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="location">Localisation (ville/région) *</Label>
+                              <Select required>
+                                <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                                  <SelectValue placeholder="Sélectionnez une région" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {regions.map((region) => (
+                                    <SelectItem key={region} value={region}>{region}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="md:col-span-2 pt-4 border-t border-gray-200">
+                              <h3 className="text-lg font-semibold mb-4 text-cpu-orange flex items-center">
+                                <Users className="h-5 w-5 mr-2" />
+                                Contact principal
+                              </h3>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="contactName">Nom *</Label>
+                              <Input id="contactName" placeholder="Prénom et Nom" required className="border-gray-300" />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="position">Fonction</Label>
+                              <Input id="position" placeholder="Ex: Directeur Général" className="border-gray-300" />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="email">Email professionnel *</Label>
+                              <Input id="email" type="email" placeholder="email@entreprise.ci" required className="border-gray-300" />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="phone">Téléphone *</Label>
+                              <Input id="phone" type="tel" placeholder="+225 XX XX XX XX XX" required className="border-gray-300" />
+                            </div>
+
+                            <div className="md:col-span-2 space-y-2">
+                              <Label>Besoins prioritaires (3 max) *</Label>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                                {["Financement", "Marchés", "Digitalisation", "Formation", "Export", "Structuration filière"].map((priority) => (
+                                  <div key={priority} className="flex items-center space-x-2">
+                                    <input
+                                      type="checkbox"
+                                      id={`priority-${priority}`}
+                                      checked={selectedPriorities.includes(priority)}
+                                      onChange={(e) => {
+                                        if (e.target.checked && selectedPriorities.length < 3) {
+                                          setSelectedPriorities([...selectedPriorities, priority]);
+                                        } else if (!e.target.checked) {
+                                          setSelectedPriorities(selectedPriorities.filter(p => p !== priority));
+                                        }
+                                      }}
+                                      disabled={!selectedPriorities.includes(priority) && selectedPriorities.length >= 3}
+                                      className="h-4 w-4 text-cpu-orange focus:ring-cpu-orange border-gray-300 rounded disabled:opacity-50"
+                                    />
+                                    <Label htmlFor={`priority-${priority}`} className="text-sm font-normal cursor-pointer">{priority}</Label>
+                                  </div>
+                                ))}
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">Maximum 3 sélections</p>
+                            </div>
+                          </>
+                        )}
+
+                        {selectedAdhesionType === "associatif" && (
+                          <>
+                            <div className="md:col-span-2 pt-4 border-t border-gray-200">
+                              <h3 className="text-lg font-semibold mb-4 text-cpu-green flex items-center">
+                                <Building2 className="h-5 w-5 mr-2" />
+                                Informations sur l'organisation
+                              </h3>
+                            </div>
+                            
+                            <div className="md:col-span-2 space-y-2">
+                              <Label htmlFor="orgName">Nom de l'organisation *</Label>
+                              <Input id="orgName" placeholder="Nom de l'organisation" required className="border-gray-300" />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="orgType">Type *</Label>
+                              <Select required>
+                                <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                                  <SelectValue placeholder="Sélectionnez" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="cooperative">Coopérative</SelectItem>
+                                  <SelectItem value="federation">Fédération</SelectItem>
+                                  <SelectItem value="association">Association</SelectItem>
+                                  <SelectItem value="gie">GIE</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="mainSector">Secteur principal *</Label>
+                              <Select value={selectedMainSector} onValueChange={setSelectedMainSector} required>
+                                <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                                  <SelectValue placeholder="Sélectionnez un secteur" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Object.values(secteursData).map((secteur) => (
+                                    <SelectItem key={secteur.id} value={secteur.id}>{secteur.nom}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {selectedMainSector && (
+                              <div className="space-y-2">
+                                <Label htmlFor="filiere">Filière principale *</Label>
+                                <Select value={selectedFiliere} onValueChange={setSelectedFiliere} required>
+                                  <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                                    <SelectValue placeholder="Sélectionnez une filière" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {getFilieresForSector().map((filiere) => (
+                                      <SelectItem key={filiere.id} value={filiere.id}>{filiere.nom}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
+
+                            <div className="md:col-span-2 space-y-2">
+                              <Label>Filières secondaires (optionnel)</Label>
+                              <div className="text-sm text-gray-600 mb-2">Sélectionnez d'autres filières si applicable</div>
+                              {Object.entries(secteursData).map(([secteurKey, secteur]) => (
+                                <div key={secteurKey} className="mb-4">
+                                  <div className="font-medium text-sm text-gray-700 mb-2">{secteur.nom}</div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    {secteur.filieres.map((filiere) => (
+                                      <div key={filiere.id} className="flex items-center space-x-2">
+                                        <input
+                                          type="checkbox"
+                                          id={`secondary-filiere-${filiere.id}`}
+                                          checked={selectedSectors.includes(filiere.id)}
+                                          onChange={(e) => {
+                                            if (e.target.checked) {
+                                              setSelectedSectors([...selectedSectors, filiere.id]);
+                                            } else {
+                                              setSelectedSectors(selectedSectors.filter(s => s !== filiere.id));
+                                            }
+                                          }}
+                                          disabled={filiere.id === selectedFiliere}
+                                          className="h-4 w-4 text-cpu-orange focus:ring-cpu-orange border-gray-300 rounded disabled:opacity-50"
+                                        />
+                                        <Label htmlFor={`secondary-filiere-${filiere.id}`} className="text-sm font-normal cursor-pointer">{filiere.nom}</Label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                               ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                            </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="employees">Nombre d'employés</Label>
-                          <Select>
-                            <SelectTrigger className="bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
-                              <SelectValue placeholder="Sélectionnez" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="1-10">1 - 10 employés</SelectItem>
-                              <SelectItem value="11-50">11 - 50 employés</SelectItem>
-                              <SelectItem value="51-100">51 - 100 employés</SelectItem>
-                              <SelectItem value="100+">Plus de 100 employés</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                            <div className="md:col-span-2 space-y-2">
+                              <Label>Zone d'intervention (régions) *</Label>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                                {regions.map((region) => (
+                                  <div key={region} className="flex items-center space-x-2">
+                                    <input
+                                      type="checkbox"
+                                      id={`region-${region}`}
+                                      checked={selectedSectors.includes(region)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setSelectedSectors([...selectedSectors, region]);
+                                        } else {
+                                          setSelectedSectors(selectedSectors.filter(s => s !== region));
+                                        }
+                                      }}
+                                      className="h-4 w-4 text-cpu-orange focus:ring-cpu-orange border-gray-300 rounded"
+                                    />
+                                    <Label htmlFor={`region-${region}`} className="text-sm font-normal cursor-pointer">{region}</Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
 
-                        {/* Contact Info */}
-                        <div className="md:col-span-2 pt-8 border-t border-gray-200">
-                          <h3 className="text-lg font-semibold mb-4 text-cpu-orange flex items-center">
-                            <Users className="h-5 w-5 mr-2" />
-                            Informations de contact
-                          </h3>
-                        </div>
+                            <div className="md:col-span-2 pt-4 border-t border-gray-200">
+                              <h3 className="text-lg font-semibold mb-4 text-cpu-orange flex items-center">
+                                <Users className="h-5 w-5 mr-2" />
+                                Gouvernance
+                              </h3>
+                            </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="contactName">Nom du représentant *</Label>
-                          <Input id="contactName" placeholder="Prénom et Nom" required className="border-gray-300" />
-                        </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="presidentName">Président/Coordonnateur *</Label>
+                              <Input id="presidentName" placeholder="Nom complet" required className="border-gray-300" />
+                            </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="position">Fonction</Label>
-                          <Input id="position" placeholder="Ex: Directeur Général" className="border-gray-300" />
-                        </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="presidentPhone">Téléphone *</Label>
+                              <Input id="presidentPhone" type="tel" placeholder="+225 XX XX XX XX XX" required className="border-gray-300" />
+                            </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="email">Email professionnel *</Label>
-                          <Input id="email" type="email" placeholder="email@entreprise.ci" required className="border-gray-300" />
-                        </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="presidentEmail">Email *</Label>
+                              <Input id="presidentEmail" type="email" placeholder="email@organisation.ci" required className="border-gray-300" />
+                            </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="phone">Téléphone *</Label>
-                          <Input id="phone" type="tel" placeholder="+225 XX XX XX XX XX" required className="border-gray-300" />
-                        </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="memberCount">Nombre approximatif de membres *</Label>
+                              <Select required>
+                                <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                                  <SelectValue placeholder="Sélectionnez" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="1-50">1 - 50 membres</SelectItem>
+                                  <SelectItem value="51-100">51 - 100 membres</SelectItem>
+                                  <SelectItem value="101-500">101 - 500 membres</SelectItem>
+                                  <SelectItem value="500+">Plus de 500 membres</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="md:col-span-2 space-y-2">
+                              <Label htmlFor="legalStatus">Statut légal et documents clés (optionnel)</Label>
+                              <Textarea 
+                                id="legalStatus" 
+                                placeholder="Décrivez le statut légal et les documents disponibles..."
+                                className="min-h-[100px] border-gray-300"
+                              />
+                            </div>
+                          </>
+                        )}
+
+                        {selectedAdhesionType === "institutionnel" && (
+                          <>
+                            <div className="md:col-span-2 pt-4 border-t border-gray-200">
+                              <h3 className="text-lg font-semibold mb-4 text-cpu-green flex items-center">
+                                <Building2 className="h-5 w-5 mr-2" />
+                                Informations sur l'institution
+                              </h3>
+                            </div>
+                            
+                            <div className="md:col-span-2 space-y-2">
+                              <Label htmlFor="institutionName">Nom de l'institution / entreprise *</Label>
+                              <Input id="institutionName" placeholder="Nom de l'institution" required className="border-gray-300" />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="institutionType">Type *</Label>
+                              <Select required>
+                                <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                                  <SelectValue placeholder="Sélectionnez" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="corporate">Corporate</SelectItem>
+                                  <SelectItem value="banque_assurance">Banque/Assurance</SelectItem>
+                                  <SelectItem value="bailleur">Bailleur</SelectItem>
+                                  <SelectItem value="collectivite">Collectivité</SelectItem>
+                                  <SelectItem value="agence_publique">Agence publique</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="md:col-span-2 pt-4 border-t border-gray-200">
+                              <h3 className="text-lg font-semibold mb-4 text-cpu-orange flex items-center">
+                                <Users className="h-5 w-5 mr-2" />
+                                Contact principal
+                              </h3>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="contactName">Nom *</Label>
+                              <Input id="contactName" placeholder="Prénom et Nom" required className="border-gray-300" />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="position">Fonction</Label>
+                              <Input id="position" placeholder="Ex: Directeur Général" className="border-gray-300" />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="email">Email professionnel *</Label>
+                              <Input id="email" type="email" placeholder="email@institution.ci" required className="border-gray-300" />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="phone">Téléphone *</Label>
+                              <Input id="phone" type="tel" placeholder="+225 XX XX XX XX XX" required className="border-gray-300" />
+                            </div>
+
+                            <div className="md:col-span-2 space-y-2">
+                              <Label>Axes d'intérêt *</Label>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                                {["Financement", "Innovation", "Emploi jeune", "Export", "Climat/RSE", "Filières prioritaires"].map((axis) => (
+                                  <div key={axis} className="flex items-center space-x-2">
+                                    <input
+                                      type="checkbox"
+                                      id={`axis-${axis}`}
+                                      checked={selectedPriorities.includes(axis)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setSelectedPriorities([...selectedPriorities, axis]);
+                                        } else {
+                                          setSelectedPriorities(selectedPriorities.filter(p => p !== axis));
+                                        }
+                                      }}
+                                      className="h-4 w-4 text-cpu-orange focus:ring-cpu-orange border-gray-300 rounded"
+                                    />
+                                    <Label htmlFor={`axis-${axis}`} className="text-sm font-normal cursor-pointer">{axis}</Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="md:col-span-2 space-y-2">
+                              <Label>Zone d'intervention *</Label>
+                              <div className="flex gap-4">
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    id="zone-nationale"
+                                    name="zone"
+                                    className="h-4 w-4 text-cpu-orange focus:ring-cpu-orange"
+                                  />
+                                  <Label htmlFor="zone-nationale" className="font-normal cursor-pointer">Nationale</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    id="zone-regions"
+                                    name="zone"
+                                    className="h-4 w-4 text-cpu-orange focus:ring-cpu-orange"
+                                  />
+                                  <Label htmlFor="zone-regions" className="font-normal cursor-pointer">Régions ciblées</Label>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="md:col-span-2 space-y-2">
+                              <Label htmlFor="targetRegions">Régions ciblées (si applicable)</Label>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                                {regions.map((region) => (
+                                  <div key={region} className="flex items-center space-x-2">
+                                    <input
+                                      type="checkbox"
+                                      id={`target-region-${region}`}
+                                      checked={selectedSectors.includes(`region-${region}`)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setSelectedSectors([...selectedSectors, `region-${region}`]);
+                                        } else {
+                                          setSelectedSectors(selectedSectors.filter(s => s !== `region-${region}`));
+                                        }
+                                      }}
+                                      className="h-4 w-4 text-cpu-orange focus:ring-cpu-orange border-gray-300 rounded"
+                                    />
+                                    <Label htmlFor={`target-region-${region}`} className="text-sm font-normal cursor-pointer">{region}</Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="md:col-span-2 space-y-2">
+                              <Label>Filières prioritaires *</Label>
+                              <div className="text-sm text-gray-600 mb-2">Sélectionnez les filières prioritaires pour votre institution</div>
+                              {Object.entries(secteursData).map(([secteurKey, secteur]) => (
+                                <div key={secteurKey} className="mb-4">
+                                  <div className="font-medium text-sm text-gray-700 mb-2">{secteur.nom}</div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    {secteur.filieres.map((filiere) => (
+                                      <div key={filiere.id} className="flex items-center space-x-2">
+                                        <input
+                                          type="checkbox"
+                                          id={`priority-filiere-${filiere.id}`}
+                                          checked={selectedSectors.includes(`filiere-${filiere.id}`)}
+                                          onChange={(e) => {
+                                            if (e.target.checked) {
+                                              setSelectedSectors([...selectedSectors, `filiere-${filiere.id}`]);
+                                            } else {
+                                              setSelectedSectors(selectedSectors.filter(s => s !== `filiere-${filiere.id}`));
+                                            }
+                                          }}
+                                          className="h-4 w-4 text-cpu-orange focus:ring-cpu-orange border-gray-300 rounded"
+                                        />
+                                        <Label htmlFor={`priority-filiere-${filiere.id}`} className="text-sm font-normal cursor-pointer">{filiere.nom}</Label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
 
                         {/* Membership Plan */}
                         <div className="md:col-span-2 pt-8 border-t border-gray-200">
