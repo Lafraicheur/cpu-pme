@@ -552,7 +552,7 @@ const SecteursContent = () => {
                               : 'text-[#221F1F] hover:text-cpu-orange'
                           }`}
                         >
-                          {section.titre}
+                      {section.titre}
                         </Link>
                       </div>
                     
@@ -570,7 +570,7 @@ const SecteursContent = () => {
                             : `/membres?tag=${encodeURIComponent(tag)}&subsector=${encodeURIComponent(subSectorId)}`;
                           return (
                             <div 
-                              key={tagIndex}
+                            key={tagIndex}
                               className={`
                                 flex items-center gap-2.5 pl-6 pr-4 py-2.5 rounded-md ml-4
                                 transition-all duration-200
@@ -598,8 +598,8 @@ const SecteursContent = () => {
                                     : 'text-[#221F1F] hover:text-cpu-orange'
                                   }
                                 `}
-                              >
-                                {tag}
+                        >
+                            {tag}
                               </Link>
                             </div>
                           );
@@ -653,10 +653,10 @@ const SecteursContent = () => {
             </div>
           ) : (
             filteredFilieres.map((filiere) => (
-              <div
-                key={filiere.id}
-                className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-10"
-              >
+            <div
+              key={filiere.id}
+              className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-10"
+            >
                 {/* Contenu généré par l'Accordion à deux niveaux (avec titres + tags) */}
                 {renderFiliereContent(filiere, secteurKey, filiere.id)}
               </div>

@@ -195,6 +195,34 @@ const MembersContent = () => {
   // Déterminer l'onglet actif depuis l'URL
   const activeTab = searchParams.get('tab') || 'annuaire';
 
+  // Fonction pour obtenir le titre adapté selon l'onglet actif
+  const getPageTitle = () => {
+    switch (activeTab) {
+      case 'annuaire':
+        return 'Annuaire';
+      case 'avantages':
+        return 'Avantages Membres';
+      case 'adhesion':
+        return 'Adhérer';
+      default:
+        return 'Nos Membres';
+    }
+  };
+
+  // Fonction pour obtenir la description adaptée selon l'onglet actif
+  const getPageDescription = () => {
+    switch (activeTab) {
+      case 'annuaire':
+        return 'Rejoignez la plus grande communauté d\'entrepreneurs, PME, entreprises, institutions et partenaires de Côte d\'Ivoire';
+      case 'avantages':
+        return 'Découvrez tous les avantages et formules d\'adhésion pour développer votre entreprise avec CPU-PME';
+      case 'adhesion':
+        return 'Rejoignez CPU-PME et bénéficiez d\'un accompagnement complet pour le développement de votre entreprise';
+      default:
+        return 'Rejoignez la plus grande communauté d\'entrepreneurs, PME, entreprises, institutions et partenaires de Côte d\'Ivoire';
+    }
+  };
+
   // Fonction de tri
   const sortMembers = (a: Member, b: Member) => {
     switch (sortOrder) {
@@ -530,11 +558,22 @@ const MembersContent = () => {
 
         {/* CONTENU */}
         <div className="relative z-10 container mx-auto px-4 text-center text-white">
+          <div className="mb-4">
+            <span className="text-lg md:text-xl font-medium text-white/80">Membres</span>
+            {activeTab !== 'annuaire' && (
+              <>
+                <span className="mx-2 text-white/60">/</span>
+                <span className="text-lg md:text-xl font-semibold text-white">
+                  {activeTab === 'avantages' ? 'Avantages' : activeTab === 'adhesion' ? 'Adhérer' : ''}
+                </span>
+              </>
+            )}
+          </div>
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in">
-            Nos Membres
+            {getPageTitle()}
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in">
-             Rejoignez la plus grande communauté d'entrepreneurs, PME, entreprises, institutions et partenaires de Côte d'Ivoire
+            {getPageDescription()}
           </p>
         </div>
       </section>
@@ -1556,18 +1595,18 @@ const MembersContent = () => {
                         {selectedAdhesionType === "entreprise" && (
                           <>
                             <div className="md:col-span-2 pt-4 border-t border-gray-200">
-                              <h3 className="text-lg font-semibold mb-4 text-cpu-green flex items-center">
-                                <Building2 className="h-5 w-5 mr-2" />
-                                Informations sur l'entreprise
-                              </h3>
-                            </div>
-                            
+                          <h3 className="text-lg font-semibold mb-4 text-cpu-green flex items-center">
+                            <Building2 className="h-5 w-5 mr-2" />
+                            Informations sur l'entreprise
+                          </h3>
+                        </div>
+                        
                             <div className="md:col-span-2 space-y-2">
                               <Label htmlFor="companyName">Raison sociale *</Label>
-                              <Input id="companyName" placeholder="Ex: Ma Société SARL" required className="border-gray-300" />
-                            </div>
-
-                            <div className="space-y-2">
+                          <Input id="companyName" placeholder="Ex: Ma Société SARL" required className="border-gray-300" />
+                        </div>
+                        
+                        <div className="space-y-2">
                               <Label htmlFor="rccm">N° RCCM / Identifiant fiscal</Label>
                               <Input id="rccm" placeholder="N° RCCM ou identifiant fiscal" className="border-gray-300" />
                             </div>
@@ -1590,18 +1629,18 @@ const MembersContent = () => {
                               <Label htmlFor="mainSector">Secteur principal *</Label>
                               <Select value={selectedMainSector} onValueChange={setSelectedMainSector} required>
                                 <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
-                                  <SelectValue placeholder="Sélectionnez un secteur" />
-                                </SelectTrigger>
-                                <SelectContent>
+                              <SelectValue placeholder="Sélectionnez un secteur" />
+                            </SelectTrigger>
+                            <SelectContent>
                                   {Object.values(secteursData).map((secteur) => (
                                     <SelectItem key={secteur.id} value={secteur.id}>{secteur.nom}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
 
                             {selectedMainSector && (
-                              <div className="space-y-2">
+                        <div className="space-y-2">
                                 <Label htmlFor="filiere">Filière *</Label>
                                 <Select value={selectedFiliere} onValueChange={setSelectedFiliere} required>
                                   <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
@@ -1634,7 +1673,7 @@ const MembersContent = () => {
 
                             <div className="space-y-2">
                               <Label htmlFor="size">Taille *</Label>
-                              <Select required>
+                          <Select required>
                                 <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
                                   <SelectValue placeholder="Sélectionnez" />
                                 </SelectTrigger>
@@ -1650,15 +1689,15 @@ const MembersContent = () => {
                               <Label htmlFor="location">Localisation (ville/région) *</Label>
                               <Select required>
                                 <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
-                                  <SelectValue placeholder="Sélectionnez une région" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {regions.map((region) => (
-                                    <SelectItem key={region} value={region}>{region}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
+                              <SelectValue placeholder="Sélectionnez une région" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {regions.map((region) => (
+                                <SelectItem key={region} value={region}>{region}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
 
                             <div className="md:col-span-2 pt-4 border-t border-gray-200">
                               <h3 className="text-lg font-semibold mb-4 text-cpu-orange flex items-center">
@@ -1667,7 +1706,7 @@ const MembersContent = () => {
                               </h3>
                             </div>
 
-                            <div className="space-y-2">
+                        <div className="space-y-2">
                               <Label htmlFor="contactName">Nom *</Label>
                               <Input id="contactName" placeholder="Prénom et Nom" required className="border-gray-300" />
                             </div>
@@ -1733,16 +1772,16 @@ const MembersContent = () => {
                               <Label htmlFor="orgType">Type *</Label>
                               <Select required>
                                 <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
-                                  <SelectValue placeholder="Sélectionnez" />
-                                </SelectTrigger>
-                                <SelectContent>
+                              <SelectValue placeholder="Sélectionnez" />
+                            </SelectTrigger>
+                            <SelectContent>
                                   <SelectItem value="cooperative">Coopérative</SelectItem>
                                   <SelectItem value="federation">Fédération</SelectItem>
                                   <SelectItem value="association">Association</SelectItem>
                                   <SelectItem value="gie">GIE</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
+                            </SelectContent>
+                          </Select>
+                        </div>
 
                             <div className="space-y-2">
                               <Label htmlFor="mainSector">Secteur principal *</Label>
@@ -1830,13 +1869,13 @@ const MembersContent = () => {
                             </div>
 
                             <div className="md:col-span-2 pt-4 border-t border-gray-200">
-                              <h3 className="text-lg font-semibold mb-4 text-cpu-orange flex items-center">
-                                <Users className="h-5 w-5 mr-2" />
+                          <h3 className="text-lg font-semibold mb-4 text-cpu-orange flex items-center">
+                            <Users className="h-5 w-5 mr-2" />
                                 Gouvernance
-                              </h3>
-                            </div>
+                          </h3>
+                        </div>
 
-                            <div className="space-y-2">
+                        <div className="space-y-2">
                               <Label htmlFor="presidentName">Président/Coordonnateur *</Label>
                               <Input id="presidentName" placeholder="Nom complet" required className="border-gray-300" />
                             </div>
@@ -1916,23 +1955,23 @@ const MembersContent = () => {
 
                             <div className="space-y-2">
                               <Label htmlFor="contactName">Nom *</Label>
-                              <Input id="contactName" placeholder="Prénom et Nom" required className="border-gray-300" />
-                            </div>
+                          <Input id="contactName" placeholder="Prénom et Nom" required className="border-gray-300" />
+                        </div>
 
-                            <div className="space-y-2">
-                              <Label htmlFor="position">Fonction</Label>
-                              <Input id="position" placeholder="Ex: Directeur Général" className="border-gray-300" />
-                            </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="position">Fonction</Label>
+                          <Input id="position" placeholder="Ex: Directeur Général" className="border-gray-300" />
+                        </div>
 
-                            <div className="space-y-2">
-                              <Label htmlFor="email">Email professionnel *</Label>
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email professionnel *</Label>
                               <Input id="email" type="email" placeholder="email@institution.ci" required className="border-gray-300" />
-                            </div>
+                        </div>
 
-                            <div className="space-y-2">
-                              <Label htmlFor="phone">Téléphone *</Label>
-                              <Input id="phone" type="tel" placeholder="+225 XX XX XX XX XX" required className="border-gray-300" />
-                            </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="phone">Téléphone *</Label>
+                          <Input id="phone" type="tel" placeholder="+225 XX XX XX XX XX" required className="border-gray-300" />
+                        </div>
 
                             <div className="md:col-span-2 space-y-2">
                               <Label>Axes d'intérêt *</Label>
