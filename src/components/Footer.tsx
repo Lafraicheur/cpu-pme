@@ -15,7 +15,7 @@ export default function Footer() {
               alt="CPU-PME Logo"
               width={160}
               height={50}
-              className="h-12 w-auto object-contain brightness-0 invert"
+              className="h-12 w-auto object-contain"
             />
             <p className="font-inter text-sm text-gray-300 leading-relaxed">
               La Confédération des Petites et Moyennes Entreprises, votre partenaire pour le développement des PME.

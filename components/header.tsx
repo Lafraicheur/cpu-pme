@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import {
   LogIn,
   UserPlus,
@@ -20,52 +20,38 @@ import {
   Users,
   Award,
   Building2,
-  Target,
-  Clock,
-  Handshake,
-  Newspaper,
-  FileText,
+  Megaphone,
+  HandshakeIcon,
 } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
+} from "@/components/ui/dialog";
 
+// Composant wrapper pour gérer useSearchParams avec Suspense
 function HeaderContent() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const pathname = usePathname();
   const [isMembersMenuOpen, setIsMembersMenuOpen] = useState(false);
-  const [membersMenuTimeout, setMembersMenuTimeout] =
-    useState<NodeJS.Timeout | null>(null);
   const [isSecteursMenuOpen, setIsSecteursMenuOpen] = useState(false);
-  const [secteursMenuTimeout, setSecteursMenuTimeout] =
-    useState<NodeJS.Timeout | null>(null);
-  const [isAProposMenuOpen, setIsAProposMenuOpen] = useState(false);
-  const [aProposMenuTimeout, setAProposMenuTimeout] =
-    useState<NodeJS.Timeout | null>(null);
-  const [isActualitesMenuOpen, setIsActualitesMenuOpen] = useState(false);
-  const [actualitesMenuTimeout, setActualitesMenuTimeout] =
-    useState<NodeJS.Timeout | null>(null);
-  // États pour les menus mobiles
   const [isMobileMembersOpen, setIsMobileMembersOpen] = useState(false);
   const [isMobileSecteursOpen, setIsMobileSecteursOpen] = useState(false);
-  const [isMobileAProposOpen, setIsMobileAProposOpen] = useState(false);
-  const [isMobileActualitesOpen, setIsMobileActualitesOpen] = useState(false);
   const searchParams = useSearchParams();
 
-  // Debug: afficher le pathname
-  useEffect(() => {
-    console.log("Current pathname:", pathname);
-  }, [pathname]);
+  // Utilisation de useRef pour les timeouts au lieu de useState
+  const [membersMenuTimeout, setMembersMenuTimeout] =
+    useState<NodeJS.Timeout | null>(null);
+  const [secteursMenuTimeout, setSecteursMenuTimeout] =
+    useState<NodeJS.Timeout | null>(null);
 
-  // Nettoyer le timeout au démontage
+  // Nettoyer les timeouts au démontage
   useEffect(() => {
     return () => {
       if (membersMenuTimeout) {
@@ -74,14 +60,8 @@ function HeaderContent() {
       if (secteursMenuTimeout) {
         clearTimeout(secteursMenuTimeout);
       }
-      if (aProposMenuTimeout) {
-        clearTimeout(aProposMenuTimeout);
-      }
-      if (actualitesMenuTimeout) {
-        clearTimeout(actualitesMenuTimeout);
-      }
     };
-  }, [membersMenuTimeout, secteursMenuTimeout, aProposMenuTimeout, actualitesMenuTimeout]);
+  }, [membersMenuTimeout, secteursMenuTimeout]);
 
   // Empêcher le scroll quand le drawer est ouvert
   useEffect(() => {
@@ -120,28 +100,20 @@ function HeaderContent() {
     return null;
   };
 
-  // Fonction pour vérifier quel onglet À Propos est actif
-  const getActiveAProposTab = () => {
-    if (pathname === "/a-propos") {
-      const tab = searchParams.get("tab");
-      return tab || "mission";
-    }
-    return null;
-  };
-
-  // Fonction pour vérifier quel onglet Actualités est actif
-  const getActiveActualitesTab = () => {
-    if (pathname === "/actualites") {
-      const tab = searchParams.get("tab");
-      return tab || "actualites";
-    }
-    return null;
-  };
-
   const activeMemberTab = getActiveMemberTab();
   const activeSecteurTab = getActiveSecteurTab();
-  const activeAProposTab = getActiveAProposTab();
-  const activeActualitesTab = getActiveActualitesTab();
+
+  // Fonction pour gérer la soumission du formulaire
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implémenter la logique de connexion
+    console.log("Formulaire de connexion soumis");
+  };
+
+  // Fonction pour gérer le clic sur le bouton Adhérer
+  const handleAdhererClick = () => {
+    window.location.href = "/membres?tab=adhesion";
+  };
 
   return (
     <>
@@ -151,17 +123,19 @@ function HeaderContent() {
           <div className="flex items-center justify-between gap-2 sm:gap-4 md:gap-6">
             {/* Logo */}
             <div className="flex items-center shrink-0">
-              <Image
-                src="/logo.png"
-                alt="CPU-PME Logo"
-                width={140}
-                height={45}
-                priority
-                className="h-10 sm:h-12 w-auto object-contain"
-              />
+              <Link href="/">
+                <Image
+                  src="/logo.png"
+                  alt="CPU-PME Logo"
+                  width={140}
+                  height={45}
+                  priority
+                  className="h-10 sm:h-12 w-auto object-contain"
+                />
+              </Link>
             </div>
 
-            {/* Navigation */}
+            {/* Navigation Desktop */}
             <nav className="hidden xl:flex items-center gap-4 flex-1 justify-center">
               <Link
                 href="/"
@@ -173,180 +147,26 @@ function HeaderContent() {
               >
                 Accueil
               </Link>
-
-              {/* Menu À Propos avec sous-menu */}
-              <div
-                className="relative"
-                onMouseEnter={() => {
-                  if (aProposMenuTimeout) {
-                    clearTimeout(aProposMenuTimeout);
-                    setAProposMenuTimeout(null);
-                  }
-                  setIsAProposMenuOpen(true);
-                }}
-                onMouseLeave={() => {
-                  const timeout = setTimeout(() => {
-                    setIsAProposMenuOpen(false);
-                  }, 200);
-                  setAProposMenuTimeout(timeout);
-                }}
+              <Link
+                href="/a-propos"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  pathname.startsWith("/a-propos")
+                    ? "text-[#F08223] font-semibold border-[#F08223]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
               >
-                <button
-                  className={`font-inter text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1 pb-1 border-b-2 ${
-                    isActive("/a-propos")
-                      ? "text-[#F08223] font-semibold border-[#F08223]"
-                      : "text-[#6F6F6F] hover:text-[#221F1F] border-transparent"
-                  }`}
-                >
-                  À Propos
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform ${
-                      isAProposMenuOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Sous-menu À Propos */}
-                {isAProposMenuOpen && (
-                  <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                    onMouseEnter={() => {
-                      if (aProposMenuTimeout) {
-                        clearTimeout(aProposMenuTimeout);
-                        setAProposMenuTimeout(null);
-                      }
-                      setIsAProposMenuOpen(true);
-                    }}
-                    onMouseLeave={() => {
-                      const timeout = setTimeout(() => {
-                        setIsAProposMenuOpen(false);
-                      }, 200);
-                      setAProposMenuTimeout(timeout);
-                    }}
-                  >
-                    <Link
-                      href="/a-propos?tab=mission"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-t-lg mx-2 ${
-                        activeAProposTab === "mission"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Target className="w-4 h-4" />
-                      Mission & Vision
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=histoire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeAProposTab === "histoire"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Clock className="w-4 h-4" />
-                      Histoire
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=equipe"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeAProposTab === "equipe"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Users className="w-4 h-4" />
-                      Équipe
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=partenaires"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
-                        activeAProposTab === "partenaires"
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                      }`}
-                    >
-                      <Handshake className="w-4 h-4" />
-                      Partenaires
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              {/* Menu Actualités & Publications avec sous-menu */}
-              <div
-                className="relative"
-                onMouseEnter={() => {
-                  if (actualitesMenuTimeout) {
-                    clearTimeout(actualitesMenuTimeout);
-                    setActualitesMenuTimeout(null);
-                  }
-                  setIsActualitesMenuOpen(true);
-                }}
-                onMouseLeave={() => {
-                  const timeout = setTimeout(() => {
-                    setIsActualitesMenuOpen(false);
-                  }, 200);
-                  setActualitesMenuTimeout(timeout);
-                }}
+                À Propos
+              </Link>
+              <Link
+                href="/actualites"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  pathname.startsWith("/actualites")
+                    ? "text-[#F08223] font-semibold border-[#F08223]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
               >
-                <button
-                  className={`font-inter text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1 pb-1 border-b-2 ${
-                    isActive("/actualites")
-                      ? "text-[#F08223] font-semibold border-[#F08223]"
-                      : "text-[#6F6F6F] hover:text-[#221F1F] border-transparent"
-                  }`}
-                >
-                  Actualités & Publications
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform ${
-                      isActualitesMenuOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Sous-menu Actualités & Publications */}
-                {isActualitesMenuOpen && (
-                  <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                    onMouseEnter={() => {
-                      if (actualitesMenuTimeout) {
-                        clearTimeout(actualitesMenuTimeout);
-                        setActualitesMenuTimeout(null);
-                      }
-                      setIsActualitesMenuOpen(true);
-                    }}
-                    onMouseLeave={() => {
-                      const timeout = setTimeout(() => {
-                        setIsActualitesMenuOpen(false);
-                      }, 200);
-                      setActualitesMenuTimeout(timeout);
-                    }}
-                  >
-                    <Link
-                      href="/actualites?tab=actualites"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-t-lg mx-2 ${
-                        activeActualitesTab === "actualites"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Newspaper className="w-4 h-4" />
-                      Actualités
-                    </Link>
-                    <Link
-                      href="/actualites?tab=publications"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
-                        activeActualitesTab === "publications"
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                      }`}
-                    >
-                      <FileText className="w-4 h-4" />
-                      Publications
-                    </Link>
-                  </div>
-                )}
-              </div>
+                Actualités & Publications
+              </Link>
 
               {/* Menu Secteurs avec sous-menu */}
               <div
@@ -368,7 +188,7 @@ function HeaderContent() {
                 <button
                   className={`font-inter text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1 pb-1 border-b-2 ${
                     isActive("/secteurs")
-                      ? "text-[#F08223] font-semibold hover:text-[#D97420]"
+                      ? "text-[#F08223] font-semibold border-[#F08223]"
                       : "text-[#6F6F6F] hover:text-[#221F1F] border-transparent"
                   }`}
                 >
@@ -445,6 +265,7 @@ function HeaderContent() {
                   </div>
                 )}
               </div>
+
               {/* Menu Membres avec sous-menu */}
               <div
                 className="relative"
@@ -467,24 +288,24 @@ function HeaderContent() {
                 <button
                   className={`font-inter text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1 pb-1 border-b-2 ${
                     isActive("/membres")
-                      ? "text-[#F08223] font-semibold hover:text-[#D97420]"
+                      ? "text-[#F08223] font-semibold border-[#F08223]"
                       : "text-[#6F6F6F] hover:text-[#221F1F] border-transparent"
                   }`}
                 >
                   Membres
                   <ChevronDown
-                    className={`w-3 h-3 transition-transform ${
+                    className={`w-3.5 h-3.5 transition-transform ${
                       isMembersMenuOpen ? "rotate-180" : ""
                     }`}
                   />
                 </button>
 
-                {/* Sous-menu */}
+                {/* Sous-menu Membres */}
                 {isMembersMenuOpen && (
                   <div
                     className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
                     onMouseEnter={() => {
-                      // Annuler le timeout si on entre dans le sous-menu
+                      // Annuler le timeout si on revient sur le menu
                       if (membersMenuTimeout) {
                         clearTimeout(membersMenuTimeout);
                         setMembersMenuTimeout(null);
@@ -495,7 +316,7 @@ function HeaderContent() {
                       // Ajouter un délai avant de fermer le menu
                       const timeout = setTimeout(() => {
                         setIsMembersMenuOpen(false);
-                      }, 200);
+                      }, 200); // 200ms de délai
                       setMembersMenuTimeout(timeout);
                     }}
                   >
@@ -535,6 +356,28 @@ function HeaderContent() {
                   </div>
                 )}
               </div>
+
+              {/* Liens manquants ajoutés */}
+              <Link
+                href="/plaidoyer"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  pathname.startsWith("/plaidoyer")
+                    ? "text-[#F08223] font-semibold border-[#F08223]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
+              >
+                Plaidoyer & Influence
+              </Link>
+              <Link
+                href="/crm"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  pathname.startsWith("/crm")
+                    ? "text-[#F08223] font-semibold border-[#F08223]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
+              >
+                CRM & Réseautage
+              </Link>
               <Link
                 href="/contact"
                 className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
@@ -545,25 +388,26 @@ function HeaderContent() {
               >
                 Contact & Assistance
               </Link>
-
-              {/* CTA Buttons */}
-              <div className="hidden md:flex items-center gap-2 shrink-0">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsLoginOpen(true)}
-                  className="border-success text-success hover:bg-success hover:text-white w-full rounded-sm font-inter text-xs font-semibold px-3 py-1.5 transition-all"
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                  Connexion
-                </Button>
-                <Button className="bg-[#F08223] text-white hover:bg-opacity-90 w-full font-inter text-xs font-semibold px-3 py-1.5 rounded-sm transition-all shadow-sm hover:shadow-md">
-                  <UserPlus className="w-3.5 h-3.5" />
-                  Adhérer
-                </Button>
-              </div>
-
-              <div className="pt-4 flex flex-col space-y-2"></div>
             </nav>
+
+            {/* CTA Buttons Desktop */}
+            <div className="hidden xl:flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                onClick={() => setIsLoginOpen(true)}
+                className="border-success text-success hover:bg-success hover:text-white w-full rounded-sm font-inter text-xs font-semibold px-3 py-1.5 transition-all"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                Connexion
+              </Button>
+              <Button
+                onClick={handleAdhererClick}
+                className="bg-[#F08223] text-white hover:bg-opacity-90 w-full font-inter text-xs font-semibold px-3 py-1.5 rounded-sm transition-all shadow-sm hover:shadow-md"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                Adhérer
+              </Button>
+            </div>
 
             {/* Mobile Menu Button */}
             <button
@@ -606,7 +450,7 @@ function HeaderContent() {
               </button>
             </div>
 
-            {/* Navigation */}
+            {/* Navigation Mobile */}
             <nav className="flex flex-col p-4 space-y-1">
               <Link
                 href="/"
@@ -619,124 +463,28 @@ function HeaderContent() {
               >
                 Accueil
               </Link>
-
-              {/* Menu À Propos avec accordéon mobile */}
-              <div>
-                <button
-                  onClick={() => setIsMobileAProposOpen(!isMobileAProposOpen)}
-                  className={`w-full flex items-center justify-between font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                    pathname.startsWith("/a-propos")
-                      ? "text-[#F08223] bg-orange-50 font-semibold"
-                      : "text-[#6F6F6F] hover:bg-gray-50"
-                  }`}
-                >
-                  À Propos
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      isMobileAProposOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isMobileAProposOpen && (
-                  <div className="mt-1 ml-4 space-y-1">
-                    <Link
-                      href="/a-propos?tab=mission"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeAProposTab === "mission"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Target className="w-4 h-4" />
-                      Mission & Vision
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=histoire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeAProposTab === "histoire"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Clock className="w-4 h-4" />
-                      Histoire
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=equipe"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeAProposTab === "equipe"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Users className="w-4 h-4" />
-                      Équipe
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=partenaires"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeAProposTab === "partenaires"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Handshake className="w-4 h-4" />
-                      Partenaires
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              {/* Menu Actualités & Publications avec accordéon mobile */}
-              <div>
-                <button
-                  onClick={() => setIsMobileActualitesOpen(!isMobileActualitesOpen)}
-                  className={`w-full flex items-center justify-between font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                    pathname.startsWith("/actualites")
-                      ? "text-[#F08223] bg-orange-50 font-semibold"
-                      : "text-[#6F6F6F] hover:bg-gray-50"
-                  }`}
-                >
-                  Actualités & Publications
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      isMobileActualitesOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isMobileActualitesOpen && (
-                  <div className="mt-1 ml-4 space-y-1">
-                    <Link
-                      href="/actualites?tab=actualites"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeActualitesTab === "actualites"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Newspaper className="w-4 h-4" />
-                      Actualités
-                    </Link>
-                    <Link
-                      href="/actualites?tab=publications"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeActualitesTab === "publications"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <FileText className="w-4 h-4" />
-                      Publications
-                    </Link>
-                  </div>
-                )}
-              </div>
+              <Link
+                href="/a-propos"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  pathname.startsWith("/a-propos")
+                    ? "text-[#F08223] bg-orange-50 font-semibold"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                À Propos
+              </Link>
+              <Link
+                href="/actualites"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  pathname.startsWith("/actualites")
+                    ? "text-[#F08223] bg-orange-50 font-semibold"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                Actualités & Publications
+              </Link>
 
               {/* Menu Secteurs avec accordéon mobile */}
               <div>
@@ -867,6 +615,7 @@ function HeaderContent() {
                   </div>
                 )}
               </div>
+
               <Link
                 href="/plaidoyer"
                 className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
@@ -916,7 +665,10 @@ function HeaderContent() {
               </button>
               <button
                 className="flex items-center justify-center gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
-                onClick={() => setIsDrawerOpen(false)}
+                onClick={() => {
+                  setIsDrawerOpen(false);
+                  handleAdhererClick();
+                }}
               >
                 <UserPlus className="w-4 h-4" />
                 Adhérer
@@ -938,7 +690,7 @@ function HeaderContent() {
             </DialogDescription>
           </DialogHeader>
 
-          <form className="space-y-5 mt-4">
+          <form className="space-y-5 mt-4" onSubmit={handleLoginSubmit}>
             {/* Email */}
             <div>
               <label className="text-sm font-semibold text-gray-700 mb-2 block">
@@ -1013,9 +765,29 @@ function HeaderContent() {
   );
 }
 
+// Composant principal avec Suspense boundary
 export default function Header() {
   return (
-    <Suspense fallback={<div className="h-20 bg-white" />}>
+    <Suspense
+      fallback={
+        <header className="sticky top-0 z-50 px-4 sm:px-6 py-4 sm:py-5 bg-white/80 backdrop-blur-sm shadow-sm">
+          <div className="max-w-[1400px] mx-auto">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center shrink-0">
+                <Image
+                  src="/logo.png"
+                  alt="CPU-PME Logo"
+                  width={140}
+                  height={45}
+                  priority
+                  className="h-10 sm:h-12 w-auto object-contain"
+                />
+              </div>
+            </div>
+          </div>
+        </header>
+      }
+    >
       <HeaderContent />
     </Suspense>
   );

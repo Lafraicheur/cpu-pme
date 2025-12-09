@@ -3,11 +3,19 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel";
+import {
   Award,
   Banknote,
   ChevronRight,
   FileSearch,
   GraduationCap,
+  Handshake,
   Link,
   Store,
   UserPlus,
@@ -15,6 +23,7 @@ import {
   Check,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import Autoplay from "embla-carousel-autoplay";
 
 // Composant de décompte animé
 function CountUp({
@@ -141,7 +150,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-0">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-4xl font-bold text-[var(--color-primary)] mb-2">
@@ -154,7 +163,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-0">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-4xl font-bold text-[var(--color-success)] mb-2">
@@ -167,7 +176,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-0">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-4xl font-bold text-[var(--color-primary)] mb-2">
@@ -180,7 +189,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-0">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-4xl font-bold text-[var(--color-success)] mb-2">
@@ -209,7 +218,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-0">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <div
@@ -226,7 +235,7 @@ export default function Home() {
                     potentiel de croissance.
                   </p>
                   <a
-                    href="https://incubateur.cpu-pme.ci"
+                    href="#"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
@@ -237,7 +246,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-0">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <div
@@ -255,7 +264,7 @@ export default function Home() {
                     activité.
                   </p>
                   <a
-                    href="https://appeldoffre.cpu-pme.ci"
+                    href="#"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center text-[var(--color-success)] hover:underline font-medium"
@@ -266,7 +275,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-0">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <div
@@ -281,7 +290,7 @@ export default function Home() {
                     formation adaptés aux besoins des PME.
                   </p>
                   <a
-                    href="https://formation.cpu-pme.ci"
+                    href="#"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
@@ -292,7 +301,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-0">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <div
@@ -309,7 +318,7 @@ export default function Home() {
                     de commerce dédiée aux entreprises ivoiriennes.
                   </p>
                   <a
-                    href="https://marketplace.cpu-pme.ci"
+                    href="#"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center text-[var(--color-success)] hover:underline font-medium"
@@ -320,7 +329,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-0">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <div
@@ -335,7 +344,7 @@ export default function Home() {
                     développer votre entreprise et réaliser vos projets.
                   </p>
                   <a
-                    href="https://financement.cpu-pme.ci"
+                    href="#"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
@@ -346,7 +355,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-md hover:shadow-xl transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-0">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <div
@@ -361,7 +370,7 @@ export default function Home() {
                     établissez des partenariats stratégiques.
                   </p>
                   <a
-                    href="https://reseautage.cpu-pme.ci"
+                    href="#"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center text-[var(--color-success)] hover:underline font-medium"
@@ -372,105 +381,175 @@ export default function Home() {
               </CardContent>
             </Card>
           </div>
-
-          <div className="text-center mt-12">
-            <Button
-              className="text-white hover:opacity-90"
-              style={{ backgroundColor: "var(--color-success)" }}
-            >
-              Voir tous nos services
-            </Button>
-          </div>
         </div>
       </section>
 
       {/* Section Adhésion */}
-      <section className="py-16" style={{ backgroundColor: "var(--color-neutral-dark)" }}>
+      <section
+        className="py-16"
+        style={{ backgroundColor: "var(--color-neutral-dark)" }}
+      >
         <div className="container mx-auto px-4 text-white">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div>
-              <h2 className="text-3xl font-bold mb-4">Rejoignez CPU-PME.CI aujourd'hui</h2>
+              <h2 className="text-3xl font-bold mb-4">
+                Rejoignez CPU-PME.CI aujourd'hui
+              </h2>
               <p className="mb-6 text-gray-300">
-                Bénéficiez de services exclusifs et d'un réseau d'entrepreneurs pour développer votre entreprise.
+                Bénéficiez de services exclusifs et d'un réseau d'entrepreneurs
+                pour développer votre entreprise.
               </p>
               <div className="space-y-4">
                 <div className="flex items-start">
-                  <div className="rounded-full p-1 mr-3 mt-1" style={{ backgroundColor: "var(--color-primary)" }}>
+                  <div
+                    className="rounded-full p-1 mr-3 mt-1"
+                    style={{ backgroundColor: "var(--color-primary)" }}
+                  >
                     <Target className="h-4 w-4 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold">Accès à des opportunités d'affaires</p>
-                    <p className="text-gray-300 text-sm">Appels d'offres, partenariats et marchés publics</p>
+                    <p className="font-semibold">
+                      Accès à des opportunités d'affaires
+                    </p>
+                    <p className="text-gray-300 text-sm">
+                      Appels d'offres, partenariats et marchés publics
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start">
-                  <div className="rounded-full p-1 mr-3 mt-1" style={{ backgroundColor: "var(--color-success)" }}>
+                  <div
+                    className="rounded-full p-1 mr-3 mt-1"
+                    style={{ backgroundColor: "var(--color-success)" }}
+                  >
                     <Target className="h-4 w-4 text-white" />
                   </div>
                   <div>
                     <p className="font-semibold">Support et accompagnement</p>
-                    <p className="text-gray-300 text-sm">Conseils personnalisés et assistance juridique</p>
+                    <p className="text-gray-300 text-sm">
+                      Conseils personnalisés et assistance juridique
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start">
-                  <div className="rounded-full p-1 mr-3 mt-1" style={{ backgroundColor: "var(--color-primary)" }}>
+                  <div
+                    className="rounded-full p-1 mr-3 mt-1"
+                    style={{ backgroundColor: "var(--color-primary)" }}
+                  >
                     <Target className="h-4 w-4 text-white" />
                   </div>
                   <div>
                     <p className="font-semibold">Visibilité et promotion</p>
-                    <p className="text-gray-300 text-sm">Faites connaître votre entreprise à l'échelle nationale</p>
+                    <p className="text-gray-300 text-sm">
+                      Faites connaître votre entreprise à l'échelle nationale
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-lg">
-              <h3 className="text-2xl font-bold mb-4 text-center" style={{ color: "var(--color-neutral-dark)" }}>
+              <h3
+                className="text-2xl font-bold mb-4 text-center"
+                style={{ color: "var(--color-neutral-dark)" }}
+              >
                 Forfaits d'adhésion
               </h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center pb-2 border-b border-gray-200">
                   <div>
-                    <p className="font-semibold" style={{ color: "var(--color-neutral-dark)" }}>Basic</p>
-                    <p className="text-sm text-gray-600">Accès limité aux fonctionnalités</p>
+                    <p
+                      className="font-semibold"
+                      style={{ color: "var(--color-neutral-dark)" }}
+                    >
+                      Basic
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Accès limité aux fonctionnalités
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold" style={{ color: "var(--color-primary)" }}>10 000 FCFA/an</p>
+                    <p
+                      className="font-bold"
+                      style={{ color: "var(--color-primary)" }}
+                    >
+                      10 000 FCFA/an
+                    </p>
                     <p className="text-sm text-gray-600">ou 1 000 FCFA/mois</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-center pb-2 border-b border-gray-200">
                   <div>
-                    <p className="font-semibold" style={{ color: "var(--color-neutral-dark)" }}>Argent</p>
-                    <p className="text-sm text-gray-600">Accès amélioré avec services premium</p>
+                    <p
+                      className="font-semibold"
+                      style={{ color: "var(--color-neutral-dark)" }}
+                    >
+                      Argent
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Accès amélioré avec services premium
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold" style={{ color: "var(--color-primary)" }}>50 000 FCFA/an</p>
+                    <p
+                      className="font-bold"
+                      style={{ color: "var(--color-primary)" }}
+                    >
+                      50 000 FCFA/an
+                    </p>
                     <p className="text-sm text-gray-600">ou 5 000 FCFA/mois</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-center pb-2 border-b border-gray-200">
                   <div>
-                    <p className="font-semibold" style={{ color: "var(--color-neutral-dark)" }}>Or</p>
-                    <p className="text-sm text-gray-600">Accès complet + avantages exclusifs</p>
+                    <p
+                      className="font-semibold"
+                      style={{ color: "var(--color-neutral-dark)" }}
+                    >
+                      Or
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Accès complet + avantages exclusifs
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold" style={{ color: "var(--color-primary)" }}>100 000 FCFA/an</p>
+                    <p
+                      className="font-bold"
+                      style={{ color: "var(--color-primary)" }}
+                    >
+                      100 000 FCFA/an
+                    </p>
                     <p className="text-sm text-gray-600">ou 10 000 FCFA/mois</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-semibold" style={{ color: "var(--color-neutral-dark)" }}>Institutionnel</p>
-                    <p className="text-sm text-gray-600">Offre personnalisée pour grandes entreprises</p>
+                    <p
+                      className="font-semibold"
+                      style={{ color: "var(--color-neutral-dark)" }}
+                    >
+                      Institutionnel
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Offre personnalisée pour grandes entreprises
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold" style={{ color: "var(--color-primary)" }}>Sur devis</p>
-                    <p className="text-sm text-gray-600">à partir de 5M FCFA/an</p>
+                    <p
+                      className="font-bold"
+                      style={{ color: "var(--color-primary)" }}
+                    >
+                      Sur devis
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      à partir de 5M FCFA/an
+                    </p>
                   </div>
                 </div>
               </div>
               <div className="mt-6">
-                <Button className="w-full text-white hover:opacity-90" style={{ backgroundColor: "var(--color-primary)" }}>
+                <Button
+                  className="w-full text-white hover:opacity-90"
+                  style={{ backgroundColor: "var(--color-primary)" }}
+                >
                   Adhérer maintenant
                 </Button>
               </div>
@@ -497,12 +576,11 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Article 1 */}
-            <Card className="overflow-hidden shadow-md hover:shadow-xl transition-shadow border-0">
+            <Card className="overflow-hidden shadow-sm transition-shadow border-0">
               <div
                 className="h-48 bg-gradient-to-br from-orange-100 to-orange-200"
                 style={{
-                  backgroundImage:
-                    'Aucun image',
+                  backgroundImage: "Aucun image",
                 }}
               />
               <CardContent className="pt-6">
@@ -533,12 +611,11 @@ export default function Home() {
             </Card>
 
             {/* Article 2 */}
-            <Card className="overflow-hidden shadow-md hover:shadow-xl transition-shadow border-0">
+            <Card className="overflow-hidden shadow-sm transition-shadow border-0">
               <div
                 className="h-48 bg-gradient-to-br from-green-100 to-green-200"
                 style={{
-                  backgroundImage:
-                    'Aucun image',
+                  backgroundImage: "Aucun image",
                 }}
               />
               <CardContent className="pt-6">
@@ -570,12 +647,11 @@ export default function Home() {
             </Card>
 
             {/* Article 3 */}
-            <Card className="overflow-hidden shadow-md hover:shadow-xl transition-shadow border-0">
+            <Card className="overflow-hidden shadow-sm transition-shadow border-0">
               <div
                 className="h-48 bg-gradient-to-br from-orange-100 to-orange-200"
                 style={{
-                  backgroundImage:
-                    'Aucun image',
+                  backgroundImage: "Aucun image",
                 }}
               />
               <CardContent className="pt-6">
@@ -606,6 +682,150 @@ export default function Home() {
               </CardContent>
             </Card>
           </div>
+        </div>
+      </section>
+
+      {/* Section Partenaires */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center mb-4">
+              <div
+                className="p-3 rounded-full mr-4"
+                style={{ backgroundColor: "rgba(25, 157, 78, 0.1)" }}
+              >
+                <Handshake
+                  className="h-8 w-8"
+                  style={{ color: "var(--color-success)" }}
+                />
+              </div>
+              <h2 className="text-3xl font-bold text-[var(--color-neutral-dark)]">
+                Partenaires Stratégiques
+              </h2>
+            </div>
+            <p className="text-[var(--color-text-secondary)] max-w-3xl mx-auto">
+              La CPU-PME.CI collabore avec un réseau de partenaires stratégiques
+              nationaux et internationaux pour offrir un soutien optimal aux PME
+              ivoiriennes et défendre leurs intérêts.
+            </p>
+          </div>
+
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            plugins={[
+              Autoplay({
+                delay: 2000,
+              }),
+            ]}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-2 md:-ml-4">
+              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
+                <Card className="flex items-center justify-center p-3 h-30 border-0 bg-white">
+                  <img
+                    src={require("@/assets/bad.png").default.src}
+                    alt="Banque Africaine de Développement"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </Card>
+              </CarouselItem>
+
+              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
+                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
+                  <img
+                    src={require("@/assets/ecobank.png").default.src}
+                    alt="Ecobank"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </Card>
+              </CarouselItem>
+
+              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
+                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
+                  <img
+                    src={require("@/assets/mtn.png").default.src}
+                    alt="MTN"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </Card>
+              </CarouselItem>
+
+              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
+                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
+                  <img
+                    src={require("@/assets/fun.png").default.src}
+                    alt="Union Européenne"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </Card>
+              </CarouselItem>
+
+              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
+                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
+                  <img
+                    src={require("@/assets/afd.png").default.src}
+                    alt="Agence Française de Développement"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </Card>
+              </CarouselItem>
+
+              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
+                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
+                  <img
+                    src={require("@/assets/cepici.png").default.src}
+                    alt="CEPICI - Centre de Promotion des Investissements en Côte d'Ivoire"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </Card>
+              </CarouselItem>
+
+              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
+                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
+                  <img
+                    src={require("@/assets/coperation.png").default.src}
+                    alt="Coopération Allemande"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </Card>
+              </CarouselItem>
+
+              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
+                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
+                  <img
+                    src={require("@/assets/agriculture.png").default.src}
+                    alt="Ministère d'État, Ministre de l'Agriculture, du Développement Rural et des Productions Vivières"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </Card>
+              </CarouselItem>
+
+              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
+                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
+                  <img
+                    src={require("@/assets/tourisme.png").default.src}
+                    alt="Ministère du Tourisme et des Loisirs"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </Card>
+              </CarouselItem>
+
+              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
+                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
+                  <img
+                    src={require("@/assets/commerce.png").default.src}
+                    alt="Ministère du Commerce et de l'Industrie"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </Card>
+              </CarouselItem>
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex" />
+            <CarouselNext className="hidden md:flex" />
+          </Carousel>
         </div>
       </section>
     </>

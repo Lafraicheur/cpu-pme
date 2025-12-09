@@ -38,8 +38,8 @@
   --radius-full: 9999px;
 
   /* === OMBRES === */
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 /* Styles de base */
@@ -49,4 +49,328 @@ body {
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Backwards-compatible utility classes used across the project
+   These map the project's `cpu-*` class names to the CSS variables above
+   and provide a few opacity variants used in the code (e.g. bg-cpu-orange/10). */
+
+:root {
+  /* RGB friendly values for opacity helpers */
+  --color-primary-rgb: 240 130 35; /* #f08223 */
+  --color-success-rgb: 25 157 78;  /* #199d4e */
+  --color-neutral-dark-rgb: 34 31 31; /* #221f1f */
+  --color-darkgray-rgb: 111 111 111; /* #6f6f6f */
+}
+
+/* Orange */
+.bg-cpu-orange { background-color: var(--color-primary); }
+.text-cpu-orange { color: var(--color-primary); }
+.bg-cpu-orange\/10 { background-color: rgba(var(--color-primary-rgb), .10); }
+.bg-cpu-orange\/5 { background-color: rgba(var(--color-primary-rgb), .05); }
+.border-cpu-orange\/20 { border-color: rgba(var(--color-primary-rgb), .20); }
+
+/* Green */
+.bg-cpu-green { background-color: var(--color-success); }
+.text-cpu-green { color: var(--color-success); }
+.bg-cpu-green\/10 { background-color: rgba(var(--color-success-rgb), .10); }
+
+/* Light gray / card bg */
+.bg-cpu-lightgray { background-color: var(--color-bg); }
+
+/* Dark gray text */
+.text-cpu-darkgray { color: var(--color-text-secondary); }
+
+/* Black / neutral dark */
+.bg-cpu-black { background-color: var(--color-neutral-dark); }
+.text-cpu-black { color: var(--color-neutral-dark); }
+
+/* Helpers for small opacity tweaks */
+.text-cpu-orange\/90 { color: rgba(var(--color-primary-rgb), .9); }
+
+/* Badge / utility */
+.border-cpu-orange { border-color: var(--color-primary); }
+
+/* High-opacity background helpers and hover variants used in components */
+.bg-cpu-orange\/90 { background-color: rgba(var(--color-primary-rgb), .90); }
+.bg-cpu-green\/90 { background-color: rgba(var(--color-success-rgb), .90); }
+.hover\:bg-cpu-orange\/90:hover { background-color: rgba(var(--color-primary-rgb), .90); }
+.hover\:bg-cpu-green\/90:hover { background-color: rgba(var(--color-success-rgb), .90); }
+
+/* Button active and focus states */
+.btn-cpu-orange {
+  background-color: var(--color-primary);
+  color: white;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-cpu-orange:hover,
+.btn-cpu-orange:focus {
+  background-color: var(--color-primary-hover);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.btn-cpu-orange:active {
+  background-color: #c75c1b;
+}
+
+/* Focus ring for better accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Select Dropdown Styling */
+[data-radix-select-content] {
+  background-color: white !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-radix-select-item] {
+  background-color: white !important;
+  color: #221f1f !important;
+  padding: 8px 12px !important;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+[data-radix-select-item]:hover,
+[data-radix-select-item][data-highlighted] {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+[data-radix-select-item][data-state="checked"] {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+  font-weight: 500;
+}
+
+/* Radix Select Viewport */
+[data-radix-select-viewport] {
+  padding: 8px !important;
+  background-color: white !important;
+}
+
+/* Button Styling - Hover and Active states */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+/* All buttons with hover border orange */
+button:hover:not([disabled]) {
+  border-color: var(--color-primary) !important;
+}
+
+/* Button active state - orange background */
+button:active:not([disabled]),
+button.active:not([disabled]) {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Specific styles for various button states */
+[role="button"]:hover:not([disabled]) {
+  border-color: var(--color-primary) !important;
+}
+
+[role="button"]:active:not([disabled]) {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+/* Tabs styling - Radix UI Tabs */
+[role="tablist"] {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+[role="tab"] {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: white;
+  color: #221f1f;
+}
+
+[role="tab"]:hover {
+  border-color: var(--color-primary) !important;
+  background-color: #f9fafb !important;
+  color: #221f1f !important;
+}
+
+/* Active tab styling */
+[role="tab"][aria-selected="true"] {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Inactive tabs */
+[role="tab"][aria-selected="false"] {
+  background-color: white;
+  color: #221f1f;
+  border-color: #e5e7eb;
+}
+
+[role="tab"][aria-selected="false"]:hover {
+  background-color: #f9fafb !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Select dropdown styling - options hover effect */
+[role="option"]:hover {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+[data-highlighted] {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+/* Radix Select Item specific */
+[data-radix-select-item]:hover,
+[data-radix-select-item][data-highlighted] {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+/* Select content background */
+[data-radix-select-content] {
+  background-color: white !important;
+}
+
+/* Member card image hover effect */
+.member-card:hover .member-image {
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
+}
+
+.member-image {
+  transition: transform 0.3s ease;
+}
+
+/* Pricing card button hover effect */
+.pricing-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(240, 130, 35, 0.3);
+  transition: all 0.3s ease;
+}
+
+.pricing-button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 8px rgba(240, 130, 35, 0.2);
+}
+
+/* Animations d'apparition */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-delay-100 {
+  animation-delay: 0.1s;
+  opacity: 0;
+}
+
+.animate-delay-200 {
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+.animate-delay-300 {
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+.animate-delay-400 {
+  animation-delay: 0.4s;
+  opacity: 0;
+}
+
+.animate-delay-500 {
+  animation-delay: 0.5s;
+  opacity: 0;
+}
+
+/* Animations pour les accordéons */
+@keyframes accordion-down {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+.animate-accordion-down {
+  animation: accordion-down 0.3s ease-out;
+}
+
+.animate-accordion-up {
+  animation: accordion-up 0.3s ease-out;
+}
+
+/* Animation d'apparition pour le contenu de l'accordion */
+@keyframes accordionContentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Appliquer l'animation quand l'accordion est ouvert */
+[data-state="open"] .accordion-content-enter {
+  animation: accordionContentFadeIn 0.4s ease-out forwards;
 }

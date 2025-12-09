@@ -1,14 +1,8 @@
 "use client";
 
+import { Suspense } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from "@/components/ui/carousel";
 import {
   Target,
   Eye,
@@ -18,9 +12,11 @@ import {
   Trophy,
   History,
 } from "lucide-react";
-import Autoplay from "embla-carousel-autoplay";
+import { useSearchParams } from "next/navigation";
 
-export default function APropos() {
+function AProposContent() {
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get("tab") || "mission";
   return (
     <>
       {/* Hero Section */}
@@ -50,27 +46,14 @@ export default function APropos() {
       {/* Tabs Section */}
       <section className="py-16 sm:py-20 bg-white">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
-          <Tabs defaultValue="mission" className="w-full">
-            <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 h-auto md:h-14 gap-3 md:gap-4 bg-transparent p-0 mb-8">
-              <TabsTrigger
-                value="mission"
-                className="text-sm md:text-base py-3.5 px-6 rounded-lg font-semibold transition-all duration-300 border-2 border-gray-200 bg-white hover:border-[var(--color-primary)] hover:shadow-md data-[state=active]:bg-[var(--color-primary)] data-[state=active]:text-white data-[state=active]:border-[var(--color-primary)] data-[state=active]:shadow-lg"
-              >
-                Mission & Vision
-              </TabsTrigger>
-              <TabsTrigger
-                value="histoire"
-                className="text-sm md:text-base py-3.5 px-6 rounded-lg font-semibold transition-all duration-300 border-2 border-gray-200 bg-white hover:border-[var(--color-primary)] hover:shadow-md data-[state=active]:bg-[var(--color-primary)] data-[state=active]:text-white data-[state=active]:border-[var(--color-primary)] data-[state=active]:shadow-lg"
-              >
-                Histoire
-              </TabsTrigger>
-              <TabsTrigger
-                value="equipe"
-                className="text-sm md:text-base py-3.5 px-6 rounded-lg font-semibold transition-all duration-300 border-2 border-gray-200 bg-white hover:border-[var(--color-primary)] hover:shadow-md data-[state=active]:bg-[var(--color-primary)] data-[state=active]:text-white data-[state=active]:border-[var(--color-primary)] data-[state=active]:shadow-lg"
-              >
-                Équipe & Partenaires
-              </TabsTrigger>
-            </TabsList>
+          <Tabs value={activeTab} className="w-full">
+            {/* TabsList masqué car la navigation se fait via le header */}
+            {/* <TabsList className="hidden">
+              <TabsTrigger value="mission">Mission & Vision</TabsTrigger>
+              <TabsTrigger value="histoire">Histoire</TabsTrigger>
+              <TabsTrigger value="equipe">Équipe</TabsTrigger>
+              <TabsTrigger value="partenaires">Partenaires</TabsTrigger>
+            </TabsList> */}
 
             {/* Mission & Vision Content */}
             <TabsContent value="mission" className="mt-4">
@@ -334,7 +317,7 @@ export default function APropos() {
                   </ul>
 
                   <div
-                    className="p-6 rounded-lg border-l-4 mt-8"
+                    className="p-6 rounded-lg mt-8"
                     style={{
                       backgroundColor: "var(--color-bg)",
                       borderColor: "var(--color-primary)",
@@ -383,7 +366,7 @@ export default function APropos() {
                       au développement économique du pays.
                     </p>
                     <div
-                      className="p-6 rounded-lg border-l-4"
+                      className="p-6 rounded-lg"
                       style={{
                         backgroundColor: "var(--color-bg)",
                         borderColor: "var(--color-success)",
@@ -427,7 +410,6 @@ export default function APropos() {
                           représentative unifiée.
                         </p>
                         <Card
-                          className="border-l-4"
                           style={{ borderColor: "var(--color-primary)" }}
                         >
                           <CardContent className="pt-6">
@@ -466,7 +448,6 @@ export default function APropos() {
                           entrepreneurs.
                         </p>
                         <Card
-                          className="border-l-4"
                           style={{ borderColor: "var(--color-success)" }}
                         >
                           <CardContent className="pt-6">
@@ -506,7 +487,6 @@ export default function APropos() {
                           représentants locaux.
                         </p>
                         <Card
-                          className="border-l-4"
                           style={{ borderColor: "var(--color-primary)" }}
                         >
                           <CardContent className="pt-6">
@@ -545,7 +525,6 @@ export default function APropos() {
                           homologues en Afrique et en Europe.
                         </p>
                         <Card
-                          className="border-l-4"
                           style={{ borderColor: "var(--color-success)" }}
                         >
                           <CardContent className="pt-6">
@@ -583,7 +562,6 @@ export default function APropos() {
                           membres.
                         </p>
                         <Card
-                          className="border-l-4"
                           style={{ borderColor: "var(--color-primary)" }}
                         >
                           <CardContent className="pt-6">
@@ -621,7 +599,6 @@ export default function APropos() {
                           des PME ivoiriennes.
                         </p>
                         <Card
-                          className="border-l-4"
                           style={{ borderColor: "var(--color-success)" }}
                         >
                           <CardContent className="pt-6">
@@ -641,149 +618,150 @@ export default function APropos() {
               </div>
             </TabsContent>
 
-            {/* Équipe & Partenaires Content */}
+            {/* Équipe Content */}
             <TabsContent value="equipe" className="mt-4">
-              <div className="grid grid-cols-1 gap-12">
-                {/* Direction */}
-                <div>
-                  <div className="flex items-center mb-6">
-                    <div
-                      className="p-3 rounded-full mr-4"
-                      style={{ backgroundColor: "rgba(240, 130, 35, 0.1)" }}
-                    >
-                      <Users
-                        className="h-8 w-8"
-                        style={{ color: "var(--color-primary)" }}
-                      />
-                    </div>
-                    <h2 className="text-2xl md:text-3xl font-bold">
-                      Équipe Dirigeante
-                    </h2>
+              {/* Direction */}
+              <div>
+                <div className="flex items-center mb-6">
+                  <div
+                    className="p-3 rounded-full mr-4"
+                    style={{ backgroundColor: "rgba(240, 130, 35, 0.1)" }}
+                  >
+                    <Users
+                      className="h-8 w-8"
+                      style={{ color: "var(--color-primary)" }}
+                    />
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Président */}
-                    <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
-                      <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
-                        <img
-                          src={require("@/assets/diomande.png").default.src}
-                          alt="Dr DIOMANDE Moussa Elias Farakhan"
-                          className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <CardContent className="pt-6 pb-6">
-                        <h3 className="text-lg font-bold mb-2 text-gray-900">
-                          Dr DIOMANDE Moussa Elias Farakhan
-                        </h3>
-                        <p
-                          className="font-semibold mb-3 text-sm"
-                          style={{ color: "var(--color-primary)" }}
-                        >
-                          Président de la CPU-PME.CI
-                        </p>
-                        <p
-                          className="text-sm leading-relaxed"
-                          style={{ color: "var(--color-text-secondary)" }}
-                        >
-                          Dr DIOMANDE dirige avec vision et détermination la
-                          Confédération Patronale Unique des PME de Côte
-                          d'Ivoire, œuvrant pour le développement économique du
-                          pays à travers le soutien aux petites et moyennes
-                          entreprises.
-                        </p>
-                      </CardContent>
-                    </Card>
-
-                    {/* Président de Filière */}
-                    <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
-                      <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
-                        <img
-                          src={require("@/assets/herman.png").default.src}
-                          alt="Hermann ADJABONI GUEZO"
-                          className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <CardContent className="pt-6 pb-6">
-                        <h3 className="text-lg font-bold mb-2 text-gray-900">
-                          Hermann ADJABONI GUEZO
-                        </h3>
-                        <p
-                          className="font-semibold mb-3 text-sm"
-                          style={{ color: "var(--color-primary)" }}
-                        >
-                          Président de Filière
-                        </p>
-                        <p
-                          className="text-sm leading-relaxed"
-                          style={{ color: "var(--color-text-secondary)" }}
-                        >
-                          Hermann ADJABONI GUEZO apporte son expertise et son
-                          leadership en tant que Président de Filière,
-                          contribuant au développement sectoriel et à la
-                          valorisation des PME ivoiriennes dans son domaine
-                          d'activité.
-                        </p>
-                      </CardContent>
-                    </Card>
-
-                    {/* Secretaire Executif */}
-                    <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
-                      <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
-                        <img
-                          src={require("@/assets/kongo.png").default.src}
-                          alt="Silvère Kongo"
-                          className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <CardContent className="pt-6 pb-6">
-                        <h3 className="text-lg font-bold mb-2 text-gray-900">
-                          Silvère Kongo
-                        </h3>
-                        <p
-                          className="font-semibold mb-3 text-sm"
-                          style={{ color: "var(--color-primary)" }}
-                        >
-                          Secretaire Executif
-                        </p>
-                        <p
-                          className="text-sm leading-relaxed"
-                          style={{ color: "var(--color-text-secondary)" }}
-                        >
-                          Silvère Kongo assure le rôle clé de Secretaire
-                          Executif au sein de la CPU-PME.CI, coordonnant les
-                          activités opérationnelles et assurant la mise en œuvre
-                          des décisions stratégiques de l'organisation.
-                        </p>
-                      </CardContent>
-                    </Card>
-
-                    {/* Autres membres - placeholder */}
-                    <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
-                      <div className="h-64 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                        <Users className="h-20 w-20 text-gray-400" />
-                      </div>
-                      <CardContent className="pt-6 pb-6">
-                        <h3 className="text-lg font-bold mb-2 text-gray-900">
-                          Nom du Dirigeant
-                        </h3>
-                        <p
-                          className="font-semibold mb-3 text-sm"
-                          style={{ color: "var(--color-primary)" }}
-                        >
-                          Poste / Fonction
-                        </p>
-                        <p
-                          className="text-sm leading-relaxed"
-                          style={{ color: "var(--color-text-secondary)" }}
-                        >
-                          Courte biographie professionnelle du dirigeant, avec
-                          son parcours et son expertise...
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold">
+                    Équipe Dirigeante
+                  </h2>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Président */}
+                  <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
+                    <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
+                      <img
+                        src={require("@/assets/diomande.png").default.src}
+                        alt="Dr DIOMANDE Moussa Elias Farakhan"
+                        className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <CardContent className="pt-6 pb-6">
+                      <h3 className="text-lg font-bold mb-2 text-gray-900">
+                        Dr DIOMANDE Moussa Elias Farakhan
+                      </h3>
+                      <p
+                        className="font-semibold mb-3 text-sm"
+                        style={{ color: "var(--color-primary)" }}
+                      >
+                        Président de la CPU-PME.CI
+                      </p>
+                      <p
+                        className="text-sm leading-relaxed"
+                        style={{ color: "var(--color-text-secondary)" }}
+                      >
+                        Dr DIOMANDE dirige avec vision et détermination la
+                        Confédération Patronale Unique des PME de Côte d'Ivoire,
+                        œuvrant pour le développement économique du pays à
+                        travers le soutien aux petites et moyennes entreprises.
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Président de Filière */}
+                  <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
+                    <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
+                      <img
+                        src={require("@/assets/herman.png").default.src}
+                        alt="Hermann ADJABONI GUEZO"
+                        className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <CardContent className="pt-6 pb-6">
+                      <h3 className="text-lg font-bold mb-2 text-gray-900">
+                        Hermann ADJABONI GUEZO
+                      </h3>
+                      <p
+                        className="font-semibold mb-3 text-sm"
+                        style={{ color: "var(--color-primary)" }}
+                      >
+                        Président de Filière
+                      </p>
+                      <p
+                        className="text-sm leading-relaxed"
+                        style={{ color: "var(--color-text-secondary)" }}
+                      >
+                        Hermann ADJABONI GUEZO apporte son expertise et son
+                        leadership en tant que Président de Filière, contribuant
+                        au développement sectoriel et à la valorisation des PME
+                        ivoiriennes dans son domaine d'activité.
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Secretaire Executif */}
+                  <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
+                    <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
+                      <img
+                        src={require("@/assets/kongo.png").default.src}
+                        alt="Silvère Kongo"
+                        className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <CardContent className="pt-6 pb-6">
+                      <h3 className="text-lg font-bold mb-2 text-gray-900">
+                        Silvère Kongo
+                      </h3>
+                      <p
+                        className="font-semibold mb-3 text-sm"
+                        style={{ color: "var(--color-primary)" }}
+                      >
+                        Secretaire Executif
+                      </p>
+                      <p
+                        className="text-sm leading-relaxed"
+                        style={{ color: "var(--color-text-secondary)" }}
+                      >
+                        Silvère Kongo assure le rôle clé de Secretaire Executif
+                        au sein de la CPU-PME.CI, coordonnant les activités
+                        opérationnelles et assurant la mise en œuvre des
+                        décisions stratégiques de l'organisation.
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Autres membres - placeholder */}
+                  <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
+                    <div className="h-64 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                      <Users className="h-20 w-20 text-gray-400" />
+                    </div>
+                    <CardContent className="pt-6 pb-6">
+                      <h3 className="text-lg font-bold mb-2 text-gray-900">
+                        Nom du Dirigeant
+                      </h3>
+                      <p
+                        className="font-semibold mb-3 text-sm"
+                        style={{ color: "var(--color-primary)" }}
+                      >
+                        Poste / Fonction
+                      </p>
+                      <p
+                        className="text-sm leading-relaxed"
+                        style={{ color: "var(--color-text-secondary)" }}
+                      >
+                        Courte biographie professionnelle du dirigeant, avec son
+                        parcours et son expertise...
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Partenaires Content */}
+            <TabsContent value="partenaires" className="mt-4">
+              <div className="grid grid-cols-1 gap-12">
                 {/* Partenaires */}
                 <div>
                   <div className="flex items-center mb-6">
@@ -811,259 +789,87 @@ export default function APropos() {
                     intérêts.
                   </p>
 
-                  <Carousel
-                    opts={{
-                      align: "start",
-                      loop: true,
-                    }}
-                    plugins={[
-                      Autoplay({
-                        delay: 2000,
-                      }),
-                    ]}
-                    className="w-full"
-                  >
-                    <CarouselContent className="-ml-2 md:-ml-4">
-                      <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-3 h-30 border-0 bg-white transition-shadow">
-                          <img
-                            src={require("@/assets/bad.png").default.src}
-                            alt="Banque Africaine de Développement"
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        </Card>
-                      </CarouselItem>
-
-                      <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
-                          <img
-                            src={require("@/assets/ecobank.png").default.src}
-                            alt="Ecobank"
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        </Card>
-                      </CarouselItem>
-
-                      <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
-                          <img
-                            src={require("@/assets/mtn.png").default.src}
-                            alt="MTN"
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        </Card>
-                      </CarouselItem>
-
-                      <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
-                          <img
-                            src={require("@/assets/fun.png").default.src}
-                            alt="Union Européenne"
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        </Card>
-                      </CarouselItem>
-
-                      <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
-                          <img
-                            src={require("@/assets/afd.png").default.src}
-                            alt="Agence Française de Développement"
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        </Card>
-                      </CarouselItem>
-
-                      <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
-                          <img
-                            src={require("@/assets/cepici.png").default.src}
-                            alt="CEPICI - Centre de Promotion des Investissements en Côte d'Ivoire"
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        </Card>
-                      </CarouselItem>
-
-                      <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
-                          <img
-                            src={require("@/assets/coperation.png").default.src}
-                            alt="Coopération Allemande"
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        </Card>
-                      </CarouselItem>
-
-                      <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
-                          <img
-                            src={
-                              require("@/assets/agriculture.png").default.src
-                            }
-                            alt="Ministère d'État, Ministre de l'Agriculture, du Développement Rural et des Productions Vivières"
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        </Card>
-                      </CarouselItem>
-
-                      <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
-                          <img
-                            src={require("@/assets/tourisme.png").default.src}
-                            alt="Ministère du Tourisme et des Loisirs"
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        </Card>
-                      </CarouselItem>
-
-                      <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                        <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white transition-shadow">
-                          <img
-                            src={require("@/assets/commerce.png").default.src}
-                            alt="Ministère du Commerce et de l'Industrie"
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        </Card>
-                      </CarouselItem>
-
-                      {/* Additional placeholder partners */}
-                      {[1, 2].map((i) => (
-                        <CarouselItem
-                          key={i}
-                          className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6"
-                        >
-                          <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white shadow-sm hover:shadow-lg transition-shadow">
-                            <div className="bg-gray-200 h-16 w-32 rounded"></div>
-                          </Card>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="hidden md:flex" />
-                    <CarouselNext className="hidden md:flex" />
-                  </Carousel>
-                </div>
-
-                {/* Témoignages */}
-                <div>
-                  <div className="text-center mb-8">
-                    <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                      Ils nous font confiance
-                    </h2>
-                    <p
-                      className="max-w-2xl mx-auto"
-                      style={{ color: "var(--color-text-secondary)" }}
-                    >
-                      Découvrez ce que nos membres et partenaires disent de
-                      notre organisation et de notre impact.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card
-                      className="border-none"
-                      style={{ backgroundColor: "var(--color-bg)" }}
-                    >
-                      <CardContent className="pt-6">
-                        <div
-                          className="text-3xl mb-4"
-                          style={{ color: "var(--color-primary)" }}
-                        >
-                          "
-                        </div>
-                        <p
-                          className="mb-6 italic"
-                          style={{ color: "var(--color-text-secondary)" }}
-                        >
-                          La CPU-PME.CI nous a apporté un soutien précieux dans
-                          le développement de notre entreprise. Grâce à leur
-                          accompagnement, nous avons pu accéder à de nouveaux
-                          marchés et développer notre réseau professionnel.
-                        </p>
-                        <div className="flex items-center">
-                          <div className="bg-gray-300 h-12 w-12 rounded-full mr-4"></div>
-                          <div>
-                            <p className="font-semibold">Nom du Témoin</p>
-                            <p
-                              className="text-sm"
-                              style={{ color: "var(--color-text-secondary)" }}
-                            >
-                              Entreprise / Poste
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
+                      <img
+                        src={require("@/assets/bad.png").default.src}
+                        alt="Banque Africaine de Développement"
+                        className="max-h-full max-w-full object-contain"
+                      />
                     </Card>
 
-                    <Card
-                      className="border-none"
-                      style={{ backgroundColor: "var(--color-bg)" }}
-                    >
-                      <CardContent className="pt-6">
-                        <div
-                          className="text-3xl mb-4"
-                          style={{ color: "var(--color-success)" }}
-                        >
-                          "
-                        </div>
-                        <p
-                          className="mb-6 italic"
-                          style={{ color: "var(--color-text-secondary)" }}
-                        >
-                          En tant que partenaire institutionnel, nous apprécions
-                          particulièrement le professionnalisme et l'engagement
-                          de la CPU-PME.CI dans la défense des intérêts des PME
-                          ivoiriennes. Leur travail contribue significativement
-                          au développement économique du pays.
-                        </p>
-                        <div className="flex items-center">
-                          <div className="bg-gray-300 h-12 w-12 rounded-full mr-4"></div>
-                          <div>
-                            <p className="font-semibold">Nom du Témoin</p>
-                            <p
-                              className="text-sm"
-                              style={{ color: "var(--color-text-secondary)" }}
-                            >
-                              Entreprise / Poste
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
+                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
+                      <img
+                        src={require("@/assets/ecobank.png").default.src}
+                        alt="Ecobank"
+                        className="max-h-full max-w-full object-contain"
+                      />
                     </Card>
 
-                    <Card
-                      className="border-none"
-                      style={{ backgroundColor: "var(--color-bg)" }}
-                    >
-                      <CardContent className="pt-6">
-                        <div
-                          className="text-3xl mb-4"
-                          style={{ color: "var(--color-primary)" }}
-                        >
-                          "
-                        </div>
-                        <p
-                          className="mb-6 italic"
-                          style={{ color: "var(--color-text-secondary)" }}
-                        >
-                          La plateforme digitale de la CPU-PME.CI a transformé
-                          notre façon de travailler. Les opportunités
-                          d'affaires, les formations en ligne et les ressources
-                          mises à disposition nous ont permis de renforcer nos
-                          compétences et d'accélérer notre croissance.
-                        </p>
-                        <div className="flex items-center">
-                          <div className="bg-gray-300 h-12 w-12 rounded-full mr-4"></div>
-                          <div>
-                            <p className="font-semibold">Nom du Témoin</p>
-                            <p
-                              className="text-sm"
-                              style={{ color: "var(--color-text-secondary)" }}
-                            >
-                              Entreprise / Poste
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
+                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
+                      <img
+                        src={require("@/assets/mtn.png").default.src}
+                        alt="MTN"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    </Card>
+
+                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
+                      <img
+                        src={require("@/assets/fun.png").default.src}
+                        alt="Union Européenne"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    </Card>
+
+                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
+                      <img
+                        src={require("@/assets/afd.png").default.src}
+                        alt="Agence Française de Développement"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    </Card>
+
+                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
+                      <img
+                        src={require("@/assets/cepici.png").default.src}
+                        alt="CEPICI - Centre de Promotion des Investissements en Côte d'Ivoire"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    </Card>
+
+                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
+                      <img
+                        src={require("@/assets/coperation.png").default.src}
+                        alt="Coopération Allemande"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    </Card>
+
+                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
+                      <img
+                        src={
+                          require("@/assets/agriculture.png").default.src
+                        }
+                        alt="Ministère d'État, Ministre de l'Agriculture, du Développement Rural et des Productions Vivières"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    </Card>
+
+                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
+                      <img
+                        src={require("@/assets/tourisme.png").default.src}
+                        alt="Ministère du Tourisme et des Loisirs"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    </Card>
+
+                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
+                      <img
+                        src={require("@/assets/commerce.png").default.src}
+                        alt="Ministère du Commerce et de l'Industrie"
+                        className="max-h-full max-w-full object-contain"
+                      />
                     </Card>
                   </div>
                 </div>
@@ -1073,5 +879,19 @@ export default function APropos() {
         </div>
       </section>
     </>
+  );
+}
+
+export default function APropos() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          Chargement...
+        </div>
+      }
+    >
+      <AProposContent />
+    </Suspense>
   );
 }
