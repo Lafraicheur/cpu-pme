@@ -218,9 +218,15 @@ const MembersContent = () => {
   };
 
   const filteredMembers = membersData.filter((member) => {
+    // Recherche insensible à la casse
+    const searchLower = searchTerm.toLowerCase().trim();
     const matchesSearch = searchTerm === "" || 
-                         member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.description.toLowerCase().includes(searchTerm.toLowerCase());
+                         member.name.toLowerCase().includes(searchLower) ||
+                         member.description.toLowerCase().includes(searchLower) ||
+                         member.sector.toLowerCase().includes(searchLower) ||
+                         member.region.toLowerCase().includes(searchLower) ||
+                         (member.badge && member.badge.toLowerCase().includes(searchLower)) ||
+                         (memberTypes.find(t => t.value === member.memberType)?.label || member.memberType).toLowerCase().includes(searchLower);
     const matchesSector = selectedSector === "all" || member.sector === selectedSector;
     const matchesRegion = selectedRegion === "all" || member.region === selectedRegion;
     const matchesMemberType = selectedMemberType === "all" || member.memberType === selectedMemberType;
