@@ -25,6 +25,7 @@ import {
   Handshake,
   Newspaper,
   FileText,
+  Layers,
 } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "./ui/button";
@@ -81,7 +82,12 @@ function HeaderContent() {
         clearTimeout(actualitesMenuTimeout);
       }
     };
-  }, [membersMenuTimeout, secteursMenuTimeout, aProposMenuTimeout, actualitesMenuTimeout]);
+  }, [
+    membersMenuTimeout,
+    secteursMenuTimeout,
+    aProposMenuTimeout,
+    actualitesMenuTimeout,
+  ]);
 
   // Empêcher le scroll quand le drawer est ouvert
   useEffect(() => {
@@ -442,6 +448,18 @@ function HeaderContent() {
                       <Network className="w-4 h-4" />
                       Quaternaire
                     </Link>
+                    <Link
+                      href="/secteurs?tab=transversales"
+                      onClick={() => setIsSecteursMenuOpen(false)}
+                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
+                        activeSecteurTab === "transversales"
+                          ? "text-white bg-[#F08223]"
+                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
+                      }`}
+                    >
+                      <Layers className="w-4 h-4" />
+                      Transversales
+                    </Link>
                   </div>
                 )}
               </div>
@@ -551,12 +569,12 @@ function HeaderContent() {
                 <Button
                   variant="outline"
                   onClick={() => setIsLoginOpen(true)}
-                  className="border-success text-success hover:bg-success hover:text-white w-full rounded-sm font-inter text-xs font-semibold px-3 py-1.5 transition-all"
+                  className="border-success text-success hover:bg-success hover:text-white w-full rounded-sm font-inter text-xs font-semibold px-3 py-1.5 transition-all cursor-pointer"
                 >
                   <LogIn className="w-3.5 h-3.5" />
                   Connexion
                 </Button>
-                <Button className="bg-[#F08223] text-white hover:bg-opacity-90 w-full font-inter text-xs font-semibold px-3 py-1.5 rounded-sm transition-all shadow-sm hover:shadow-md">
+                <Button className="bg-[#F08223] text-white hover:bg-opacity-90 w-full font-inter text-xs font-semibold px-3 py-1.5 rounded-sm transition-all shadow-sm hover:shadow-md cursor-pointer">
                   <UserPlus className="w-3.5 h-3.5" />
                   Adhérer
                 </Button>
@@ -694,7 +712,9 @@ function HeaderContent() {
               {/* Menu Actualités & Publications avec accordéon mobile */}
               <div>
                 <button
-                  onClick={() => setIsMobileActualitesOpen(!isMobileActualitesOpen)}
+                  onClick={() =>
+                    setIsMobileActualitesOpen(!isMobileActualitesOpen)
+                  }
                   className={`w-full flex items-center justify-between font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
                     pathname.startsWith("/actualites")
                       ? "text-[#F08223] bg-orange-50 font-semibold"
@@ -805,6 +825,18 @@ function HeaderContent() {
                       <Network className="w-4 h-4" />
                       Quaternaire
                     </Link>
+                    <Link
+                      href="/secteurs?tab=transversales"
+                      onClick={() => setIsSecteursMenuOpen(false)}
+                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
+                        activeSecteurTab === "transversales"
+                          ? "text-white bg-[#F08223]"
+                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
+                      }`}
+                    >
+                      <Layers className="w-4 h-4" />
+                      Transversales
+                    </Link>
                   </div>
                 )}
               </div>
@@ -905,7 +937,7 @@ function HeaderContent() {
             {/* CTA Buttons dans le drawer */}
             <div className="flex flex-col gap-3 p-4 border-t border-gray-200 mt-auto">
               <button
-                className="flex items-center justify-center gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all"
+                className="flex items-center justify-center gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all cursor-pointer"
                 onClick={() => {
                   setIsDrawerOpen(false);
                   setIsLoginOpen(true);
@@ -915,7 +947,7 @@ function HeaderContent() {
                 Connexion
               </button>
               <button
-                className="flex items-center justify-center gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
+                className="flex items-center justify-center gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all shadow-md hover:shadow-lg cursor-pointer"
                 onClick={() => setIsDrawerOpen(false)}
               >
                 <UserPlus className="w-4 h-4" />
