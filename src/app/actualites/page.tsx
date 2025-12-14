@@ -851,13 +851,13 @@ const NewsContent = () => {
                 <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
                   <SheetTrigger asChild>
                     <Button
-                      className="md:hidden fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40 bg-primary hover:bg-primary/90"
+                      className="md:hidden fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40 bg-white hover:bg-white"
                       size="icon"
                     >
-                      <Filter className="h-6 w-6" />
+                      <Filter className="h-6 w-6 text-primary" />
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl">
+                  <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl bg-white">
                     <SheetHeader className="mb-6">
                       <SheetTitle className="text-2xl font-bold text-center">
                         Filtrer les publications
