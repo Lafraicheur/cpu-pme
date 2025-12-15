@@ -4,19 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
-import { LogIn, UserPlus, Menu, X, Users, Award, Building2, ChevronDown, ChevronRight, Factory, Building, Briefcase, Network, Layers } from "lucide-react";
+import { LogIn, UserPlus, Menu, X, Users, Award, Building2, ChevronDown, ChevronRight } from "lucide-react";
 
 function HeaderContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isMembersMenuOpen, setIsMembersMenuOpen] = useState(false);
-  const [membersMenuTimeout, setMembersMenuTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [isSecteursMenuOpen, setIsSecteursMenuOpen] = useState(false);
-  const [secteursMenuTimeout, setSecteursMenuTimeout] = useState<NodeJS.Timeout | null>(null);
-  // États pour les sous-menus dans le drawer mobile
-  const [isSecteursDrawerOpen, setIsSecteursDrawerOpen] = useState(false);
-  const [isMembersDrawerOpen, setIsMembersDrawerOpen] = useState(false);
 
   // Empêcher le scroll quand le drawer est ouvert
   useEffect(() => {
@@ -30,17 +23,6 @@ function HeaderContent() {
     };
   }, [isDrawerOpen]);
 
-  // Nettoyer le timeout au démontage
-  useEffect(() => {
-    return () => {
-      if (membersMenuTimeout) {
-        clearTimeout(membersMenuTimeout);
-      }
-      if (secteursMenuTimeout) {
-        clearTimeout(secteursMenuTimeout);
-      }
-    };
-  }, [membersMenuTimeout, secteursMenuTimeout]);
 
   // Fonction pour vérifier si un lien est actif
   const isActive = (href: string) => {
@@ -48,15 +30,6 @@ function HeaderContent() {
       return pathname === "/";
     }
     return pathname.startsWith(href);
-  };
-
-  // Fonction pour vérifier quel onglet membre est actif
-  const getActiveMemberTab = () => {
-    if (pathname === "/membres") {
-      const tab = searchParams.get('tab');
-      return tab || 'annuaire';
-    }
-    return null;
   };
 
   // Fonction pour vérifier quel secteur est actif
@@ -68,7 +41,6 @@ function HeaderContent() {
     return null;
   };
 
-  const activeMemberTab = getActiveMemberTab();
   const activeSecteurTab = getActiveSecteurTab();
 
   return (
@@ -121,221 +93,29 @@ function HeaderContent() {
               >
                 Actualités & Publications
               </Link>
-              {/* Menu Secteurs avec sous-menu */}
-              <div 
-                className="relative"
-                onMouseEnter={() => {
-                  // Fermer le menu Membres si ouvert
-                  if (isMembersMenuOpen) {
-                    setIsMembersMenuOpen(false);
-                    if (membersMenuTimeout) {
-                      clearTimeout(membersMenuTimeout);
-                      setMembersMenuTimeout(null);
-                    }
-                  }
-                  if (secteursMenuTimeout) {
-                    clearTimeout(secteursMenuTimeout);
-                    setSecteursMenuTimeout(null);
-                  }
-                  setIsSecteursMenuOpen(true);
-                }}
-                onMouseLeave={() => {
-                  const timeout = setTimeout(() => {
-                    setIsSecteursMenuOpen(false);
-                  }, 200);
-                  setSecteursMenuTimeout(timeout);
-                }}
-              >
-                <button
-                  className={`font-inter text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1 ${
+              {/* Lien Secteurs simple (sans sous-menu) */}
+              <Link
+                href="/secteurs"
+                className={`font-inter text-xs font-medium transition-colors whitespace-nowrap ${
                   isActive("/secteurs")
                     ? "text-[#F08223] hover:text-[#D97420]"
                     : "text-[#6F6F6F] hover:text-[#221F1F]"
                 }`}
               >
                 Secteurs & Filières
-                  <ChevronDown className={`w-3 h-3 transition-transform ${isSecteursMenuOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {/* Sous-menu Secteurs */}
-                {isSecteursMenuOpen && (
-                  <div 
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                    onMouseEnter={() => {
-                      if (secteursMenuTimeout) {
-                        clearTimeout(secteursMenuTimeout);
-                        setSecteursMenuTimeout(null);
-                      }
-                      setIsSecteursMenuOpen(true);
-                    }}
-                    onMouseLeave={() => {
-                      const timeout = setTimeout(() => {
-                        setIsSecteursMenuOpen(false);
-                      }, 200);
-                      setSecteursMenuTimeout(timeout);
-                    }}
-                  >
-                    <Link
-                      href="/secteurs?tab=primaire"
-                      onClick={() => setIsSecteursMenuOpen(false)}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-t-lg mx-2 ${
-                        activeSecteurTab === 'primaire'
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Factory className="w-4 h-4" />
-                      Primaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=secondaire"
-                      onClick={() => setIsSecteursMenuOpen(false)}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeSecteurTab === 'secondaire'
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Building className="w-4 h-4" />
-                      Secondaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=tertiaire"
-                      onClick={() => setIsSecteursMenuOpen(false)}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeSecteurTab === 'tertiaire'
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Briefcase className="w-4 h-4" />
-                      Tertiaire
               </Link>
-                    <Link
-                      href="/secteurs?tab=quaternaire"
-                      onClick={() => setIsSecteursMenuOpen(false)}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeSecteurTab === 'quaternaire'
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Network className="w-4 h-4" />
-                      Quaternaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=transversales"
-                      onClick={() => setIsSecteursMenuOpen(false)}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
-                        activeSecteurTab === 'transversales'
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                      }`}
-                    >
-                      <Layers className="w-4 h-4" />
-                      Transversales
-                    </Link>
-                  </div>
-                )}
-              </div>
               
-              {/* Menu Membres avec sous-menu */}
-              <div 
-                className="relative"
-                onMouseEnter={() => {
-                  // Fermer le menu Secteurs si ouvert
-                  if (isSecteursMenuOpen) {
-                    setIsSecteursMenuOpen(false);
-                    if (secteursMenuTimeout) {
-                      clearTimeout(secteursMenuTimeout);
-                      setSecteursMenuTimeout(null);
-                    }
-                  }
-                  // Annuler le timeout si on revient sur le menu
-                  if (membersMenuTimeout) {
-                    clearTimeout(membersMenuTimeout);
-                    setMembersMenuTimeout(null);
-                  }
-                  setIsMembersMenuOpen(true);
-                }}
-                onMouseLeave={() => {
-                  // Ajouter un délai avant de fermer le menu
-                  const timeout = setTimeout(() => {
-                    setIsMembersMenuOpen(false);
-                  }, 200); // 200ms de délai
-                  setMembersMenuTimeout(timeout);
-                }}
-              >
-                <button
-                  className={`font-inter text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1 ${
+              {/* Lien Membres simple (sans sous-menu) */}
+              <Link
+                href="/membres"
+                className={`font-inter text-xs font-medium transition-colors whitespace-nowrap ${
                   isActive("/membres")
                     ? "text-[#F08223] hover:text-[#D97420]"
                     : "text-[#6F6F6F] hover:text-[#221F1F]"
                 }`}
               >
                 Membres
-                  <ChevronDown className={`w-3 h-3 transition-transform ${isMembersMenuOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {/* Sous-menu */}
-                {isMembersMenuOpen && (
-                  <div 
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                    onMouseEnter={() => {
-                      // Annuler le timeout si on entre dans le sous-menu
-                      if (membersMenuTimeout) {
-                        clearTimeout(membersMenuTimeout);
-                        setMembersMenuTimeout(null);
-                      }
-                      setIsMembersMenuOpen(true);
-                    }}
-                    onMouseLeave={() => {
-                      // Ajouter un délai avant de fermer le menu
-                      const timeout = setTimeout(() => {
-                        setIsMembersMenuOpen(false);
-                      }, 200);
-                      setMembersMenuTimeout(timeout);
-                    }}
-                  >
-                    <Link
-                      href="/membres?tab=annuaire"
-                      onClick={() => setIsMembersMenuOpen(false)}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-t-lg mx-2 ${
-                        activeMemberTab === 'annuaire'
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Users className="w-4 h-4" />
-                      Annuaire
-                    </Link>
-                    <Link
-                      href="/membres?tab=avantages"
-                      onClick={() => setIsMembersMenuOpen(false)}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeMemberTab === 'avantages'
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Award className="w-4 h-4" />
-                      Avantages
-                    </Link>
-                    <Link
-                      href="/membres?tab=adhesion"
-                      onClick={() => setIsMembersMenuOpen(false)}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
-                        activeMemberTab === 'adhesion'
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                      }`}
-                    >
-                      <Building2 className="w-4 h-4" />
-                      Adhérer
-                    </Link>
-                  </div>
-                )}
-              </div>
+              </Link>
               
               <Link
                 href="/contact"
@@ -443,179 +223,31 @@ function HeaderContent() {
               >
                 Actualités & Publications
               </Link>
-              {/* Sous-menu Secteurs dans le drawer mobile */}
-              <div className="space-y-1">
-                <button
-                  onClick={() => setIsSecteursDrawerOpen(!isSecteursDrawerOpen)}
-                  className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors w-full flex items-center justify-between ${
-                    isActive("/secteurs")
-                      ? "text-[#F08223] bg-orange-50"
-                      : "text-[#6F6F6F] hover:bg-gray-50"
-                  }`}
-                >
-                  <span>Secteurs & Filières</span>
-                  <ChevronRight className={`w-4 h-4 transition-transform ${isSecteursDrawerOpen ? 'rotate-90' : ''}`} />
-                </button>
-                {isSecteursDrawerOpen && (
-                  <div className="pl-4 space-y-1">
-                    <Link
-                  href="/secteurs?tab=primaire"
-                  className={`font-inter text-sm font-medium px-8 py-2 rounded-lg transition-all duration-200 block ${
-                    activeSecteurTab === 'primaire'
-                      ? "text-white bg-[#F08223]"
-                      : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                  }`}
-                  onClick={() => {
-                    setIsDrawerOpen(false);
-                    setIsSecteursMenuOpen(false);
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Factory className="w-4 h-4" />
-                    Primaire
-                  </div>
-                </Link>
-                <Link
-                  href="/secteurs?tab=secondaire"
-                  className={`font-inter text-sm font-medium px-8 py-2 rounded-lg transition-all duration-200 block ${
-                    activeSecteurTab === 'secondaire'
-                      ? "text-white bg-[#F08223]"
-                      : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                  }`}
-                  onClick={() => {
-                    setIsDrawerOpen(false);
-                    setIsSecteursMenuOpen(false);
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Building className="w-4 h-4" />
-                    Secondaire
-                  </div>
-              </Link>
-                <Link
-                  href="/secteurs?tab=tertiaire"
-                  className={`font-inter text-sm font-medium px-8 py-2 rounded-lg transition-all duration-200 block ${
-                    activeSecteurTab === 'tertiaire'
-                      ? "text-white bg-[#F08223]"
-                      : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                }`}
-                onClick={() => {
-                  setIsDrawerOpen(false);
-                  setIsSecteursMenuOpen(false);
-                }}
-              >
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="w-4 h-4" />
-                    Tertiaire
-                  </div>
-              </Link>
+              {/* Lien Secteurs simple (sans sous-menu) dans le drawer mobile */}
               <Link
-                  href="/secteurs?tab=quaternaire"
-                  className={`font-inter text-sm font-medium px-8 py-2 rounded-lg transition-all duration-200 block ${
-                    activeSecteurTab === 'quaternaire'
-                      ? "text-white bg-[#F08223]"
-                      : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                  }`}
-                  onClick={() => {
-                    setIsDrawerOpen(false);
-                    setIsSecteursMenuOpen(false);
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Network className="w-4 h-4" />
-                    Quaternaire
-                  </div>
-                </Link>
-                <Link
-                  href="/secteurs?tab=transversales"
-                  className={`font-inter text-sm font-medium px-8 py-2 rounded-lg transition-all duration-200 block ${
-                    activeSecteurTab === 'transversales'
-                      ? "text-white bg-[#F08223]"
-                      : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                  }`}
-                  onClick={() => {
-                    setIsDrawerOpen(false);
-                    setIsSecteursMenuOpen(false);
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Layers className="w-4 h-4" />
-                    Transversales
-                  </div>
-                </Link>
-                  </div>
-                )}
-              </div>
-              
-              {/* Sous-menu Membres dans le drawer mobile */}
-              <div className="space-y-1">
-                <button
-                  onClick={() => setIsMembersDrawerOpen(!isMembersDrawerOpen)}
-                  className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors w-full flex items-center justify-between ${
-                    isActive("/membres")
-                      ? "text-[#F08223] bg-orange-50"
-                      : "text-[#6F6F6F] hover:bg-gray-50"
-                  }`}
-                >
-                  <span>Membres</span>
-                  <ChevronRight className={`w-4 h-4 transition-transform ${isMembersDrawerOpen ? 'rotate-90' : ''}`} />
-                </button>
-                {isMembersDrawerOpen && (
-                  <div className="pl-4 space-y-1">
-                    <Link
-                  href="/membres?tab=annuaire"
-                  className={`font-inter text-sm font-medium px-8 py-2 rounded-lg transition-all duration-200 block ${
-                    activeMemberTab === 'annuaire'
-                      ? "text-white bg-[#F08223]"
-                      : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                  }`}
-                  onClick={() => {
-                    setIsDrawerOpen(false);
-                    setIsMembersMenuOpen(false);
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    Annuaire
-                  </div>
-                </Link>
-                <Link
-                  href="/membres?tab=avantages"
-                  className={`font-inter text-sm font-medium px-8 py-2 rounded-lg transition-all duration-200 block ${
-                    activeMemberTab === 'avantages'
-                      ? "text-white bg-[#F08223]"
-                      : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                  }`}
-                  onClick={() => {
-                    setIsDrawerOpen(false);
-                    setIsMembersMenuOpen(false);
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Award className="w-4 h-4" />
-                    Avantages
-                  </div>
+                href="/secteurs"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/secteurs")
+                    ? "text-[#F08223] bg-orange-50"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                Secteurs & Filières
               </Link>
-                <Link
-                  href="/membres?tab=adhesion"
-                  className={`font-inter text-sm font-medium px-8 py-2 rounded-lg transition-all duration-200 block ${
-                    activeMemberTab === 'adhesion'
-                      ? "text-white bg-[#F08223]"
-                      : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                  }`}
-                  onClick={() => {
-                    setIsDrawerOpen(false);
-                    setIsMembersMenuOpen(false);
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4" />
-                    Adhérer
-                  </div>
-                </Link>
-                  </div>
-                )}
-              </div>
+              
+              {/* Lien Membres simple (sans sous-menu) dans le drawer mobile */}
+              <Link
+                href="/membres"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/membres")
+                    ? "text-[#F08223] bg-orange-50"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                Membres
+              </Link>
               
               <Link
                 href="/contact"
