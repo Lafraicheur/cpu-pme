@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -16,7 +16,9 @@ import { useSearchParams } from "next/navigation";
 
 function AProposContent() {
   const searchParams = useSearchParams();
-  const activeTab = searchParams.get("tab") || "mission";
+  const initialTab = searchParams.get("tab") || "mission";
+  const [activeTab, setActiveTab] = useState(initialTab);
+
   return (
     <>
       {/* Hero Section */}
@@ -46,14 +48,52 @@ function AProposContent() {
       {/* Tabs Section */}
       <section className="py-16 sm:py-20 bg-white">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
-          <Tabs value={activeTab} className="w-full">
-            {/* TabsList masqué car la navigation se fait via le header */}
-            {/* <TabsList className="hidden">
-              <TabsTrigger value="mission">Mission & Vision</TabsTrigger>
-              <TabsTrigger value="histoire">Histoire</TabsTrigger>
-              <TabsTrigger value="equipe">Équipe</TabsTrigger>
-              <TabsTrigger value="partenaires">Partenaires</TabsTrigger>
-            </TabsList> */}
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <div className="flex justify-center mb-8">
+              <TabsList
+                className="
+      grid grid-cols-2 md:grid-cols-4
+      w-full max-w-5xl
+      gap-4
+      p-3
+      bg-gray-50/50
+      rounded-sm
+    "
+              >
+                {[
+                  { value: "mission", label: "Mission & Vision" },
+                  { value: "histoire", label: "Histoire" },
+                  { value: "equipe", label: "Équipe" },
+                  { value: "partenaires", label: "Partenaires" },
+                ].map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className="
+          w-full
+          flex items-center justify-center
+          px-6 py-4
+          rounded-lg
+          font-semibold
+          text-sm sm:text-base
+          transition-all duration-300
+          data-[state=active]:bg-white
+          data-[state=active]:text-[#221F1F]
+          data-[state=active]:shadow-md
+          data-[state=inactive]:bg-slate-100
+          data-[state=inactive]:text-gray-600
+          hover:bg-slate-200
+        "
+                  >
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
 
             {/* Mission & Vision Content */}
             <TabsContent value="mission" className="mt-4">
@@ -409,9 +449,7 @@ function AProposContent() {
                           réunit pour poser les bases d'une organisation
                           représentative unifiée.
                         </p>
-                        <Card
-                          style={{ borderColor: "var(--color-primary)" }}
-                        >
+                        <Card style={{ borderColor: "var(--color-primary)" }}>
                           <CardContent className="pt-6">
                             <p className="text-sm">
                               Les premiers travaux de réflexion sont lancés avec
@@ -447,9 +485,7 @@ function AProposContent() {
                           assemblée constitutive réunissant plus de 200
                           entrepreneurs.
                         </p>
-                        <Card
-                          style={{ borderColor: "var(--color-success)" }}
-                        >
+                        <Card style={{ borderColor: "var(--color-success)" }}>
                           <CardContent className="pt-6">
                             <p className="text-sm">
                               Les statuts sont adoptés, les instances
@@ -486,9 +522,7 @@ function AProposContent() {
                           bureaux régionaux et le développement d'un réseau de
                           représentants locaux.
                         </p>
-                        <Card
-                          style={{ borderColor: "var(--color-primary)" }}
-                        >
+                        <Card style={{ borderColor: "var(--color-primary)" }}>
                           <CardContent className="pt-6">
                             <p className="text-sm">
                               Cette expansion permet de mieux prendre en compte
@@ -524,9 +558,7 @@ function AProposContent() {
                           accords de partenariat avec des organisations
                           homologues en Afrique et en Europe.
                         </p>
-                        <Card
-                          style={{ borderColor: "var(--color-success)" }}
-                        >
+                        <Card style={{ borderColor: "var(--color-success)" }}>
                           <CardContent className="pt-6">
                             <p className="text-sm">
                               Ces partenariats ouvrent de nouvelles perspectives
@@ -561,9 +593,7 @@ function AProposContent() {
                           intégrée, offrant des services en ligne aux PME
                           membres.
                         </p>
-                        <Card
-                          style={{ borderColor: "var(--color-primary)" }}
-                        >
+                        <Card style={{ borderColor: "var(--color-primary)" }}>
                           <CardContent className="pt-6">
                             <p className="text-sm">
                               Cette plateforme marque un tournant dans la
@@ -598,9 +628,7 @@ function AProposContent() {
                           offre de services pour répondre aux besoins évolutifs
                           des PME ivoiriennes.
                         </p>
-                        <Card
-                          style={{ borderColor: "var(--color-success)" }}
-                        >
+                        <Card style={{ borderColor: "var(--color-success)" }}>
                           <CardContent className="pt-6">
                             <p className="text-sm">
                               L'organisation se projette vers l'avenir avec
@@ -848,9 +876,7 @@ function AProposContent() {
 
                     <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
                       <img
-                        src={
-                          require("@/assets/agriculture.png").default.src
-                        }
+                        src={require("@/assets/agriculture.png").default.src}
                         alt="Ministère d'État, Ministre de l'Agriculture, du Développement Rural et des Productions Vivières"
                         className="max-h-full max-w-full object-contain"
                       />
@@ -884,13 +910,7 @@ function AProposContent() {
 
 export default function APropos() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          Chargement...
-        </div>
-      }
-    >
+    <Suspense fallback={<div className="min-h-screen" />}>
       <AProposContent />
     </Suspense>
   );

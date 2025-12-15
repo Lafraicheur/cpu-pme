@@ -67,6 +67,7 @@ import {
   Gem,
   Crown,
   Building,
+  Percent,
   Filter,
   Menu,
 } from "lucide-react";
@@ -82,6 +83,7 @@ import {
   memberBadges,
 } from "./data";
 import { secteursData } from "../secteurs/data";
+import { sectorToMemberMapping } from "../secteurs/sectorMapping";
 import { useToast } from "@/components/ui/use-toast";
 import {
   IconBTP,
@@ -119,15 +121,173 @@ const MemberCardSkeleton = () => (
   </div>
 );
 
+// Données des partenaires Discount +
+const discountPartners = [
+  {
+    id: "orange",
+    name: "Orange Côte d'Ivoire",
+    logo: "orange",
+    logoBg: "bg-orange-500",
+    logoText: "text-white",
+    offer: "15%",
+    description:
+      "Réduction de 15% sur les forfaits data mobile et les services de communication pour les entreprises membres.",
+    conditions:
+      "* Offre valable sur présentation de la carte de membre CPU-PME",
+    category: "technologie",
+  },
+  {
+    id: "mtn",
+    name: "MTN Côte d'Ivoire",
+    logo: "my MTN Côte d'Ivoire",
+    logoBg: "bg-yellow-400",
+    logoText: "text-gray-800",
+    offer: "15%",
+    description:
+      "Réduction de 15% sur les services data et communication pour les entreprises membres.",
+    conditions:
+      "* Offre valable sur présentation de la carte de membre CPU-PME",
+    category: "technologie",
+  },
+  {
+    id: "ecobank",
+    name: "Ecobank",
+    logo: "Ecobank The Pan African Bank",
+    logoBg: "bg-blue-600",
+    logoText: "text-white",
+    offer: "1 an sans frais",
+    description:
+      "Exonération des frais de gestion de compte pendant 1 an pour les nouveaux comptes entreprises.",
+    conditions:
+      "* Offre valable pour les nouveaux comptes ouverts avec la carte CPU-PME",
+    category: "finance",
+  },
+  {
+    id: "nsia",
+    name: "NSIA Assurances",
+    logo: "NSIA",
+    logoBg: "bg-blue-500",
+    logoText: "text-white",
+    offer: "15%",
+    description:
+      "Réduction de 15% sur tous les produits d'assurance pour les membres CPU-PME.",
+    conditions: "* Offre valable sur présentation de la carte de membre",
+    category: "finance",
+  },
+  {
+    id: "aircotedivoire",
+    name: "Air Côte d'Ivoire",
+    logo: "Air Côte d'Ivoire",
+    logoBg: "bg-orange-600",
+    logoText: "text-white",
+    offer: "15%",
+    description:
+      "Réduction de 15% sur les billets d'avion pour les voyages d'affaires des membres.",
+    conditions:
+      "* Offre valable sur présentation de la carte de membre CPU-PME",
+    category: "voyage",
+  },
+  {
+    id: "moov",
+    name: "Moov Africa",
+    logo: "Moov Africa",
+    logoBg: "bg-green-600",
+    logoText: "text-white",
+    offer: "1 mois gratuit",
+    description:
+      "1 mois gratuit sur les abonnements fibre optique pour les nouvelles souscriptions entreprises.",
+    conditions:
+      "* Offre valable pour les nouveaux abonnements avec la carte CPU-PME",
+    category: "technologie",
+  },
+  {
+    id: "sodeci",
+    name: "SODECI",
+    logo: "SODECI",
+    logoBg: "bg-blue-700",
+    logoText: "text-white",
+    offer: "10%",
+    description:
+      "Réduction de 10% sur les services d'eau et d'assainissement pour les entreprises membres.",
+    conditions:
+      "* Offre valable sur présentation de la carte de membre CPU-PME",
+    category: "operations",
+  },
+  {
+    id: "cie",
+    name: "CIE",
+    logo: "CIE",
+    logoBg: "bg-yellow-500",
+    logoText: "text-gray-900",
+    offer: "10%",
+    description:
+      "Réduction de 10% sur les factures d'électricité pour les entreprises membres.",
+    conditions:
+      "* Offre valable sur présentation de la carte de membre CPU-PME",
+    category: "operations",
+  },
+  {
+    id: "adecco",
+    name: "Adecco Côte d'Ivoire",
+    logo: "Adecco",
+    logoBg: "bg-red-600",
+    logoText: "text-white",
+    offer: "15%",
+    description:
+      "Réduction de 15% sur les services de recrutement et d'intérim pour les entreprises membres.",
+    conditions:
+      "* Offre valable sur présentation de la carte de membre CPU-PME",
+    category: "rh",
+  },
+  {
+    id: "manpower",
+    name: "Manpower Côte d'Ivoire",
+    logo: "Manpower",
+    logoBg: "bg-blue-500",
+    logoText: "text-white",
+    offer: "20%",
+    description:
+      "Réduction de 20% sur les services de formation professionnelle et de développement des compétences.",
+    conditions:
+      "* Offre valable sur présentation de la carte de membre CPU-PME",
+    category: "rh",
+  },
+  {
+    id: "cinema",
+    name: "Ciné Afrique",
+    logo: "Ciné Afrique",
+    logoBg: "bg-purple-600",
+    logoText: "text-white",
+    offer: "20%",
+    description:
+      "Réduction de 20% sur les billets de cinéma pour les sorties d'entreprise des membres.",
+    conditions:
+      "* Offre valable sur présentation de la carte de membre CPU-PME",
+    category: "loisirs",
+  },
+  {
+    id: "sport",
+    name: "Complexe Sportif Abidjan",
+    logo: "CSA",
+    logoBg: "bg-green-500",
+    logoText: "text-white",
+    offer: "15%",
+    description:
+      "Réduction de 15% sur les abonnements et locations d'espaces sportifs pour les entreprises membres.",
+    conditions:
+      "* Offre valable sur présentation de la carte de membre CPU-PME",
+    category: "loisirs",
+  },
+];
+
 const MembersContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSector, setSelectedSector] = useState<string>("all");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
-  const [selectedMemberType, setSelectedMemberType] = useState<string>("all");
-  const [selectedBadge, setSelectedBadge] = useState<string>("all");
-  const [sortOrder, setSortOrder] = useState<string>("alphabetical");
+  const [sortOrder, setSortOrder] = useState<string>("random");
+  const [shuffledMembers, setShuffledMembers] = useState<Member[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
@@ -224,7 +384,35 @@ const MembersContent = () => {
   }, [searchParams]);
 
   // Déterminer l'onglet actif depuis l'URL
-  const activeTab = searchParams.get("tab") || "annuaire";
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("tab") || "annuaire"
+  );
+  const [discountFilter, setDiscountFilter] = useState(
+    searchParams.get("discountFilter") || ""
+  );
+
+  // Synchroniser activeTab et discountFilter avec l'URL quand searchParams change
+  useEffect(() => {
+    const tab = searchParams.get("tab") || "annuaire";
+    const filter = searchParams.get("discountFilter") || "";
+
+    // Si un discountFilter est présent dans l'URL, basculer vers l'onglet discount
+    if (filter && tab !== "discount") {
+      setActiveTab("discount");
+      setDiscountFilter(filter);
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("tab", "discount");
+      router.replace(`/membres?${params.toString()}`, { scroll: false });
+    } else {
+      if (tab !== activeTab) {
+        setActiveTab(tab);
+      }
+      if (filter !== discountFilter) {
+        setDiscountFilter(filter);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Fonction pour obtenir le titre adapté selon l'onglet actif
   const getPageTitle = () => {
@@ -233,6 +421,8 @@ const MembersContent = () => {
         return "Annuaire";
       case "avantages":
         return "Avantages Membres";
+      case "discount":
+        return "Discount +";
       case "adhesion":
         return "Adhérer";
       default:
@@ -247,6 +437,8 @@ const MembersContent = () => {
         return "Rejoignez la plus grande communauté d'entrepreneurs, PME, entreprises, institutions et partenaires de Côte d'Ivoire";
       case "avantages":
         return "Découvrez tous les avantages et formules d'adhésion pour développer votre entreprise avec CPU-PME";
+      case "discount":
+        return "Profitez de réductions exclusives et d'offres spéciales réservées aux membres CPU-PME";
       case "adhesion":
         return "Rejoignez CPU-PME et bénéficiez d'un accompagnement complet pour le développement de votre entreprise";
       default:
@@ -259,88 +451,96 @@ const MembersContent = () => {
     switch (sortOrder) {
       case "alphabetical":
         return a.name.localeCompare(b.name, "fr", { sensitivity: "base" });
-      case "date":
-        // Pour la date, on utilise l'index dans le tableau comme proxy (les derniers sont les plus récents)
-        const indexA = membersData.findIndex((m) => m.id === a.id);
-        const indexB = membersData.findIndex((m) => m.id === b.id);
-        return indexB - indexA; // Plus récent en premier
-      case "badge":
-        const badgeOrder = { Institutionnel: 4, Or: 3, Argent: 2, Basic: 1 };
-        const badgeA = badgeOrder[a.badge as keyof typeof badgeOrder] || 0;
-        const badgeB = badgeOrder[b.badge as keyof typeof badgeOrder] || 0;
-        return badgeB - badgeA;
       case "sector":
         return a.sector.localeCompare(b.sector, "fr", { sensitivity: "base" });
+      case "random":
+        // Pour le tri aléatoire, on utilise l'ordre du tableau shuffledMembers
+        const indexA = shuffledMembers.findIndex((m) => m.id === a.id);
+        const indexB = shuffledMembers.findIndex((m) => m.id === b.id);
+        return indexA - indexB;
       default:
-        return a.name.localeCompare(b.name, "fr", { sensitivity: "base" });
+        // Par défaut, tri aléatoire
+        const defaultIndexA = shuffledMembers.findIndex((m) => m.id === a.id);
+        const defaultIndexB = shuffledMembers.findIndex((m) => m.id === b.id);
+        return defaultIndexA - defaultIndexB;
     }
   };
 
-  const filteredMembers = membersData
-    .filter((member) => {
-      // Recherche insensible à la casse
-      const searchLower = searchTerm.toLowerCase().trim();
-      const matchesSearch =
-        searchTerm === "" ||
-        member.name.toLowerCase().includes(searchLower) ||
-        member.description.toLowerCase().includes(searchLower) ||
-        member.sector.toLowerCase().includes(searchLower) ||
-        member.region.toLowerCase().includes(searchLower) ||
-        (member.badge && member.badge.toLowerCase().includes(searchLower)) ||
-        (
-          memberTypes.find((t) => t.value === member.memberType)?.label ||
-          member.memberType
-        )
-          .toLowerCase()
-          .includes(searchLower);
-      const matchesSector =
-        selectedSector === "all" || member.sector === selectedSector;
-      const matchesRegion =
-        selectedRegion === "all" || member.region === selectedRegion;
-      const matchesMemberType =
-        selectedMemberType === "all" ||
-        member.memberType === selectedMemberType;
-      const matchesBadge =
-        selectedBadge === "all" || member.badge === selectedBadge;
-      return (
-        matchesSearch &&
-        matchesSector &&
-        matchesRegion &&
-        matchesMemberType &&
-        matchesBadge
-      );
-    })
-    .sort(sortMembers);
+  // Fonction pour mélanger aléatoirement un tableau
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  // Initialiser le mélange aléatoire au chargement
+  useEffect(() => {
+    if (shuffledMembers.length === 0) {
+      setShuffledMembers(shuffleArray(membersData));
+    }
+  }, []);
+
+  // Mélanger les membres toutes les 3 minutes quand le tri est aléatoire
+  useEffect(() => {
+    if (sortOrder !== "random") return;
+
+    // Mélanger toutes les 3 minutes si le tri est aléatoire
+    const interval = setInterval(() => {
+      setShuffledMembers(shuffleArray(membersData));
+    }, 3 * 60 * 1000); // 3 minutes
+
+    return () => clearInterval(interval);
+  }, [sortOrder]);
+
+  const filteredMembers = membersData.filter((member) => {
+    // Recherche insensible à la casse
+    const searchLower = searchTerm.toLowerCase().trim();
+    const matchesSearch =
+      searchTerm === "" ||
+      member.name.toLowerCase().includes(searchLower) ||
+      member.description.toLowerCase().includes(searchLower) ||
+      member.sector.toLowerCase().includes(searchLower) ||
+      member.region.toLowerCase().includes(searchLower);
+    const matchesSector =
+      selectedSector === "all" || member.sector === selectedSector;
+    const matchesRegion =
+      selectedRegion === "all" || member.region === selectedRegion;
+    return matchesSearch && matchesSector && matchesRegion;
+  });
+
+  // Appliquer le tri ou le mélange aléatoire
+  const sortedMembers =
+    sortOrder === "random"
+      ? filteredMembers.sort((a, b) => {
+          // Utiliser l'ordre du tableau shuffledMembers pour maintenir l'ordre aléatoire
+          const indexA = shuffledMembers.findIndex((m) => m.id === a.id);
+          const indexB = shuffledMembers.findIndex((m) => m.id === b.id);
+          // Si un membre n'est pas dans shuffledMembers (peu probable), le mettre à la fin
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          return indexA - indexB;
+        })
+      : filteredMembers.sort(sortMembers);
 
   // Vérifier si des filtres sont actifs
   const hasActiveFilters =
-    searchTerm !== "" ||
-    selectedSector !== "all" ||
-    selectedRegion !== "all" ||
-    selectedMemberType !== "all" ||
-    selectedBadge !== "all";
+    searchTerm !== "" || selectedSector !== "all" || selectedRegion !== "all";
 
   // Fonction pour réinitialiser tous les filtres
   const resetFilters = () => {
     setSearchTerm("");
     setSelectedSector("all");
     setSelectedRegion("all");
-    setSelectedMemberType("all");
-    setSelectedBadge("all");
     setCurrentPage(1);
   };
 
   // Réinitialiser la page quand les filtres changent
   useEffect(() => {
     setCurrentPage(1);
-  }, [
-    searchTerm,
-    selectedSector,
-    selectedRegion,
-    selectedMemberType,
-    selectedBadge,
-    sortOrder,
-  ]);
+  }, [searchTerm, selectedSector, selectedRegion, sortOrder]);
 
   // Calculer la pagination
   const totalPages = Math.ceil(filteredMembers.length / membersPerPage);
@@ -495,6 +695,51 @@ const MembersContent = () => {
     return !failedImages.has(memberId);
   };
 
+  // Fonction pour obtenir la couleur du badge selon l'index (alternance orange/vert)
+  const getBadgeColor = (index: number) => {
+    return index % 2 === 0
+      ? "bg-cpu-orange/10 text-cpu-orange border-cpu-orange/30 hover:bg-cpu-orange/20"
+      : "bg-cpu-green/10 text-cpu-green border-cpu-green/30 hover:bg-cpu-green/20";
+  };
+
+  // Fonction pour obtenir les sous-secteurs associés à un secteur de membre
+  // Utilisation de useMemo pour éviter les recalculs inutiles
+  const getSubSectorsForMemberSector = (memberSector: string): string[] => {
+    if (!memberSector) return [];
+
+    const subSectors: string[] = [];
+
+    try {
+      // Parcourir tous les secteurs dans secteursData
+      Object.values(secteursData).forEach((secteurData) => {
+        if (!secteurData || !secteurData.filieres) return;
+
+        secteurData.filieres.forEach((filiere) => {
+          if (!filiere || !filiere.sousCategories) return;
+
+          filiere.sousCategories.forEach((sousCat) => {
+            if (!sousCat || !sousCat.nom) return;
+
+            // Vérifier si cette sous-catégorie correspond au secteur du membre
+            const mappedSector =
+              sectorToMemberMapping[sousCat.nom] ||
+              sectorToMemberMapping[filiere.nom];
+            if (mappedSector === memberSector) {
+              // Ajouter le nom de la sous-catégorie si pas déjà présent
+              if (!subSectors.includes(sousCat.nom)) {
+                subSectors.push(sousCat.nom);
+              }
+            }
+          });
+        });
+      });
+    } catch (error) {
+      console.warn("Erreur lors de la récupération des sous-secteurs:", error);
+    }
+
+    return subSectors;
+  };
+
   // Fonction pour exporter en CSV
   const exportToCSV = () => {
     const headers = [
@@ -532,10 +777,37 @@ const MembersContent = () => {
       "download",
       `membres-cpu-${new Date().toISOString().split("T")[0]}.csv`
     );
+    link.style.position = "absolute";
+    link.style.top = "-9999px";
+    link.style.left = "-9999px";
     link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    link.style.opacity = "0";
+
+    try {
+      document.body.appendChild(link);
+      link.click();
+
+      // Nettoyer après un délai pour éviter l'erreur removeChild
+      setTimeout(() => {
+        try {
+          if (link && link.parentNode === document.body) {
+            document.body.removeChild(link);
+          }
+        } catch (error) {
+          // Ignorer l'erreur si l'élément a déjà été supprimé
+          console.warn("Erreur lors du nettoyage du lien:", error);
+        }
+        try {
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          // Ignorer l'erreur si l'URL a déjà été révoquée
+          console.warn("Erreur lors de la révocation de l'URL:", error);
+        }
+      }, 200);
+    } catch (error) {
+      console.error("Erreur lors de l'export CSV:", error);
+      URL.revokeObjectURL(url);
+    }
 
     toast({
       title: "Export réussi",
@@ -622,9 +894,7 @@ const MembersContent = () => {
     if (searchTerm) params.set("search", searchTerm);
     if (selectedSector !== "all") params.set("sector", selectedSector);
     if (selectedRegion !== "all") params.set("region", selectedRegion);
-    if (selectedMemberType !== "all") params.set("type", selectedMemberType);
-    if (selectedBadge !== "all") params.set("badge", selectedBadge);
-    if (sortOrder !== "alphabetical") params.set("sort", sortOrder);
+    if (sortOrder !== "random") params.set("sort", sortOrder);
     if (viewMode !== "grid") params.set("view", viewMode);
 
     const url = `${window.location.origin}/membres?${params.toString()}`;
@@ -633,7 +903,7 @@ const MembersContent = () => {
       navigator
         .share({
           title: "Recherche de membres CPU-PME",
-          text: `Découvrez ${filteredMembers.length} membres sur CPU-PME`,
+          text: `Découvrez ${sortedMembers.length} membres sur CPU-PME`,
           url: url,
         })
         .catch(() => {
@@ -689,6 +959,8 @@ const MembersContent = () => {
                 <span className="text-lg md:text-xl font-semibold text-white">
                   {activeTab === "avantages"
                     ? "Avantages"
+                    : activeTab === "discount"
+                    ? "Discount +"
                     : activeTab === "adhesion"
                     ? "Adhérer"
                     : ""}
@@ -705,15 +977,77 @@ const MembersContent = () => {
         </div>
       </section>
 
+      {/* Titre et Navigation par Onglets */}
+      <section className="bg-white py-8 sm:py-10">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+          <h2 className="font-montserrat text-2xl sm:text-3xl md:text-4xl font-bold text-[#221F1F] text-center mb-10">
+            {getPageTitle()}
+          </h2>
+
+          {/* Navigation par Onglets - Style amélioré */}
+          <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 md:gap-8 mb-8 px-6 py-3 bg-gray-50/50 rounded-xl border border-gray-100 shadow-sm">
+            {[
+              { value: "annuaire", label: "Annuaire", icon: Users },
+              { value: "discount", label: "Discount +", icon: Percent },
+              { value: "avantages", label: "Avantages", icon: Award },
+              { value: "adhesion", label: "Adhérer", icon: Building2 },
+            ].map((tab) => {
+              const isActive = activeTab === tab.value;
+              const IconComponent = tab.icon;
+              return (
+                <button
+                  key={tab.value}
+                  onClick={() => {
+                    setActiveTab(tab.value);
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.set("tab", tab.value);
+                    // Supprimer discountFilter si on change d'onglet (sauf si on va sur discount)
+                    if (tab.value !== "discount") {
+                      params.delete("discountFilter");
+                    }
+                    router.replace(`/membres?${params.toString()}`, {
+                      scroll: false,
+                    });
+                  }}
+                  className={`
+                    relative flex items-center gap-2 px-5 sm:px-7 py-3 sm:py-3.5 rounded-lg font-inter text-sm sm:text-base font-semibold 
+                    transition-all duration-300 ease-in-out cursor-pointer
+                    ${
+                      isActive
+                        ? "bg-white text-[#221F1F] shadow-md z-10"
+                        : "bg-slate-100 text-gray-600 hover:bg-slate-200 hover:text-gray-700"
+                    }
+                  `}
+                >
+                  <IconComponent
+                    className={`h-5 w-5 ${
+                      isActive ? "text-[#221F1F]" : "text-gray-600"
+                    }`}
+                  />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Main Content */}
-      <section className="bg-white border-b border-gray-200 pt-20 pb-16">
+      <section className="bg-white border-b border-gray-200 pt-8 pb-16">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <Tabs
             value={activeTab}
             onValueChange={(value) => {
+              setActiveTab(value);
               const params = new URLSearchParams(searchParams.toString());
               params.set("tab", value);
-              router.push(`/membres?${params.toString()}`);
+              // Supprimer discountFilter si on change d'onglet (sauf si on va sur discount)
+              if (value !== "discount") {
+                params.delete("discountFilter");
+              }
+              router.replace(`/membres?${params.toString()}`, {
+                scroll: false,
+              });
             }}
             className="w-full"
           >
@@ -767,36 +1101,76 @@ const MembersContent = () => {
                         <div className="flex-1 flex flex-col justify-between">
                           <div>
                             <div className="flex items-center flex-wrap gap-2 mb-4">
-                              {recentMembers[featuredIndex].badge &&
-                                (() => {
-                                  const badgeConfig = getBadgeConfig(
-                                    recentMembers[featuredIndex].badge
-                                  );
-                                  return (
-                                    <Badge
-                                      className={`text-xs flex items-center gap-1.5 px-2.5 py-1 border ${badgeConfig.className} shadow-sm`}
-                                    >
-                                      {badgeConfig.icon}
-                                      <span className="font-semibold">
-                                        {recentMembers[featuredIndex].badge}
-                                      </span>
-                                    </Badge>
-                                  );
-                                })()}
-                              <Badge variant="outline" className="text-xs">
-                                {memberTypes.find(
-                                  (t) =>
-                                    t.value ===
-                                    recentMembers[featuredIndex].memberType
-                                )?.label ||
-                                  recentMembers[featuredIndex].memberType}
-                              </Badge>
-                              <Badge className="bg-green-600 text-white text-xs">
+                              <Badge className="bg-green-600 text-white text-xs transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in">
                                 Nouveau
                               </Badge>
-                              <Badge variant="outline" className="text-xs">
+                              {/* Badge secteur principal */}
+                              <Badge className="text-xs bg-white text-gray-700 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in">
                                 {recentMembers[featuredIndex].sector}
                               </Badge>
+                              {/* Badges sous-secteurs */}
+                              {(() => {
+                                try {
+                                  if (!recentMembers[featuredIndex]?.sector)
+                                    return null;
+                                  const subSectors =
+                                    getSubSectorsForMemberSector(
+                                      recentMembers[featuredIndex].sector
+                                    );
+                                  if (!subSectors || subSectors.length === 0)
+                                    return null;
+
+                                  const visibleSubSectors = subSectors.slice(
+                                    0,
+                                    2
+                                  );
+                                  const remainingCount =
+                                    subSectors.length -
+                                    visibleSubSectors.length;
+
+                                  return (
+                                    <>
+                                      {visibleSubSectors.map(
+                                        (subSector, subIndex) => {
+                                          // Alternance orange/vert basée sur l'index
+                                          const isOrange = subIndex % 2 === 0;
+                                          const badgeClass = isOrange
+                                            ? "text-xs bg-cpu-orange/10 text-cpu-orange border-cpu-orange/30 transition-all duration-300 hover:scale-105 hover:shadow-md hover:bg-cpu-orange/20 animate-fade-in"
+                                            : "text-xs bg-cpu-green/10 text-cpu-green border-cpu-green/30 transition-all duration-300 hover:scale-105 hover:shadow-md hover:bg-cpu-green/20 animate-fade-in";
+
+                                          return (
+                                            <Badge
+                                              key={`recent-${featuredIndex}-sub-${subIndex}`}
+                                              className={badgeClass}
+                                              style={{
+                                                animationDelay: `${
+                                                  (subIndex + 1) * 0.02
+                                                }s`,
+                                              }}
+                                            >
+                                              {subSector}
+                                            </Badge>
+                                          );
+                                        }
+                                      )}
+                                      {remainingCount > 0 && (
+                                        <Badge
+                                          className="text-xs bg-cpu-green text-white border-cpu-green transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in"
+                                          style={{ animationDelay: `0.06s` }}
+                                        >
+                                          +{remainingCount}
+                                        </Badge>
+                                      )}
+                                    </>
+                                  );
+                                } catch (error) {
+                                  console.warn(
+                                    "Erreur lors de l'affichage des sous-secteurs:",
+                                    error
+                                  );
+                                  return null;
+                                }
+                              })()}
                             </div>
                             <h3 className="text-2xl font-bold text-[#221F1F] mb-4">
                               {recentMembers[featuredIndex].name}
@@ -873,7 +1247,7 @@ const MembersContent = () => {
               {/* Search and Filters Bar */}
               <div className="bg-white border border-gray-200 rounded-lg p-6 mb-12 animate-fade-in-up animate-delay-200">
                 {/* Desktop Filters */}
-                <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="lg:col-span-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -885,22 +1259,6 @@ const MembersContent = () => {
                       />
                     </div>
                   </div>
-                  <Select
-                    value={selectedMemberType}
-                    onValueChange={setSelectedMemberType}
-                  >
-                    <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
-                      <SelectValue placeholder="Type de membre" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les types</SelectItem>
-                      {memberTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <Select
                     value={selectedSector}
                     onValueChange={setSelectedSector}
@@ -933,22 +1291,6 @@ const MembersContent = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select
-                    value={selectedBadge}
-                    onValueChange={setSelectedBadge}
-                  >
-                    <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
-                      <SelectValue placeholder="Formule d'adhésion" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes les formules</SelectItem>
-                      {memberBadges.map((badge) => (
-                        <SelectItem key={badge} value={badge}>
-                          {badge}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 {/* Mobile Filters - Drawer */}
@@ -977,8 +1319,6 @@ const MembersContent = () => {
                                 searchTerm,
                                 selectedSector,
                                 selectedRegion,
-                                selectedMemberType,
-                                selectedBadge,
                               ].filter((f) => f !== "" && f !== "all").length
                             }
                           </Badge>
@@ -990,27 +1330,6 @@ const MembersContent = () => {
                         <SheetTitle>Filtres de recherche</SheetTitle>
                       </SheetHeader>
                       <div className="space-y-6 mt-6">
-                        <div className="space-y-2">
-                          <Label>Type de membre</Label>
-                          <Select
-                            value={selectedMemberType}
-                            onValueChange={setSelectedMemberType}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Tous les types" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">
-                                Tous les types
-                              </SelectItem>
-                              {memberTypes.map((type) => (
-                                <SelectItem key={type.value} value={type.value}>
-                                  {type.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
                         <div className="space-y-2">
                           <Label>Secteur</Label>
                           <Select
@@ -1048,27 +1367,6 @@ const MembersContent = () => {
                               {regions.map((region) => (
                                 <SelectItem key={region} value={region}>
                                   {region}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Formule d'adhésion</Label>
-                          <Select
-                            value={selectedBadge}
-                            onValueChange={setSelectedBadge}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Toutes les formules" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">
-                                Toutes les formules
-                              </SelectItem>
-                              {memberBadges.map((badge) => (
-                                <SelectItem key={badge} value={badge}>
-                                  {badge}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -1123,9 +1421,9 @@ const MembersContent = () => {
                               Résultats
                             </span>
                             <span className="text-lg font-bold text-[#221F1F]">
-                              {filteredMembers.length}{" "}
+                              {sortedMembers.length}{" "}
                               <span className="text-sm font-normal text-gray-600">
-                                membre{filteredMembers.length > 1 ? "s" : ""}
+                                membre{sortedMembers.length > 1 ? "s" : ""}
                               </span>
                             </span>
                           </div>
@@ -1164,14 +1462,9 @@ const MembersContent = () => {
                           <SelectValue placeholder="Trier par" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="random">Aléatoire</SelectItem>
                           <SelectItem value="alphabetical">
                             Alphabétique
-                          </SelectItem>
-                          <SelectItem value="date">
-                            Date d'inscription
-                          </SelectItem>
-                          <SelectItem value="badge">
-                            Formule d'adhésion
                           </SelectItem>
                           <SelectItem value="sector">Secteur</SelectItem>
                         </SelectContent>
@@ -1258,31 +1551,6 @@ const MembersContent = () => {
                             <X className="h-3 w-3" />
                           </Badge>
                         )}
-                        {/* Badge type de membre */}
-                        {selectedMemberType !== "all" && (
-                          <Badge
-                            variant="outline"
-                            className="bg-white border-gray-300 text-[#221F1F] hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
-                            onClick={() => setSelectedMemberType("all")}
-                          >
-                            Type:{" "}
-                            {memberTypes.find(
-                              (t) => t.value === selectedMemberType
-                            )?.label || selectedMemberType}
-                            <X className="h-3 w-3" />
-                          </Badge>
-                        )}
-                        {/* Badge formule */}
-                        {selectedBadge !== "all" && (
-                          <Badge
-                            variant="outline"
-                            className="bg-white border-gray-300 text-[#221F1F] hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
-                            onClick={() => setSelectedBadge("all")}
-                          >
-                            Formule: {selectedBadge}
-                            <X className="h-3 w-3" />
-                          </Badge>
-                        )}
                         {/* Badge tag depuis URL */}
                         {searchParams.get("tag") && (
                           <Badge
@@ -1354,31 +1622,80 @@ const MembersContent = () => {
 
                             {/* Card Content */}
                             <div className="p-6 flex flex-col flex-1">
-                              <div className="mb-4 flex flex-wrap gap-2">
-                                {member.badge &&
-                                  (() => {
-                                    const badgeConfig = getBadgeConfig(
-                                      member.badge
-                                    );
-                                    return (
-                                      <Badge
-                                        className={`text-xs flex items-center gap-1.5 px-2.5 py-1 border ${badgeConfig.className} shadow-sm`}
-                                      >
-                                        {badgeConfig.icon}
-                                        <span className="font-semibold">
-                                          {member.badge}
-                                        </span>
-                                      </Badge>
-                                    );
-                                  })()}
-                                <Badge variant="outline" className="text-xs">
-                                  {memberTypes.find(
-                                    (t) => t.value === member.memberType
-                                  )?.label || member.memberType}
-                                </Badge>
-                                <Badge variant="outline" className="text-xs">
+                              <div className="mb-4 flex flex-wrap gap-2 items-center">
+                                {/* Badge secteur principal */}
+                                <Badge
+                                  className="text-xs bg-white text-gray-700 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in"
+                                  style={{ animationDelay: `${index * 0.05}s` }}
+                                >
                                   {member.sector}
                                 </Badge>
+                                {/* Badges sous-secteurs */}
+                                {(() => {
+                                  try {
+                                    const subSectors =
+                                      getSubSectorsForMemberSector(
+                                        member.sector
+                                      );
+                                    if (!subSectors || subSectors.length === 0)
+                                      return null;
+
+                                    const visibleSubSectors = subSectors.slice(
+                                      0,
+                                      2
+                                    );
+                                    const remainingCount =
+                                      subSectors.length -
+                                      visibleSubSectors.length;
+
+                                    return (
+                                      <>
+                                        {visibleSubSectors.map(
+                                          (subSector, subIndex) => {
+                                            // Alternance orange/vert basée sur l'index
+                                            const isOrange = subIndex % 2 === 0;
+                                            const badgeClass = isOrange
+                                              ? "text-xs bg-cpu-orange/10 text-cpu-orange border-cpu-orange/30 transition-all duration-300 hover:scale-105 hover:shadow-md hover:bg-cpu-orange/20 animate-fade-in"
+                                              : "text-xs bg-cpu-green/10 text-cpu-green border-cpu-green/30 transition-all duration-300 hover:scale-105 hover:shadow-md hover:bg-cpu-green/20 animate-fade-in";
+
+                                            return (
+                                              <Badge
+                                                key={`${member.id}-sub-${subIndex}`}
+                                                className={badgeClass}
+                                                style={{
+                                                  animationDelay: `${
+                                                    index * 0.05 +
+                                                    (subIndex + 1) * 0.02
+                                                  }s`,
+                                                }}
+                                              >
+                                                {subSector}
+                                              </Badge>
+                                            );
+                                          }
+                                        )}
+                                        {remainingCount > 0 && (
+                                          <Badge
+                                            className="text-xs bg-cpu-green text-white border-cpu-green transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in"
+                                            style={{
+                                              animationDelay: `${
+                                                index * 0.05 + 0.06
+                                              }s`,
+                                            }}
+                                          >
+                                            +{remainingCount}
+                                          </Badge>
+                                        )}
+                                      </>
+                                    );
+                                  } catch (error) {
+                                    console.warn(
+                                      "Erreur lors de l'affichage des sous-secteurs:",
+                                      error
+                                    );
+                                    return null;
+                                  }
+                                })()}
                               </div>
 
                               <h3 className="text-lg font-bold text-[#221F1F] mb-3 line-clamp-2">
@@ -1468,36 +1785,83 @@ const MembersContent = () => {
                               <div className="flex items-start justify-between gap-4 mb-3">
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center flex-wrap gap-2 mb-2">
-                                    {member.badge &&
-                                      (() => {
-                                        const badgeConfig = getBadgeConfig(
-                                          member.badge
-                                        );
-                                        return (
-                                          <Badge
-                                            className={`text-xs flex items-center gap-1.5 px-2.5 py-1 border ${badgeConfig.className} shadow-sm`}
-                                          >
-                                            {badgeConfig.icon}
-                                            <span className="font-semibold">
-                                              {member.badge}
-                                            </span>
-                                          </Badge>
-                                        );
-                                      })()}
+                                    {/* Badge secteur principal */}
                                     <Badge
-                                      variant="outline"
-                                      className="text-xs"
-                                    >
-                                      {memberTypes.find(
-                                        (t) => t.value === member.memberType
-                                      )?.label || member.memberType}
-                                    </Badge>
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs"
+                                      className="text-xs bg-white text-gray-700 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in"
+                                      style={{
+                                        animationDelay: `${index * 0.05}s`,
+                                      }}
                                     >
                                       {member.sector}
                                     </Badge>
+                                    {/* Badges sous-secteurs */}
+                                    {(() => {
+                                      try {
+                                        const subSectors =
+                                          getSubSectorsForMemberSector(
+                                            member.sector
+                                          );
+                                        if (
+                                          !subSectors ||
+                                          subSectors.length === 0
+                                        )
+                                          return null;
+
+                                        const visibleSubSectors =
+                                          subSectors.slice(0, 2);
+                                        const remainingCount =
+                                          subSectors.length -
+                                          visibleSubSectors.length;
+
+                                        return (
+                                          <>
+                                            {visibleSubSectors.map(
+                                              (subSector, subIndex) => {
+                                                // Alternance orange/vert basée sur l'index
+                                                const isOrange =
+                                                  subIndex % 2 === 0;
+                                                const badgeClass = isOrange
+                                                  ? "text-xs bg-cpu-orange/10 text-cpu-orange border-cpu-orange/30 transition-all duration-300 hover:scale-105 hover:shadow-md hover:bg-cpu-orange/20 animate-fade-in"
+                                                  : "text-xs bg-cpu-green/10 text-cpu-green border-cpu-green/30 transition-all duration-300 hover:scale-105 hover:shadow-md hover:bg-cpu-green/20 animate-fade-in";
+
+                                                return (
+                                                  <Badge
+                                                    key={`${member.id}-sub-${subIndex}`}
+                                                    className={badgeClass}
+                                                    style={{
+                                                      animationDelay: `${
+                                                        index * 0.05 +
+                                                        (subIndex + 1) * 0.02
+                                                      }s`,
+                                                    }}
+                                                  >
+                                                    {subSector}
+                                                  </Badge>
+                                                );
+                                              }
+                                            )}
+                                            {remainingCount > 0 && (
+                                              <Badge
+                                                className="text-xs bg-cpu-green text-white border-cpu-green transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in"
+                                                style={{
+                                                  animationDelay: `${
+                                                    index * 0.05 + 0.06
+                                                  }s`,
+                                                }}
+                                              >
+                                                +{remainingCount}
+                                              </Badge>
+                                            )}
+                                          </>
+                                        );
+                                      } catch (error) {
+                                        console.warn(
+                                          "Erreur lors de l'affichage des sous-secteurs:",
+                                          error
+                                        );
+                                        return null;
+                                      }
+                                    })()}
                                   </div>
                                   <h3 className="text-lg md:text-xl font-bold text-[#221F1F] mb-2">
                                     {member.name}
@@ -1531,7 +1895,7 @@ const MembersContent = () => {
                   </div>
                 )}
 
-                {filteredMembers.length === 0 && (
+                {sortedMembers.length === 0 && (
                   <div className="text-center py-12 border border-gray-200 rounded-lg bg-gray-50 animate-fade-in-up">
                     <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500 font-medium">
@@ -1541,7 +1905,7 @@ const MembersContent = () => {
                 )}
 
                 {/* Pagination */}
-                {filteredMembers.length > 0 && totalPages > 1 && (
+                {sortedMembers.length > 0 && totalPages > 1 && (
                   <div className="mt-12 flex flex-col items-center gap-4">
                     <div className="flex items-center gap-2">
                       {/* Bouton Première page */}
@@ -1643,18 +2007,18 @@ const MembersContent = () => {
                       Affichage de{" "}
                       <span className="font-semibold">{startIndex + 1}</span> à{" "}
                       <span className="font-semibold">
-                        {Math.min(endIndex, filteredMembers.length)}
+                        {Math.min(endIndex, sortedMembers.length)}
                       </span>{" "}
                       sur{" "}
                       <span className="font-semibold">
-                        {filteredMembers.length}
+                        {sortedMembers.length}
                       </span>{" "}
                       membres
                     </p>
                   </div>
                 )}
 
-                {filteredMembers.length > 0 && totalPages === 1 && (
+                {sortedMembers.length > 0 && totalPages === 1 && (
                   <div className="text-center mt-12">
                     <p className="text-[#6F6F6F]">
                       Plus de{" "}
@@ -1737,7 +2101,7 @@ const MembersContent = () => {
                       )}
 
                       <div className="p-8 flex flex-col h-full">
-                        <h3 className="text-xl font-bold text-[#221F1F] mb-2 mt-1">
+                        <h3 className="text-lg font-bold text-[#221F1F] mb-2 mt-1">
                           {plan.name}
                         </h3>
                         <p className="text-cpu-darkgray text-sm mb-6">
@@ -1747,7 +2111,7 @@ const MembersContent = () => {
                         <div className="mb-6 py-5 border-t border-b border-gray-200">
                           {plan.isInstitutional ? (
                             <>
-                              <p className="text-3xl font-bold text-cpu-orange mb-1">
+                              <p className="text-2xl font-bold text-cpu-orange mb-1">
                                 Sur devis
                               </p>
                               <p className="text-sm text-cpu-darkgray">
@@ -1759,7 +2123,7 @@ const MembersContent = () => {
                           ) : (
                             <>
                               <div className="flex items-baseline justify-center gap-2 mb-2">
-                                <p className="text-3xl font-bold text-cpu-orange">
+                                <p className="text-2xl font-bold text-cpu-orange">
                                   {plan.priceYearly.toLocaleString("fr-FR")}{" "}
                                   FCFA
                                 </p>
@@ -1802,7 +2166,152 @@ const MembersContent = () => {
               </div>
             </TabsContent>
 
-            {/* Adhesion Tab */}
+            {/* Discount + Tab */}
+            <TabsContent value="discount" className="mt-4">
+              <div className="max-w-7xl mx-auto">
+                {/* Barre de filtres */}
+                <div className="flex items-center justify-center gap-2 sm:gap-3 md:gap-4 mb-8 flex-wrap px-2">
+                  {[
+                    { value: "all", label: "Tous les partenaires" },
+                    { value: "finance", label: "Finances et assurances" },
+                    { value: "operations", label: "Soutien aux opérations" },
+                    { value: "rh", label: "Ressources humaines" },
+                    { value: "voyage", label: "Voyage" },
+                    { value: "technologie", label: "Technologie" },
+                    { value: "loisirs", label: "Loisirs et divertissement" },
+                  ].map((filter) => {
+                    // Utiliser l'état local discountFilter pour une détection plus fiable
+                    const currentFilter =
+                      discountFilter ||
+                      searchParams.get("discountFilter") ||
+                      "";
+                    // Le filtre est actif si :
+                    // - C'est "all" ET qu'il n'y a pas de filtre dans l'URL (chaîne vide)
+                    // - OU c'est le filtre correspondant à celui dans l'URL
+                    const isActive =
+                      filter.value === "all"
+                        ? !currentFilter || currentFilter === ""
+                        : currentFilter === filter.value;
+                    return (
+                      <button
+                        key={filter.value}
+                        onClick={() => {
+                          setActiveTab("discount");
+                          const newFilter =
+                            filter.value === "all" ? "" : filter.value;
+                          setDiscountFilter(newFilter);
+                          const params = new URLSearchParams(
+                            searchParams.toString()
+                          );
+                          // S'assurer qu'on est sur l'onglet discount
+                          params.set("tab", "discount");
+                          if (filter.value === "all") {
+                            params.delete("discountFilter");
+                          } else {
+                            params.set("discountFilter", filter.value);
+                          }
+                          router.replace(`/membres?${params.toString()}`, {
+                            scroll: false,
+                          });
+                        }}
+                        className={`
+                          px-3 sm:px-4 md:px-5 py-2 rounded-lg font-inter text-xs sm:text-sm md:text-base font-medium whitespace-nowrap
+                          transition-all duration-200 cursor-pointer flex-shrink-0
+                          ${
+                            isActive
+                              ? "bg-cpu-green text-white shadow-sm"
+                              : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                          }
+                        `}
+                      >
+                        {filter.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Grille des offres partenaires */}
+                {(() => {
+                  const activeFilter =
+                    discountFilter ||
+                    searchParams.get("discountFilter") ||
+                    "all";
+                  const filteredPartners =
+                    activeFilter === "all" || activeFilter === ""
+                      ? discountPartners
+                      : discountPartners.filter(
+                          (p) => p.category === activeFilter
+                        );
+
+                  const categoryLabels: { [key: string]: string } = {
+                    technologie: "Technologie",
+                    finance: "Finances et assurances",
+                    voyage: "Voyage",
+                    operations: "Soutien aux opérations",
+                    rh: "Ressources humaines",
+                    loisirs: "Loisirs et divertissement",
+                  };
+
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                      {filteredPartners.map((partner) => (
+                        <div
+                          key={partner.id}
+                          className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                        >
+                          <div
+                            className={`h-24 ${partner.logoBg} flex items-center justify-center`}
+                          >
+                            <span
+                              className={`${partner.logoText} ${
+                                partner.logo === "orange"
+                                  ? "text-2xl"
+                                  : "text-lg"
+                              } font-bold`}
+                            >
+                              {partner.logo}
+                            </span>
+                          </div>
+                          <div className="p-5 relative">
+                            <div className="absolute top-4 right-4">
+                              <Badge className="bg-cpu-orange text-white px-3 py-1 text-sm font-semibold">
+                                {partner.offer}
+                              </Badge>
+                            </div>
+                            <h3 className="text-lg font-bold text-[#221F1F] mb-2 mt-2">
+                              {partner.name}
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-2">
+                              {partner.description}
+                            </p>
+                            <p className="text-xs text-gray-500 italic mb-3">
+                              {partner.conditions}
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              <Badge variant="outline" className="text-xs">
+                                {categoryLabels[partner.category]}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                {/* Section CTA Partenaires */}
+                <div className="bg-gray-100 rounded-xl p-8 md:p-12 text-center mb-8">
+                  <p className="text-lg md:text-xl text-gray-700 mb-6">
+                    Vous êtes partenaire ? Rejoignez notre programme Discount+
+                    et offrez des avantages exclusifs aux membres CPU-PME.CI
+                  </p>
+                  <Button className="bg-cpu-orange hover:bg-[#D97420] text-white px-8 py-6 text-lg font-semibold">
+                    Devenir partenaire
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+
             <TabsContent value="adhesion" className="mt-4">
               <div className="max-w-4xl mx-auto">
                 <div className="text-center mb-12">
@@ -2945,7 +3454,7 @@ const MembersContent = () => {
   );
 };
 
-const Members = () => {
+export default function Members() {
   return (
     <Suspense
       fallback={
@@ -2959,6 +3468,4 @@ const Members = () => {
       <MembersContent />
     </Suspense>
   );
-};
-
-export default Members;
+}

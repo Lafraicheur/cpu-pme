@@ -118,36 +118,8 @@ function HeaderContent() {
   };
 
   // Fonction pour vérifier quel secteur est actif
-  const getActiveSecteurTab = () => {
-    if (pathname === "/secteurs") {
-      const tab = searchParams.get("tab");
-      return tab || "primaire";
-    }
-    return null;
-  };
-
-  // Fonction pour vérifier quel onglet À Propos est actif
-  const getActiveAProposTab = () => {
-    if (pathname === "/a-propos") {
-      const tab = searchParams.get("tab");
-      return tab || "mission";
-    }
-    return null;
-  };
-
-  // Fonction pour vérifier quel onglet Actualités est actif
-  const getActiveActualitesTab = () => {
-    if (pathname === "/actualites") {
-      const tab = searchParams.get("tab");
-      return tab || "actualites";
-    }
-    return null;
-  };
 
   const activeMemberTab = getActiveMemberTab();
-  const activeSecteurTab = getActiveSecteurTab();
-  const activeAProposTab = getActiveAProposTab();
-  const activeActualitesTab = getActiveActualitesTab();
 
   return (
     <>
@@ -181,378 +153,52 @@ function HeaderContent() {
               </Link>
 
               {/* Menu À Propos avec sous-menu */}
-              <div
-                className="relative"
-                onMouseEnter={() => {
-                  if (aProposMenuTimeout) {
-                    clearTimeout(aProposMenuTimeout);
-                    setAProposMenuTimeout(null);
-                  }
-                  setIsAProposMenuOpen(true);
-                }}
-                onMouseLeave={() => {
-                  const timeout = setTimeout(() => {
-                    setIsAProposMenuOpen(false);
-                  }, 200);
-                  setAProposMenuTimeout(timeout);
-                }}
+              <Link
+                href="/a-propos"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  isActive("/a-propos")
+                    ? "text-[#F08223] font-semibold hover:text-[#D97420]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
               >
-                <button
-                  className={`font-inter text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1 pb-1 border-b-2 ${
-                    isActive("/a-propos")
-                      ? "text-[#F08223] font-semibold border-[#F08223]"
-                      : "text-[#6F6F6F] hover:text-[#221F1F] border-transparent"
-                  }`}
-                >
-                  À Propos
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform ${
-                      isAProposMenuOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
+                À propos
+              </Link>
 
-                {/* Sous-menu À Propos */}
-                {isAProposMenuOpen && (
-                  <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                    onMouseEnter={() => {
-                      if (aProposMenuTimeout) {
-                        clearTimeout(aProposMenuTimeout);
-                        setAProposMenuTimeout(null);
-                      }
-                      setIsAProposMenuOpen(true);
-                    }}
-                    onMouseLeave={() => {
-                      const timeout = setTimeout(() => {
-                        setIsAProposMenuOpen(false);
-                      }, 200);
-                      setAProposMenuTimeout(timeout);
-                    }}
-                  >
-                    <Link
-                      href="/a-propos?tab=mission"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-t-lg mx-2 ${
-                        activeAProposTab === "mission"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Target className="w-4 h-4" />
-                      Mission & Vision
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=histoire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeAProposTab === "histoire"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Clock className="w-4 h-4" />
-                      Histoire
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=equipe"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeAProposTab === "equipe"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Users className="w-4 h-4" />
-                      Équipe
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=partenaires"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
-                        activeAProposTab === "partenaires"
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                      }`}
-                    >
-                      <Handshake className="w-4 h-4" />
-                      Partenaires
-                    </Link>
-                  </div>
-                )}
-              </div>
+              <Link
+                href="/actualites"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  isActive("/actualites")
+                    ? "text-[#F08223] font-semibold hover:text-[#D97420]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
+              >
+                Actualités & Publications
+              </Link>
 
               {/* Menu Actualités & Publications avec sous-menu */}
-              <div
-                className="relative"
-                onMouseEnter={() => {
-                  if (actualitesMenuTimeout) {
-                    clearTimeout(actualitesMenuTimeout);
-                    setActualitesMenuTimeout(null);
-                  }
-                  setIsActualitesMenuOpen(true);
-                }}
-                onMouseLeave={() => {
-                  const timeout = setTimeout(() => {
-                    setIsActualitesMenuOpen(false);
-                  }, 200);
-                  setActualitesMenuTimeout(timeout);
-                }}
+              <Link
+                href="/secteurs"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  isActive("/secteurs")
+                    ? "text-[#F08223] font-semibold hover:text-[#D97420]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
               >
-                <button
-                  className={`font-inter text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1 pb-1 border-b-2 ${
-                    isActive("/actualites")
-                      ? "text-[#F08223] font-semibold border-[#F08223]"
-                      : "text-[#6F6F6F] hover:text-[#221F1F] border-transparent"
-                  }`}
-                >
-                  Actualités & Publications
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform ${
-                      isActualitesMenuOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Sous-menu Actualités & Publications */}
-                {isActualitesMenuOpen && (
-                  <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                    onMouseEnter={() => {
-                      if (actualitesMenuTimeout) {
-                        clearTimeout(actualitesMenuTimeout);
-                        setActualitesMenuTimeout(null);
-                      }
-                      setIsActualitesMenuOpen(true);
-                    }}
-                    onMouseLeave={() => {
-                      const timeout = setTimeout(() => {
-                        setIsActualitesMenuOpen(false);
-                      }, 200);
-                      setActualitesMenuTimeout(timeout);
-                    }}
-                  >
-                    <Link
-                      href="/actualites?tab=actualites"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-t-lg mx-2 ${
-                        activeActualitesTab === "actualites"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Newspaper className="w-4 h-4" />
-                      Actualités
-                    </Link>
-                    <Link
-                      href="/actualites?tab=publications"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
-                        activeActualitesTab === "publications"
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                      }`}
-                    >
-                      <FileText className="w-4 h-4" />
-                      Publications
-                    </Link>
-                  </div>
-                )}
-              </div>
+                Secteurs & Filières
+              </Link>
 
               {/* Menu Secteurs avec sous-menu */}
-              <div
-                className="relative"
-                onMouseEnter={() => {
-                  if (secteursMenuTimeout) {
-                    clearTimeout(secteursMenuTimeout);
-                    setSecteursMenuTimeout(null);
-                  }
-                  setIsSecteursMenuOpen(true);
-                }}
-                onMouseLeave={() => {
-                  const timeout = setTimeout(() => {
-                    setIsSecteursMenuOpen(false);
-                  }, 200);
-                  setSecteursMenuTimeout(timeout);
-                }}
+              <Link
+                href="/membres"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  isActive("/membres")
+                    ? "text-[#F08223] font-semibold hover:text-[#D97420]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
               >
-                <button
-                  className={`font-inter text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1 pb-1 border-b-2 ${
-                    isActive("/secteurs")
-                      ? "text-[#F08223] font-semibold hover:text-[#D97420]"
-                      : "text-[#6F6F6F] hover:text-[#221F1F] border-transparent"
-                  }`}
-                >
-                  Secteurs & Filières
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform ${
-                      isSecteursMenuOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
+                Membres
+              </Link>
 
-                {/* Sous-menu Secteurs */}
-                {isSecteursMenuOpen && (
-                  <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                    onMouseEnter={() => {
-                      if (secteursMenuTimeout) {
-                        clearTimeout(secteursMenuTimeout);
-                        setSecteursMenuTimeout(null);
-                      }
-                      setIsSecteursMenuOpen(true);
-                    }}
-                    onMouseLeave={() => {
-                      const timeout = setTimeout(() => {
-                        setIsSecteursMenuOpen(false);
-                      }, 200);
-                      setSecteursMenuTimeout(timeout);
-                    }}
-                  >
-                    <Link
-                      href="/secteurs?tab=primaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-t-lg mx-2 ${
-                        activeSecteurTab === "primaire"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Factory className="w-4 h-4" />
-                      Primaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=secondaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeSecteurTab === "secondaire"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Building className="w-4 h-4" />
-                      Secondaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=tertiaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeSecteurTab === "tertiaire"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Briefcase className="w-4 h-4" />
-                      Tertiaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=quaternaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
-                        activeSecteurTab === "quaternaire"
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                      }`}
-                    >
-                      <Network className="w-4 h-4" />
-                      Quaternaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=transversales"
-                      onClick={() => setIsSecteursMenuOpen(false)}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
-                        activeSecteurTab === "transversales"
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                      }`}
-                    >
-                      <Layers className="w-4 h-4" />
-                      Transversales
-                    </Link>
-                  </div>
-                )}
-              </div>
-              {/* Menu Membres avec sous-menu */}
-              <div
-                className="relative"
-                onMouseEnter={() => {
-                  // Annuler le timeout si on revient sur le menu
-                  if (membersMenuTimeout) {
-                    clearTimeout(membersMenuTimeout);
-                    setMembersMenuTimeout(null);
-                  }
-                  setIsMembersMenuOpen(true);
-                }}
-                onMouseLeave={() => {
-                  // Ajouter un délai avant de fermer le menu
-                  const timeout = setTimeout(() => {
-                    setIsMembersMenuOpen(false);
-                  }, 200); // 200ms de délai
-                  setMembersMenuTimeout(timeout);
-                }}
-              >
-                <button
-                  className={`font-inter text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1 pb-1 border-b-2 ${
-                    isActive("/membres")
-                      ? "text-[#F08223] font-semibold hover:text-[#D97420]"
-                      : "text-[#6F6F6F] hover:text-[#221F1F] border-transparent"
-                  }`}
-                >
-                  Membres
-                  <ChevronDown
-                    className={`w-3 h-3 transition-transform ${
-                      isMembersMenuOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Sous-menu */}
-                {isMembersMenuOpen && (
-                  <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                    onMouseEnter={() => {
-                      // Annuler le timeout si on entre dans le sous-menu
-                      if (membersMenuTimeout) {
-                        clearTimeout(membersMenuTimeout);
-                        setMembersMenuTimeout(null);
-                      }
-                      setIsMembersMenuOpen(true);
-                    }}
-                    onMouseLeave={() => {
-                      // Ajouter un délai avant de fermer le menu
-                      const timeout = setTimeout(() => {
-                        setIsMembersMenuOpen(false);
-                      }, 200);
-                      setMembersMenuTimeout(timeout);
-                    }}
-                  >
-                    <Link
-                      href="/membres?tab=annuaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-t-lg mx-2 ${
-                        activeMemberTab === "annuaire"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Users className="w-4 h-4" />
-                      Annuaire
-                    </Link>
-                    <Link
-                      href="/membres?tab=avantages"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeMemberTab === "avantages"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Award className="w-4 h-4" />
-                      Avantages
-                    </Link>
-                    <Link
-                      href="/membres?tab=adhesion"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
-                        activeMemberTab === "adhesion"
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                      }`}
-                    >
-                      <Building2 className="w-4 h-4" />
-                      Adhérer
-                    </Link>
-                  </div>
-                )}
-              </div>
               <Link
                 href="/contact"
                 className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
@@ -638,289 +284,53 @@ function HeaderContent() {
                 Accueil
               </Link>
 
-              {/* Menu À Propos avec accordéon mobile */}
-              <div>
-                <button
-                  onClick={() => setIsMobileAProposOpen(!isMobileAProposOpen)}
-                  className={`w-full flex items-center justify-between font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                    pathname.startsWith("/a-propos")
-                      ? "text-[#F08223] bg-orange-50 font-semibold"
-                      : "text-[#6F6F6F] hover:bg-gray-50"
-                  }`}
-                >
-                  À Propos
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      isMobileAProposOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isMobileAProposOpen && (
-                  <div className="mt-1 ml-4 space-y-1">
-                    <Link
-                      href="/a-propos?tab=mission"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeAProposTab === "mission"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Target className="w-4 h-4" />
-                      Mission & Vision
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=histoire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeAProposTab === "histoire"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Clock className="w-4 h-4" />
-                      Histoire
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=equipe"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeAProposTab === "equipe"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Users className="w-4 h-4" />
-                      Équipe
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=partenaires"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeAProposTab === "partenaires"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Handshake className="w-4 h-4" />
-                      Partenaires
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              {/* Menu Actualités & Publications avec accordéon mobile */}
-              <div>
-                <button
-                  onClick={() =>
-                    setIsMobileActualitesOpen(!isMobileActualitesOpen)
-                  }
-                  className={`w-full flex items-center justify-between font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                    pathname.startsWith("/actualites")
-                      ? "text-[#F08223] bg-orange-50 font-semibold"
-                      : "text-[#6F6F6F] hover:bg-gray-50"
-                  }`}
-                >
-                  Actualités & Publications
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      isMobileActualitesOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isMobileActualitesOpen && (
-                  <div className="mt-1 ml-4 space-y-1">
-                    <Link
-                      href="/actualites?tab=actualites"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeActualitesTab === "actualites"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Newspaper className="w-4 h-4" />
-                      Actualités
-                    </Link>
-                    <Link
-                      href="/actualites?tab=publications"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeActualitesTab === "publications"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <FileText className="w-4 h-4" />
-                      Publications
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              {/* Menu Secteurs avec accordéon mobile */}
-              <div>
-                <button
-                  onClick={() => setIsMobileSecteursOpen(!isMobileSecteursOpen)}
-                  className={`w-full flex items-center justify-between font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                    pathname.startsWith("/secteurs")
-                      ? "text-[#F08223] bg-orange-50 font-semibold"
-                      : "text-[#6F6F6F] hover:bg-gray-50"
-                  }`}
-                >
-                  Secteurs & Filières
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      isMobileSecteursOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isMobileSecteursOpen && (
-                  <div className="mt-1 ml-4 space-y-1">
-                    <Link
-                      href="/secteurs?tab=primaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeSecteurTab === "primaire"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Factory className="w-4 h-4" />
-                      Primaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=secondaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeSecteurTab === "secondaire"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Building className="w-4 h-4" />
-                      Secondaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=tertiaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeSecteurTab === "tertiaire"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Briefcase className="w-4 h-4" />
-                      Tertiaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=quaternaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeSecteurTab === "quaternaire"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Network className="w-4 h-4" />
-                      Quaternaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=transversales"
-                      onClick={() => setIsSecteursMenuOpen(false)}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
-                        activeSecteurTab === "transversales"
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                      }`}
-                    >
-                      <Layers className="w-4 h-4" />
-                      Transversales
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              {/* Menu Membres avec accordéon mobile */}
-              <div>
-                <button
-                  onClick={() => setIsMobileMembersOpen(!isMobileMembersOpen)}
-                  className={`w-full flex items-center justify-between font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                    pathname.startsWith("/membres")
-                      ? "text-[#F08223] bg-orange-50 font-semibold"
-                      : "text-[#6F6F6F] hover:bg-gray-50"
-                  }`}
-                >
-                  Membres
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      isMobileMembersOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isMobileMembersOpen && (
-                  <div className="mt-1 ml-4 space-y-1">
-                    <Link
-                      href="/membres?tab=annuaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeMemberTab === "annuaire"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Users className="w-4 h-4" />
-                      Annuaire
-                    </Link>
-                    <Link
-                      href="/membres?tab=avantages"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeMemberTab === "avantages"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Award className="w-4 h-4" />
-                      Avantages
-                    </Link>
-                    <Link
-                      href="/membres?tab=adhesion"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeMemberTab === "adhesion"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Building2 className="w-4 h-4" />
-                      Adhérer
-                    </Link>
-                  </div>
-                )}
-              </div>
               <Link
-                href="/plaidoyer"
+                href="/a-propos"
                 className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                  pathname.startsWith("/plaidoyer")
-                    ? "text-[#F08223] bg-orange-50 font-semibold"
+                  isActive("/a-propos")
+                    ? "text-[#F08223] bg-orange-50"
                     : "text-[#6F6F6F] hover:bg-gray-50"
                 }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
-                Plaidoyer & Influence
+                À Propos
               </Link>
               <Link
-                href="/crm"
+                href="/actualites"
                 className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                  pathname.startsWith("/crm")
-                    ? "text-[#F08223] bg-orange-50 font-semibold"
+                  isActive("/actualites")
+                    ? "text-[#F08223] bg-orange-50"
                     : "text-[#6F6F6F] hover:bg-gray-50"
                 }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
-                CRM & Réseautage
+                Actualités & Publications
               </Link>
+              {/* Lien Secteurs simple (sans sous-menu) dans le drawer mobile */}
+              <Link
+                href="/secteurs"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/secteurs")
+                    ? "text-[#F08223] bg-orange-50"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                Secteurs & Filières
+              </Link>
+
+              <Link
+                href="/membres"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/membres")
+                    ? "text-[#F08223] bg-orange-50"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                Membres
+              </Link>
+
               <Link
                 href="/contact"
                 className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${

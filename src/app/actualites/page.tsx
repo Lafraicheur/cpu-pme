@@ -40,6 +40,7 @@ const NewsContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeMainTab = searchParams?.get("tab") || "actualites";
+  const [activeTab, setActiveTab] = useState(activeMainTab);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -325,21 +326,23 @@ const NewsContent = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
       <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
+        {/* BACKGROUND IMAGE */}
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bmV3c3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=1470&q=80"
-            alt="Actualités"
+            src="/logo.png"
+            alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
         </div>
-        <div className="relative z-10 container mx-auto px-4 text-center text-white animate-in fade-in duration-1000">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold mb-4">
+
+        {/* CONTENU */}
+        <div className="relative z-10 container mx-auto px-4 text-center text-white">
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold mb-6 animate-fade-in">
             Actualités & Publications
           </h1>
-          <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in">
             Restez informés sur l'actualité du CPU-PME et accédez à nos
             publications : rapports, guides, études et documents stratégiques
           </p>
@@ -347,10 +350,54 @@ const NewsContent = () => {
       </section>
 
       {/* Onglets principaux : Actualités et Publications */}
-      <section className="py-8 bg-white border-b border-slate-200">
+      <section className="py-16 sm:py-20 bg-white">
         <div className="container mx-auto px-4">
-          <Tabs value={activeMainTab} className="w-full">
-            {/* <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 h-12">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <div className="flex justify-center mb-8">
+              <TabsList
+                className="
+      grid grid-cols-2 md:grid-cols-4
+      w-full max-w-5xl
+      gap-4
+      p-3
+      bg-gray-50/50
+      rounded-xl
+    "
+              >
+                {[
+                  { value: "actualites", label: "Actualites" },
+                  { value: "publications", label: "Publication" },
+                ].map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className="
+          w-full
+          flex items-center justify-center
+          px-6 py-4
+          rounded-lg
+          font-semibold
+          text-sm sm:text-base
+          transition-all duration-300
+          data-[state=active]:bg-white
+          data-[state=active]:text-[#221F1F]
+          data-[state=active]:shadow-md
+          data-[state=inactive]:bg-slate-100
+          data-[state=inactive]:text-gray-600
+          hover:bg-slate-200
+        "
+                  >
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+
+            {/* <TabsList className="grid grid-cols-2 md:grid-cols-2 w-full max-w-7xl bg-[#F1F5F9] p-4 rounded-sm">
               <TabsTrigger
                 value="actualites"
                 onClick={() => {
@@ -572,7 +619,10 @@ const NewsContent = () => {
                 </div>
 
                 {/* Bouton flottant pour filtres - Mobile uniquement */}
-                <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+                <Sheet
+                  open={isFilterSheetOpen}
+                  onOpenChange={setIsFilterSheetOpen}
+                >
                   <SheetTrigger asChild>
                     <Button
                       className="md:hidden fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40 bg-white hover:bg-white/90"
@@ -581,7 +631,10 @@ const NewsContent = () => {
                       <Filter className="h-6 w-6 text-primary" />
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl bg-white">
+                  <SheetContent
+                    side="bottom"
+                    className="h-[80vh] rounded-t-3xl bg-white"
+                  >
                     <SheetHeader className="mb-6">
                       <SheetTitle className="text-2xl font-bold text-center">
                         Filtrer les actualités
@@ -606,9 +659,7 @@ const NewsContent = () => {
                             setIsFilterSheetOpen(false);
                           }}
                           className={`w-full justify-start text-left h-14 text-base font-medium ${
-                            selectedCategory === category.id
-                              ? "shadow-md"
-                              : ""
+                            selectedCategory === category.id ? "shadow-md" : ""
                           }`}
                         >
                           {category.name}
@@ -848,7 +899,10 @@ const NewsContent = () => {
                 </div>
 
                 {/* Bouton flottant pour filtres - Mobile uniquement */}
-                <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+                <Sheet
+                  open={isFilterSheetOpen}
+                  onOpenChange={setIsFilterSheetOpen}
+                >
                   <SheetTrigger asChild>
                     <Button
                       className="md:hidden fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40 bg-white hover:bg-white"
@@ -857,7 +911,10 @@ const NewsContent = () => {
                       <Filter className="h-6 w-6 text-primary" />
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl bg-white">
+                  <SheetContent
+                    side="bottom"
+                    className="h-[80vh] rounded-t-3xl bg-white"
+                  >
                     <SheetHeader className="mb-6">
                       <SheetTitle className="text-2xl font-bold text-center">
                         Filtrer les publications
@@ -882,9 +939,7 @@ const NewsContent = () => {
                             setIsFilterSheetOpen(false);
                           }}
                           className={`w-full justify-start text-left h-14 text-base font-medium ${
-                            selectedCategory === category.id
-                              ? "shadow-md"
-                              : ""
+                            selectedCategory === category.id ? "shadow-md" : ""
                           }`}
                         >
                           {category.name}
@@ -1117,14 +1172,16 @@ const NewsContent = () => {
 
 const News = () => {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-slate-600">Chargement...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-slate-600">Chargement...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <NewsContent />
     </Suspense>
   );

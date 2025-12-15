@@ -16,7 +16,6 @@ import {
   FileSearch,
   GraduationCap,
   Handshake,
-  Link,
   Store,
   UserPlus,
   Target,
@@ -24,6 +23,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
+import Link from "next/link";
 
 // Composant de décompte animé
 function CountUp({
@@ -150,7 +150,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card className="shadow-sm transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-0 bg-white">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-4xl font-bold text-[var(--color-primary)] mb-2">
@@ -163,7 +163,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-0 bg-white">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-4xl font-bold text-[var(--color-success)] mb-2">
@@ -176,7 +176,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-0 bg-white">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-4xl font-bold text-[var(--color-primary)] mb-2">
@@ -189,7 +189,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-0 bg-white">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-4xl font-bold text-[var(--color-success)] mb-2">
@@ -390,177 +390,72 @@ export default function Home() {
         style={{ backgroundColor: "var(--color-neutral-dark)" }}
       >
         <div className="container mx-auto px-4 text-white">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          <div className="gap-8 items-center">
             <div>
-              <h2 className="text-3xl font-bold mb-4">
+              <h2 className="text-3xl text-center font-bold mb-4">
                 Rejoignez CPU-PME.CI aujourd'hui
               </h2>
-              <p className="mb-6 text-gray-300">
+              <p className="mb-6 text-center text-gray-300">
                 Bénéficiez de services exclusifs et d'un réseau d'entrepreneurs
                 pour développer votre entreprise.
               </p>
-              <div className="space-y-4">
-                <div className="flex items-start">
+              <div className="flex gap-8 align-center justify-center flex-wrap">
+                <div className="flex flex-col items-center text-center max-w-xs">
                   <div
-                    className="rounded-full p-1 mr-3 mt-1"
+                    className="rounded-full p-2 mb-3"
                     style={{ backgroundColor: "var(--color-primary)" }}
                   >
-                    <Target className="h-4 w-4 text-white" />
+                    <Target className="h-8 w-8 text-white" />
                   </div>
-                  <div>
-                    <p className="font-semibold">
-                      Accès à des opportunités d'affaires
-                    </p>
-                    <p className="text-gray-300 text-sm">
-                      Appels d'offres, partenariats et marchés publics
-                    </p>
-                  </div>
+                  <p className="font-semibold">Opportunités d'affaires</p>
+                  <p className="text-gray-300 text-sm">
+                    Appels d'offres et partenariats
+                  </p>
                 </div>
-                <div className="flex items-start">
+
+                <div className="flex flex-col items-center text-center max-w-xs">
                   <div
-                    className="rounded-full p-1 mr-3 mt-1"
+                    className="rounded-full p-2 mb-3"
                     style={{ backgroundColor: "var(--color-success)" }}
                   >
-                    <Target className="h-4 w-4 text-white" />
+                    <Target className="h-8 w-8 text-white" />
                   </div>
-                  <div>
-                    <p className="font-semibold">Support et accompagnement</p>
-                    <p className="text-gray-300 text-sm">
-                      Conseils personnalisés et assistance juridique
-                    </p>
-                  </div>
+                  <p className="font-semibold">Support personnalisé</p>
+                  <p className="text-gray-300 text-sm">
+                    Conseils et assistance juridique
+                  </p>
                 </div>
-                <div className="flex items-start">
+
+                <div className="flex flex-col items-center text-center max-w-xs">
                   <div
-                    className="rounded-full p-1 mr-3 mt-1"
+                    className="rounded-full p-2 mb-3"
                     style={{ backgroundColor: "var(--color-primary)" }}
                   >
-                    <Target className="h-4 w-4 text-white" />
+                    <Target className="h-8 w-8 text-white" />
                   </div>
-                  <div>
-                    <p className="font-semibold">Visibilité et promotion</p>
-                    <p className="text-gray-300 text-sm">
-                      Faites connaître votre entreprise à l'échelle nationale
-                    </p>
-                  </div>
+                  <p className="font-semibold">Visibilité nationale</p>
+                  <p className="text-gray-300 text-sm">
+                    Promotion de votre entreprise
+                  </p>
                 </div>
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-lg">
-              <h3
-                className="text-2xl font-bold mb-4 text-center"
-                style={{ color: "var(--color-neutral-dark)" }}
-              >
-                Forfaits d'adhésion
-              </h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center pb-2 border-b border-gray-200">
-                  <div>
-                    <p
-                      className="font-semibold"
-                      style={{ color: "var(--color-neutral-dark)" }}
-                    >
-                      Basic
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Accès limité aux fonctionnalités
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p
-                      className="font-bold"
-                      style={{ color: "var(--color-primary)" }}
-                    >
-                      10 000 FCFA/an
-                    </p>
-                    <p className="text-sm text-gray-600">ou 1 000 FCFA/mois</p>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center pb-2 border-b border-gray-200">
-                  <div>
-                    <p
-                      className="font-semibold"
-                      style={{ color: "var(--color-neutral-dark)" }}
-                    >
-                      Argent
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Accès amélioré avec services premium
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p
-                      className="font-bold"
-                      style={{ color: "var(--color-primary)" }}
-                    >
-                      50 000 FCFA/an
-                    </p>
-                    <p className="text-sm text-gray-600">ou 5 000 FCFA/mois</p>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center pb-2 border-b border-gray-200">
-                  <div>
-                    <p
-                      className="font-semibold"
-                      style={{ color: "var(--color-neutral-dark)" }}
-                    >
-                      Or
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Accès complet + avantages exclusifs
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p
-                      className="font-bold"
-                      style={{ color: "var(--color-primary)" }}
-                    >
-                      100 000 FCFA/an
-                    </p>
-                    <p className="text-sm text-gray-600">ou 10 000 FCFA/mois</p>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p
-                      className="font-semibold"
-                      style={{ color: "var(--color-neutral-dark)" }}
-                    >
-                      Institutionnel
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Offre personnalisée pour grandes entreprises
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p
-                      className="font-bold"
-                      style={{ color: "var(--color-primary)" }}
-                    >
-                      Sur devis
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      à partir de 5M FCFA/an
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-6">
-                <Button
-                  className="w-full text-white hover:opacity-90"
-                  style={{ backgroundColor: "var(--color-primary)" }}
-                >
-                  Adhérer maintenant
-                </Button>
               </div>
             </div>
           </div>
+        </div>
+        <div className="mt-10 flex justify-center">
+          <Link
+            href="/membres"
+            className="inline-flex items-center justify-center px-8 py-3 rounded-[6px] font-semibold text-white transition duration-300 hover:opacity-90"
+            style={{ backgroundColor: "var(--color-primary)" }}
+          >
+            Adhérer maintenant
+          </Link>
         </div>
       </section>
 
       {/* Section Actualités */}
       <section className="py-16 bg-[var(--color-bg)]">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-1">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-bold text-[var(--color-neutral-dark)]">
               Dernières actualités
@@ -690,24 +585,10 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center mb-4">
-              <div
-                className="p-3 rounded-full mr-4"
-                style={{ backgroundColor: "rgba(25, 157, 78, 0.1)" }}
-              >
-                <Handshake
-                  className="h-8 w-8"
-                  style={{ color: "var(--color-success)" }}
-                />
-              </div>
               <h2 className="text-3xl font-bold text-[var(--color-neutral-dark)]">
-                Partenaires Stratégiques
+                Nos Partenaires
               </h2>
             </div>
-            <p className="text-[var(--color-text-secondary)] max-w-3xl mx-auto">
-              La CPU-PME.CI collabore avec un réseau de partenaires stratégiques
-              nationaux et internationaux pour offrir un soutien optimal aux PME
-              ivoiriennes et défendre leurs intérêts.
-            </p>
           </div>
 
           <Carousel

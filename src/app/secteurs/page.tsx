@@ -930,40 +930,48 @@ const SecteursContent = () => {
       {/* Titre de Classification */}
       <section className="bg-white py-8 sm:py-10">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
-          <h2 className="font-montserrat text-2xl sm:text-3xl md:text-4xl font-bold text-[#221F1F] text-center">
+          <h2 className="font-montserrat text-2xl sm:text-3xl md:text-4xl font-bold text-[#221F1F] text-center mb-10">
             Classification Sectorielle des PME en Côte d'Ivoire
           </h2>
-        </div>
-      </section>
 
-      {/* Navigation par Onglets */}
-      <section className="bg-white border-b border-gray-200">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
-          <div className="w-full mb-8">
-            <Tabs
-              value={activeSecteur}
-              onValueChange={(value) => {
-                setActiveSecteur(value as SecteurKey);
-                setBreadcrumb({
-                  secteur: secteursData[value as SecteurKey].nom,
-                });
-                const params = new URLSearchParams(searchParams.toString());
-                params.set("tab", value);
-                router.push(`/secteurs?${params.toString()}`);
-              }}
-              className="w-full"
-            >
-              {/* Les onglets sont maintenant dans le header, on les cache ici */}
-              <div className="hidden">
-                <TabsList>
-                  {Object.keys(secteursData).map((key) => (
-                    <TabsTrigger key={key} value={key}>
-                      {secteursData[key as SecteurKey].nom}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </div>
-            </Tabs>
+          {/* Navigation par Onglets - Style amélioré */}
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-5 mb-8 px-4 py-3 bg-gray-50/50 rounded-xl border border-gray-100 shadow-sm">
+            {Object.keys(secteursData).map((key) => {
+              const secteur = secteursData[key as SecteurKey];
+              const isActive = activeSecteur === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setActiveSecteur(key as SecteurKey);
+                    setBreadcrumb({ secteur: secteur.nom });
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.set("tab", key);
+                    const newUrl = `/secteurs?${params.toString()}`;
+                    // Mettre à jour l'URL sans recharger la page
+                    window.history.replaceState(
+                      { ...window.history.state, as: newUrl, url: newUrl },
+                      "",
+                      newUrl
+                    );
+                  }}
+                  className={`
+                    relative px-5 sm:px-7 py-3 sm:py-3.5 rounded-lg font-inter text-sm sm:text-base font-semibold 
+                    transition-all duration-300 ease-in-out
+                    ${
+                      isActive
+                        ? "bg-white text-[#221F1F] shadow-md scale-105 z-10"
+                        : "bg-white/60 text-gray-600 hover:bg-white hover:text-[#221F1F] hover:shadow-sm hover:scale-[1.02]"
+                    }
+                  `}
+                >
+                  {secteur.nom}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-cpu-orange rounded-full"></span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -1073,7 +1081,19 @@ const SecteursContent = () => {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <Tabs
             value={activeSecteur}
-            onValueChange={setActiveSecteur as (value: string) => void}
+            onValueChange={(value) => {
+              setActiveSecteur(value as SecteurKey);
+              setBreadcrumb({ secteur: secteursData[value as SecteurKey].nom });
+              const params = new URLSearchParams(searchParams.toString());
+              params.set("tab", value);
+              const newUrl = `/secteurs?${params.toString()}`;
+              // Mettre à jour l'URL sans recharger la page
+              window.history.replaceState(
+                { ...window.history.state, as: newUrl, url: newUrl },
+                "",
+                newUrl
+              );
+            }}
           >
             {renderTabContent("primaire")}
             {renderTabContent("secondaire")}
