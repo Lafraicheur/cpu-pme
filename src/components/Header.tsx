@@ -54,11 +54,15 @@ function HeaderContent() {
   const [isActualitesMenuOpen, setIsActualitesMenuOpen] = useState(false);
   const [actualitesMenuTimeout, setActualitesMenuTimeout] =
     useState<NodeJS.Timeout | null>(null);
+  const [isServicesMenuOpen, setIsServicesMenuOpen] = useState(false);
+  const [servicesMenuTimeout, setServicesMenuTimeout] =
+    useState<NodeJS.Timeout | null>(null);
   // États pour les menus mobiles
   const [isMobileMembersOpen, setIsMobileMembersOpen] = useState(false);
   const [isMobileSecteursOpen, setIsMobileSecteursOpen] = useState(false);
   const [isMobileAProposOpen, setIsMobileAProposOpen] = useState(false);
   const [isMobileActualitesOpen, setIsMobileActualitesOpen] = useState(false);
+  const [isMobileServicesOpen, setIsMobileServicesOpen] = useState(false);
   const searchParams = useSearchParams();
 
   // Debug: afficher le pathname
@@ -81,12 +85,16 @@ function HeaderContent() {
       if (actualitesMenuTimeout) {
         clearTimeout(actualitesMenuTimeout);
       }
+      if (servicesMenuTimeout) {
+        clearTimeout(servicesMenuTimeout);
+      }
     };
   }, [
     membersMenuTimeout,
     secteursMenuTimeout,
     aProposMenuTimeout,
     actualitesMenuTimeout,
+    servicesMenuTimeout,
   ]);
 
   // Empêcher le scroll quand le drawer est ouvert
@@ -164,6 +172,99 @@ function HeaderContent() {
                 À propos
               </Link>
 
+              {/* Menu Services avec sous-menu */}
+              <div
+                className="relative"
+                onMouseEnter={() => {
+                  if (servicesMenuTimeout) {
+                    clearTimeout(servicesMenuTimeout);
+                    setServicesMenuTimeout(null);
+                  }
+                  setIsServicesMenuOpen(true);
+                }}
+                onMouseLeave={() => {
+                  const timeout = setTimeout(() => {
+                    setIsServicesMenuOpen(false);
+                  }, 200);
+                  setServicesMenuTimeout(timeout);
+                }}
+              >
+                <button
+                  className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 flex items-center gap-1 cursor-pointer ${
+                    isActive("/services")
+                      ? "text-[#F08223] font-semibold hover:text-[#D97420] border-[#F08223]"
+                      : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                  }`}
+                >
+                  Services
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${
+                      isServicesMenuOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* Sous-menu Services */}
+                {isServicesMenuOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <Award className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223] cursor-pointer">
+                        Incubateur Champion 225
+                      </span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <FileText className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
+                        Appels d&apos;offres & Opportunités
+                      </span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <Building2 className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
+                        Formation / CPU-Académie
+                      </span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <Layers className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
+                        Marketplace
+                      </span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <Briefcase className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
+                        Financement
+                      </span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <Network className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
+                        Réseautage & Événements
+                      </span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
               <Link
                 href="/actualites"
                 className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
@@ -197,17 +298,6 @@ function HeaderContent() {
                 }`}
               >
                 Membres
-              </Link>
-
-              <Link
-                href="/contact"
-                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
-                  pathname.startsWith("/contact")
-                    ? "text-[#F08223] font-semibold border-[#F08223]"
-                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
-                }`}
-              >
-                Contact & Assistance
               </Link>
 
               {/* CTA Buttons */}
@@ -295,6 +385,80 @@ function HeaderContent() {
               >
                 À Propos
               </Link>
+
+              {/* Menu Services avec sous-menu mobile */}
+              <div>
+                <button
+                  onClick={() => setIsMobileServicesOpen(!isMobileServicesOpen)}
+                  className={`w-full flex items-center justify-between font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors cursor-pointer ${
+                    isActive("/services")
+                      ? "text-[#F08223] bg-orange-50"
+                      : "text-[#6F6F6F] hover:bg-gray-50"
+                  }`}
+                >
+                  <span>Services</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${
+                      isMobileServicesOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* Sous-menu Services mobile */}
+                {isMobileServicesOpen && (
+                  <div className="ml-4 mt-1 space-y-1">
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      <Award className="w-4 h-4" />
+                      <span>Incubateur Champion 225</span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>Appels d&apos;offres & Opportunités</span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      <Building2 className="w-4 h-4" />
+                      <span>Formation / CPU-Académie</span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      <Layers className="w-4 h-4" />
+                      <span>Marketplace</span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      <Briefcase className="w-4 h-4" />
+                      <span>Financement</span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      <Network className="w-4 h-4" />
+                      <span>Réseautage & Événements</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
               <Link
                 href="/actualites"
                 className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
@@ -330,39 +494,22 @@ function HeaderContent() {
               >
                 Membres
               </Link>
-
-              <Link
-                href="/contact"
-                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                  pathname.startsWith("/contact")
-                    ? "text-[#F08223] bg-orange-50 font-semibold"
-                    : "text-[#6F6F6F] hover:bg-gray-50"
-                }`}
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                Contact & Assistance
-              </Link>
             </nav>
 
             {/* CTA Buttons dans le drawer */}
             <div className="flex flex-col gap-3 p-4 border-t border-gray-200 mt-auto">
-              <button
-                className="flex items-center justify-center gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all cursor-pointer"
-                onClick={() => {
-                  setIsDrawerOpen(false);
-                  setIsLoginOpen(true);
-                }}
+              <Button
+                variant="outline"
+                onClick={() => setIsLoginOpen(true)}
+                className="border-success text-success hover:bg-success hover:text-white w-full rounded-sm font-inter text-xs font-semibold px-3 py-1.5 transition-all cursor-pointer"
               >
-                <LogIn className="w-4 h-4" />
+                <LogIn className="w-3.5 h-3.5" />
                 Connexion
-              </button>
-              <button
-                className="flex items-center justify-center gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all shadow-md hover:shadow-lg cursor-pointer"
-                onClick={() => setIsDrawerOpen(false)}
-              >
-                <UserPlus className="w-4 h-4" />
+              </Button>
+              <Button className="bg-[#F08223] text-white hover:bg-opacity-90 w-full font-inter text-xs font-semibold px-3 py-1.5 rounded-sm transition-all shadow-sm hover:shadow-md cursor-pointer">
+                <UserPlus className="w-3.5 h-3.5" />
                 Adhérer
-              </button>
+              </Button>
             </div>
           </div>
         </>
