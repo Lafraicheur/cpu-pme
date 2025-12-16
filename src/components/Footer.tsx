@@ -17,6 +17,9 @@ export default function Footer() {
               height={50}
               className="h-12 w-auto object-contain"
             />
+            <p className="text-cpu-orange font-semibold italic text-sm">
+              "L'écosystème intégré au service des PME"
+            </p>
             <p className="font-inter text-sm text-gray-300 leading-relaxed">
               La Confédération Patronale Unique des PME de Côte d'Ivoire, votre
               partenaire pour le développement et la croissance des entreprises
@@ -123,6 +126,14 @@ export default function Footer() {
                   className="font-inter text-sm text-gray-300 hover:text-[#F08223] transition-colors"
                 >
                   Contact
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/emplois"
+                  className="font-inter text-sm text-gray-300 hover:text-[#F08223] transition-colors"
+                >
+                  Offres d'emploi
                 </a>
               </li>
             </ul>
