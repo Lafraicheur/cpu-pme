@@ -68,6 +68,7 @@ import {
   Crown,
   Building,
   Percent,
+  CreditCard,
   Filter,
   Menu,
   Info,
@@ -1421,7 +1422,7 @@ const MembersContent = () => {
           <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 md:gap-8 mb-8 px-6 py-3 bg-gray-50/50 rounded-xl border border-gray-100 shadow-sm">
             {[
               { value: "annuaire", label: "Annuaire", icon: Users },
-              { value: "pass-pme", label: "Pass PME", icon: Percent },
+              { value: "pass-pme", label: "Pass PME", icon: CreditCard },
               { value: "avantages", label: "Avantages", icon: Award },
               { value: "adhesion", label: "Adhérer", icon: Building2 },
             ].map((tab) => {
@@ -2602,6 +2603,138 @@ const MembersContent = () => {
             {/* Pass PME Tab */}
             <TabsContent value="pass-pme" className="mt-4">
               <div className="max-w-7xl mx-auto">
+                {/* Section Votre Carte Membre */}
+                <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-8 mb-12">
+                  <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-[#221F1F] mb-4">
+                      Votre Carte Membre
+                    </h2>
+                    <p className="text-gray-600 text-lg">
+                      Présentez votre carte Pass PME chez nos partenaires pour bénéficier de réductions exclusives
+                    </p>
+                  </div>
+
+                  {/* Cartes de membre - 3 niveaux */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Carte Basic - Orange */}
+                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg transform hover:scale-105 transition-transform duration-300">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2 bg-white/20 rounded-lg px-3 py-1">
+                          <CreditCard className="h-4 w-4" />
+                          <span className="font-semibold text-sm">Pass PME</span>
+                        </div>
+                        <span className="bg-white/20 rounded-full px-3 py-1 text-xs font-semibold">
+                          Basic
+                        </span>
+                      </div>
+                      
+                      <div className="mb-4">
+                        <p className="text-xs opacity-80 mb-1">CPU-PME.CI</p>
+                      </div>
+
+                      <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Users className="h-4 w-4" />
+                          <p className="font-bold text-lg">Awa Diallo</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Building className="h-4 w-4 opacity-80" />
+                          <p className="text-sm opacity-90">Boutique Awa</p>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center text-xs pt-4 border-t border-white/20">
+                        <div>
+                          <p className="opacity-70 mb-1">N° Membre</p>
+                          <p className="font-semibold">CPU-2024-00245</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="opacity-70 mb-1">Valide jusqu'au</p>
+                          <p className="font-semibold">31/12/2025</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Carte Argent - Gris/Bleu */}
+                    <div className="bg-gradient-to-br from-slate-500 to-slate-600 rounded-xl p-6 text-white shadow-lg transform hover:scale-105 transition-transform duration-300">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2 bg-white/20 rounded-lg px-3 py-1">
+                          <CreditCard className="h-4 w-4" />
+                          <span className="font-semibold text-sm">Pass PME</span>
+                        </div>
+                        <span className="bg-white/20 rounded-full px-3 py-1 text-xs font-semibold">
+                          Argent
+                        </span>
+                      </div>
+                      
+                      <div className="mb-4">
+                        <p className="text-xs opacity-80 mb-1">CPU-PME.CI</p>
+                      </div>
+
+                      <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Users className="h-4 w-4" />
+                          <p className="font-bold text-lg">Konan Yao</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Building className="h-4 w-4 opacity-80" />
+                          <p className="text-sm opacity-90">SARL AgriPlus</p>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center text-xs pt-4 border-t border-white/20">
+                        <div>
+                          <p className="opacity-70 mb-1">N° Membre</p>
+                          <p className="font-semibold">CPU-2024-00189</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="opacity-70 mb-1">Valide jusqu'au</p>
+                          <p className="font-semibold">31/12/2025</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Carte Or - Gold */}
+                    <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-6 text-white shadow-lg transform hover:scale-105 transition-transform duration-300">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2 bg-white/20 rounded-lg px-3 py-1">
+                          <CreditCard className="h-4 w-4" />
+                          <span className="font-semibold text-sm">Pass PME</span>
+                        </div>
+                        <span className="bg-white/20 rounded-full px-3 py-1 text-xs font-semibold">
+                          Or
+                        </span>
+                      </div>
+                      
+                      <div className="mb-4">
+                        <p className="text-xs opacity-80 mb-1">CPU-PME.CI</p>
+                      </div>
+
+                      <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Users className="h-4 w-4" />
+                          <p className="font-bold text-lg">Jean Kouassi</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Building className="h-4 w-4 opacity-80" />
+                          <p className="text-sm opacity-90">SARL TechIvoire</p>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center text-xs pt-4 border-t border-white/20">
+                        <div>
+                          <p className="opacity-70 mb-1">N° Membre</p>
+                          <p className="font-semibold">CPU-2024-00158</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="opacity-70 mb-1">Valide jusqu'au</p>
+                          <p className="font-semibold">31/12/2025</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Barre de filtres */}
                 <div className="flex items-center justify-center gap-2 sm:gap-3 md:gap-4 mb-8 flex-wrap px-2">
                   {[
