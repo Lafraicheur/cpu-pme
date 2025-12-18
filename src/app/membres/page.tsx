@@ -2957,53 +2957,57 @@ const MembersContent = () => {
                         )}
                       </div>
 
-                      {/* Trait de séparation */}
-                      <div className="border-t border-gray-200"></div>
+                      {/* SECTION: Coordonnées (pour Membre institutionnel uniquement) */}
+                      {selectedAdhesionType === "institutionnel" && (
+                        <>
+                          {/* Trait de séparation */}
+                          <div className="border-t border-gray-200"></div>
 
-                      {/* SECTION: Coordonnées */}
-                      <div className="py-6">
-                        <h3 className="text-base font-semibold text-cpu-green flex items-center mb-4">
-                          <MapPin className="h-5 w-5 mr-2" />
-                          Coordonnées
-                        </h3>
-                        
-                        <div className="space-y-4">
-                          {/* Adresse complète */}
-                          <div className="space-y-2">
-                            <Label htmlFor="fullAddress">Adresse complète</Label>
-                            <Input
-                              id="fullAddress"
-                              placeholder="Ex: Boulevard Latrille, Cocody"
-                              className="border-gray-300"
-                            />
+                          <div className="py-6">
+                            <h3 className="text-base font-semibold text-cpu-green flex items-center mb-4">
+                              <MapPin className="h-5 w-5 mr-2" />
+                              Coordonnées
+                            </h3>
+                            
+                            <div className="space-y-4">
+                              {/* Adresse complète */}
+                              <div className="space-y-2">
+                                <Label htmlFor="fullAddress">Adresse complète</Label>
+                                <Input
+                                  id="fullAddress"
+                                  placeholder="Ex: Boulevard Latrille, Cocody"
+                                  className="border-gray-300"
+                                />
+                              </div>
+
+                              {/* Ligne: Ville et Pays */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="city">Ville</Label>
+                                  <Input
+                                    id="city"
+                                    placeholder="Ex: Abidjan"
+                                    className="border-gray-300"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="country">Pays</Label>
+                                  <Input
+                                    id="country"
+                                    placeholder="Côte d'Ivoire"
+                                    defaultValue="Côte d'Ivoire"
+                                    className="border-gray-300"
+                                  />
+                                </div>
+                              </div>
+                            </div>
                           </div>
 
-                          {/* Ligne: Ville et Pays */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="city">Ville</Label>
-                              <Input
-                                id="city"
-                                placeholder="Ex: Abidjan"
-                                className="border-gray-300"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor="country">Pays</Label>
-                              <Input
-                                id="country"
-                                placeholder="Côte d'Ivoire"
-                                defaultValue="Côte d'Ivoire"
-                                className="border-gray-300"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Trait de séparation */}
-                      <div className="border-t border-gray-200"></div>
+                          {/* Trait de séparation */}
+                          <div className="border-t border-gray-200"></div>
+                        </>
+                      )}
 
                       {/* SECTION: Axes d'intérêt (pour Membre institutionnel uniquement) */}
                       {selectedAdhesionType === "institutionnel" && (
