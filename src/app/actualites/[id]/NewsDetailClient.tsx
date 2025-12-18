@@ -1,0 +1,254 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Calendar,
+  ArrowLeft,
+  Share2,
+  Facebook,
+  Twitter,
+  Mail,
+  Clock,
+  ArrowRight,
+  ImageOff,
+} from "lucide-react";
+import { toast } from "sonner";
+import Image from "next/image";
+import type { StaticImageData } from "next/image";
+
+interface NewsItem {
+  id: string;
+  titre: string;
+  description: string;
+  categorie: string;
+  created_at: number;
+  auteur: string;
+  couverture: {
+    url: string;
+  };
+  image?: StaticImageData | null;
+}
+
+interface NewsDetailClientProps {
+  newsItem: NewsItem;
+  newsImage: StaticImageData | null;
+  relatedNews: NewsItem[];
+  categories: Array<{ id: string; name: string }>;
+}
+
+export default function NewsDetailClient({
+  newsItem,
+  newsImage,
+  relatedNews,
+  categories,
+}: NewsDetailClientProps) {
+  const router = useRouter();
+
+  const formatDate = (timestamp: number | string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find((cat) => cat.id === categoryId);
+    return category ? category.name : categoryId;
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Barre de navigation sticky */}
+      <section className="bg-white border-b border-slate-200 sticky top-0 z-30 backdrop-blur-sm bg-white/95 shadow-sm">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between max-w-7xl mx-auto">
+            <Button
+              onClick={() => router.push("/actualites")}
+              variant="ghost"
+              size="sm"
+              className="hover:bg-slate-100 rounded-full"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Retour aux actualités
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Hero Image pleine largeur */}
+      <section className="relative h-[400px] md:h-[550px] bg-slate-900">
+        {newsImage ? (
+          <Image
+            src={newsImage}
+            alt={newsItem.titre}
+            fill
+            className="object-cover opacity-90"
+            priority
+          />
+        ) : (
+          <div className="w-full h-full bg-slate-300 flex flex-col items-center justify-center text-slate-600">
+            <ImageOff className="h-32 w-32 mb-4 opacity-50" />
+            <p className="text-2xl font-medium">Image non disponible</p>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+
+        {/* Contenu du hero */}
+        <div className="absolute bottom-0 left-0 right-0 pb-12">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <Badge className="mb-4 px-4 py-1.5 text-sm font-semibold bg-primary text-white shadow-lg">
+              {getCategoryName(newsItem.categorie)}
+            </Badge>
+            <h1 className="text-xl md:text-2xl lg:text-6xl font-heading font-bold mb-4 leading-tight text-white">
+              {newsItem.titre}
+            </h1>
+          </div>
+        </div>
+      </section>
+
+      {/* Contenu principal */}
+      <article className="py-12">
+        <div className="container mx-auto px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Sidebar gauche - Métadonnées */}
+              <aside className="lg:col-span-3 order-2 lg:order-1">
+                <div className="lg:sticky lg:top-24 space-y-6">
+                  {/* Auteur */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white font-bold text-xl">
+                        {newsItem.auteur.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 uppercase tracking-wide">
+                          Auteur
+                        </p>
+                        <p className="font-semibold text-slate-900 text-sm">
+                          {newsItem.auteur}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-3 pt-4 border-t border-slate-100">
+                      <div className="flex items-center gap-3 text-sm text-slate-600">
+                        <Calendar className="h-4 w-4 text-slate-400" />
+                        <span>{formatDate(newsItem.created_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+
+              {/* Contenu de l'article */}
+              <div className="lg:col-span-9 order-1 lg:order-2">
+                <div className="bg-white rounded-2xl p-8 md:p-12 shadow-sm border border-slate-200">
+                  {/* Contenu de l'article avec typographie améliorée */}
+                  <div className="prose prose-slate prose-lg max-w-none">
+                    <p className="text-lg leading-relaxed text-slate-700 whitespace-pre-line first-letter:text-5xl first-letter:font-bold first-letter:text-primary first-letter:mr-1 first-letter:float-left first-letter:leading-none first-letter:mt-1">
+                      {newsItem.description}
+                    </p>
+                  </div>                
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      {/* Actualités similaires */}
+      {relatedNews.length > 0 && (
+        <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto">
+              {/* Titre de section */}
+              <div className="flex items-center gap-3 mb-12">
+                <div className="flex-shrink-0 w-1 h-10 bg-primary rounded-full"></div>
+                <h2 className="text-3xl md:text-4xl font-heading font-bold tracking-tight">
+                  Articles similaires
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {relatedNews.map((news) => (
+                  <Card
+                    key={news.id}
+                    className="overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer group border-0 bg-white"
+                    onClick={() => {
+                      router.push(`/actualites/${news.id}`);
+                      window.scrollTo(0, 0);
+                    }}
+                  >
+                    <div className="relative h-56 overflow-hidden">
+                      {news.image ? (
+                        <Image
+                          src={news.image}
+                          alt={news.titre}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-slate-200 flex flex-col items-center justify-center text-slate-500">
+                          <ImageOff className="h-16 w-16 mb-2" />
+                          <p className="text-sm font-medium">
+                            Image non disponible
+                          </p>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                      {/* Badge catégorie */}
+                      <div className="absolute top-3 right-3">
+                        <Badge className="bg-white/95 text-slate-900 shadow-md backdrop-blur-sm border-0 font-medium text-xs">
+                          {getCategoryName(news.categorie)}
+                        </Badge>
+                      </div>
+
+                      {/* Overlay hover */}
+                      <div className="absolute inset-0 flex items-end justify-center p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <Button size="sm" className="rounded-full shadow-lg">
+                          Lire l'article
+                          <ArrowRight className="ml-2 h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-2 text-xs text-slate-500 mb-3 font-medium">
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>{formatDate(news.created_at)}</span>
+                      </div>
+                      <h3 className="text-lg font-heading font-bold mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-tight">
+                        {news.titre}
+                      </h3>
+                      <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed">
+                        {news.description.split("\n")[0]}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* CTA pour voir plus */}
+              <div className="text-center mt-12">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => router.push("/actualites")}
+                  className="rounded-full border-2 hover:bg-primary hover:text-white hover:border-primary"
+                >
+                  Voir toutes les actualités
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
