@@ -2,6 +2,13 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import emailjs from "@emailjs/browser";
+
+// Configuration EmailJS
+const EMAILJS_SERVICE_ID = "service_hlp7bbq";
+const EMAILJS_TEMPLATE_ADMIN = "template_z6oykwg"; // Template pour l'admin
+const EMAILJS_TEMPLATE_USER = "template_n85pxw4"; // Template pour l'utilisateur
+const EMAILJS_PUBLIC_KEY = "oQdvQQh_YZVaReqrU";
 
 export default function Home() {
   // État pour le compte à rebours
@@ -66,36 +73,42 @@ export default function Home() {
     return () => clearInterval(timer);
   }, [targetDate]);
 
-  // Gestion de la soumission du formulaire
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Gestion de la soumission du formulaire avec EmailJS
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setMessage(null);
 
     try {
-      const response = await fetch("/api/newsletter", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      // Email 1 : Notification à l'admin
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ADMIN,
+        {
+          user_email: email,
+          to_email: "admin@cpupme.com",
         },
-        body: JSON.stringify({ email }),
+        EMAILJS_PUBLIC_KEY
+      );
+
+      // Email 2 : Confirmation à l'utilisateur
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_USER,
+        {
+          user_email: email,
+          to_email: email,
+        },
+        EMAILJS_PUBLIC_KEY
+      );
+
+      setMessage({
+        type: "success",
+        text: "Merci ! Vous recevrez un email de confirmation.",
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage({
-          type: "success",
-          text: "Merci ! Vous recevrez un email de confirmation.",
-        });
-        setEmail("");
-      } else {
-        setMessage({
-          type: "error",
-          text: data.error || "Une erreur est survenue. Veuillez réessayer.",
-        });
-      }
+      setEmail("");
     } catch (error) {
+      console.error("Erreur lors de l'envoi:", error);
       setMessage({
         type: "error",
         text: "Une erreur est survenue. Veuillez réessayer.",
@@ -207,6 +220,7 @@ export default function Home() {
               <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <input
                   type="email"
+                  name="user_email"
                   placeholder="Votre adresse email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
