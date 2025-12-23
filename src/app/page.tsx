@@ -14,6 +14,14 @@ export default function Home() {
 
   const [targetDate, setTargetDate] = useState<Date | null>(null);
 
+  // États pour le formulaire newsletter
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
   // Initialiser ou récupérer la date cible
   useEffect(() => {
     const storedDate = localStorage.getItem("countdownTargetDate");
@@ -57,6 +65,45 @@ export default function Home() {
 
     return () => clearInterval(timer);
   }, [targetDate]);
+
+  // Gestion de la soumission du formulaire
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage({
+          type: "success",
+          text: "Merci ! Vous recevrez un email de confirmation.",
+        });
+        setEmail("");
+      } else {
+        setMessage({
+          type: "error",
+          text: data.error || "Une erreur est survenue. Veuillez réessayer.",
+        });
+      }
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: "Une erreur est survenue. Veuillez réessayer.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
@@ -157,20 +204,37 @@ export default function Home() {
               <p className="font-inter text-base sm:text-lg text-[#221F1F] font-medium">
                 Soyez informé du lancement
               </p>
-              <form className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <input
                   type="email"
                   placeholder="Votre adresse email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="flex-1 px-5 sm:px-7 py-4 sm:py-5 bg-white/80 backdrop-blur-md border-2 border-[#F08223]/20 rounded-xl font-inter text-sm sm:text-base text-[#221F1F] placeholder:text-[#AAAAAA] focus:outline-none focus:ring-2 focus:ring-[#F08223] focus:border-transparent shadow-lg transition-all"
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="submit"
-                  className="bg-gradient-to-r from-[#199D4E] to-[#157A3D] hover:from-[#157A3D] hover:to-[#199D4E] text-white font-inter font-bold px-8 sm:px-10 py-4 sm:py-5 rounded-xl transition-all whitespace-nowrap text-sm sm:text-base shadow-xl hover:shadow-2xl hover:scale-105 transform duration-300"
+                  disabled={isLoading}
+                  className="bg-gradient-to-r from-[#199D4E] to-[#157A3D] hover:from-[#157A3D] hover:to-[#199D4E] text-white font-inter font-bold px-8 sm:px-10 py-4 sm:py-5 rounded-xl transition-all whitespace-nowrap text-sm sm:text-base shadow-xl hover:shadow-2xl hover:scale-105 transform duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
-                  M&apos;informer
+                  {isLoading ? "Envoi..." : "M'informer"}
                 </button>
               </form>
+
+              {/* Message de succès ou d'erreur */}
+              {message && (
+                <div
+                  className={`mt-4 p-4 rounded-xl font-inter text-sm sm:text-base ${
+                    message.type === "success"
+                      ? "bg-green-100/80 text-green-800 border-2 border-green-200"
+                      : "bg-red-100/80 text-red-800 border-2 border-red-200"
+                  } backdrop-blur-md shadow-lg`}
+                >
+                  {message.text}
+                </div>
+              )}
             </div>
 
             {/* Social Icons - Design moderne avec effet de hover */}
