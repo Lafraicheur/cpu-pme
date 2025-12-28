@@ -608,6 +608,13 @@ const MembersContent = () => {
   const [siegeVille, setSiegeVille] = useState<string>("");
   const [siegeVillage, setSiegeVillage] = useState<string>("");
   const [selectedBadge, setSelectedBadge] = useState<string>("");
+  // États pour les champs du formulaire d'adhésion
+  const [formName, setFormName] = useState<string>("");
+  const [formPosition, setFormPosition] = useState<string>("");
+  const [formEmail, setFormEmail] = useState<string>("");
+  const [formPhone, setFormPhone] = useState<string>("");
+  const [formMessage, setFormMessage] = useState<string>("");
+  const [isMounted, setIsMounted] = useState<boolean>(false);
   // États spécifiques aux membres institutionnels
   const [selectedAxesInteret, setSelectedAxesInteret] = useState<string[]>([]);
   const [selectedFilieresPrioritaires, setSelectedFilieresPrioritaires] = useState<string[]>([]);
@@ -620,6 +627,11 @@ const MembersContent = () => {
       setIsLoading(false);
     }, 1000);
     return () => clearTimeout(timer);
+  }, []);
+
+  // S'assurer que le composant est monté côté client pour éviter les erreurs d'hydratation
+  useEffect(() => {
+    setIsMounted(true);
   }, []);
 
   // Réinitialiser les états quand le type de membre change
@@ -840,6 +852,30 @@ const MembersContent = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
+  // Gérer le pré-remplissage du plan séparément pour éviter les conflits
+  useEffect(() => {
+    const planParam = searchParams.get("plan");
+    const tab = searchParams.get("tab") || "annuaire";
+
+    // Si un plan est spécifié dans l'URL et qu'on est sur l'onglet adhesion
+    if (planParam && tab === "adhesion" && activeTab === "adhesion") {
+      // Vérifier que le plan existe dans la liste des plans disponibles
+      const planExists = membershipPlans.some((plan) => plan.name === planParam);
+      if (planExists && selectedBadge !== planParam) {
+        setSelectedBadge(planParam);
+        // Supprimer le paramètre plan de l'URL après un court délai pour éviter les conflits
+        // Utiliser window.history pour éviter les re-renders
+        setTimeout(() => {
+          const params = new URLSearchParams(window.location.search);
+          params.delete("plan");
+          const newUrl = params.toString() ? `/membres?${params.toString()}` : "/membres";
+          window.history.replaceState({}, "", newUrl);
+        }, 200);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
   // Fonction pour obtenir le titre adapté selon l'onglet actif
   const getPageTitle = () => {
     switch (activeTab) {
@@ -1002,6 +1038,11 @@ const MembersContent = () => {
     setSelectedBadge("");
     setSelectedMainSector("");
     setSelectedFiliere("");
+    setFormName("");
+    setFormPosition("");
+    setFormEmail("");
+    setFormPhone("");
+    setFormMessage("");
   };
 
   const getBenefitIcon = (icon: string) => {
@@ -1365,6 +1406,27 @@ const MembersContent = () => {
           description: "Impossible de copier le lien.",
         });
       });
+  };
+
+  // Fonction pour filtrer les plans d'abonnement selon le type de membre et le sous-profil
+  const getAvailablePlans = () => {
+    if (!selectedAdhesionType) {
+      return [];
+    }
+    
+    // Cas spécial : Si associatif avec sous-profil "federation_filiere", seul "Abonnement Fédération" est disponible
+    if (selectedAdhesionType === "associatif" && selectedSubProfile === "federation_filiere") {
+      return membershipPlans.filter((plan) => plan.name === "Abonnement Fédération");
+    }
+    
+    return membershipPlans.filter((plan) => {
+      // Si le plan n'a pas de memberTypes défini, on le garde pour compatibilité
+      if (!plan.memberTypes || plan.memberTypes.length === 0) {
+        return false;
+      }
+      // Vérifier si le type de membre sélectionné est dans la liste des types autorisés
+      return plan.memberTypes.includes(selectedAdhesionType);
+    });
   };
 
   return (
@@ -1742,7 +1804,7 @@ const MembersContent = () => {
                     <SheetTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full justify-start"
+                        className="w-full justify-start cursor-pointer"
                       >
                         <Filter className="mr-2 h-4 w-4" />
                         Filtres
@@ -1810,13 +1872,13 @@ const MembersContent = () => {
                           <Button
                             variant="outline"
                             onClick={resetFilters}
-                            className="flex-1"
+                            className="flex-1 cursor-pointer"
                           >
                             Réinitialiser
                           </Button>
                           <Button
                             onClick={() => setIsFiltersOpen(false)}
-                            className="flex-1 bg-cpu-orange hover:bg-orange-700"
+                            className="flex-1 bg-cpu-orange hover:bg-orange-700 cursor-pointer"
                           >
                             Appliquer
                           </Button>
@@ -2005,7 +2067,7 @@ const MembersContent = () => {
                         variant="outline"
                         size="sm"
                         onClick={resetFilters}
-                        className="text-cpu-orange border-cpu-orange hover:bg-cpu-orange hover:text-white flex items-center gap-2"
+                        className="text-cpu-orange border-cpu-orange hover:bg-cpu-orange hover:text-white flex items-center gap-2 cursor-pointer"
                       >
                         <RotateCcw className="h-4 w-4" />
                         Réinitialiser
@@ -2503,7 +2565,7 @@ const MembersContent = () => {
 
               {/* Pricing Plans */}
               <div className="p-8 md:p-12 animate-fade-in-up animate-delay-400">
-                <div className="text-center mb-20">
+                <div className="text-center mb-16">
                   <h2 className="text-3xl font-bold mb-4 text-[#221F1F]">
                     Nos Formules d'Adhésion
                   </h2>
@@ -2512,8 +2574,27 @@ const MembersContent = () => {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 pt-4">
-                  {membershipPlans.map((plan, index) => (
+                {/* Plans pour Membres Individuels et Entreprises */}
+                <div className="mb-16">
+                  <div className="text-center mb-8">
+                    <div className="inline-flex items-center gap-3 mb-4">
+                      <div className="h-px w-12 bg-gradient-to-r from-transparent to-cpu-orange"></div>
+                      <h3 className="text-2xl font-bold text-[#221F1F]">
+                        Membres Individuels & Entreprises
+                      </h3>
+                      <div className="h-px w-12 bg-gradient-to-l from-transparent to-cpu-orange"></div>
+                    </div>
+                    <p className="text-cpu-darkgray text-sm">
+                      Formules adaptées aux particuliers et aux PME
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+                    {membershipPlans
+                      .filter((plan) => 
+                        plan.memberTypes?.includes("individuel") || 
+                        plan.memberTypes?.includes("entreprise")
+                      )
+                      .map((plan, index) => (
                     <div
                       key={index}
                       className={`relative border rounded-lg overflow-visible transition-all animate-fade-in-up ${
@@ -2585,7 +2666,23 @@ const MembersContent = () => {
                         </ul>
 
                         <Button
-                          className={`w-full py-3 font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 pricing-button ${
+                          onClick={() => {
+                            setActiveTab("adhesion");
+                            const params = new URLSearchParams(searchParams.toString());
+                            params.set("tab", "adhesion");
+                            params.set("plan", plan.name); // Passer le nom du plan dans l'URL
+                            router.replace(`/membres?${params.toString()}`, {
+                              scroll: false,
+                            });
+                            // Faire défiler vers le formulaire après un court délai
+                            setTimeout(() => {
+                              const adhesionSection = document.getElementById("adhesion-form");
+                              if (adhesionSection) {
+                                adhesionSection.scrollIntoView({ behavior: "smooth", block: "start" });
+                              }
+                            }, 100);
+                          }}
+                          className={`w-full py-3 font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 pricing-button cursor-pointer ${
                             plan.recommended
                               ? "bg-cpu-orange text-white hover:bg-orange-700 hover:border-orange-700 active:bg-orange-800 focus:ring-cpu-orange"
                               : "border border-cpu-orange text-cpu-orange bg-white hover:bg-cpu-orange hover:text-white active:bg-cpu-orange active:text-white focus:ring-cpu-orange"
@@ -2595,7 +2692,140 @@ const MembersContent = () => {
                         </Button>
                       </div>
                     </div>
-                  ))}
+                      ))}
+                  </div>
+                </div>
+
+                {/* Plans pour Membres Associatifs et Institutionnels */}
+                <div className="mt-20">
+                  <div className="text-center mb-8">
+                    <div className="inline-flex items-center gap-3 mb-4">
+                      <div className="h-px w-12 bg-gradient-to-r from-transparent to-cpu-green"></div>
+                      <h3 className="text-2xl font-bold text-[#221F1F]">
+                        Organisations Collectives & Institutions
+                      </h3>
+                      <div className="h-px w-12 bg-gradient-to-l from-transparent to-cpu-green"></div>
+                    </div>
+                    <p className="text-cpu-darkgray text-sm">
+                      Formules dédiées aux associations, coopératives, groupements, fédérations et institutions
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+                    {membershipPlans
+                      .filter((plan) => 
+                        plan.memberTypes?.includes("associatif") || 
+                        plan.memberTypes?.includes("institutionnel")
+                      )
+                      .map((plan, index) => (
+                        <div
+                          key={`org-${index}`}
+                          className={`relative border rounded-xl overflow-visible transition-all animate-fade-in-up shadow-lg hover:shadow-xl ${
+                            plan.isInstitutional
+                              ? "border-cpu-green bg-gradient-to-br from-cpu-green/5 to-white md:scale-105"
+                              : plan.name.includes("Fédération")
+                              ? "border-cpu-orange bg-gradient-to-br from-cpu-orange/5 to-white"
+                              : "border-gray-200 bg-white"
+                          }`}
+                          style={{
+                            animationDelay: `${0.5 + index * 0.15}s`,
+                            opacity: 0,
+                          }}
+                        >
+                          {plan.isInstitutional && (
+                            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
+                              <Badge className="bg-cpu-green text-white px-4 py-1.5 shadow-md">
+                                Premium
+                              </Badge>
+                            </div>
+                          )}
+                          {plan.name.includes("Fédération") && !plan.isInstitutional && (
+                            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
+                              <Badge className="bg-cpu-orange text-white px-4 py-1.5 shadow-md">
+                                Recommandé
+                              </Badge>
+                            </div>
+                          )}
+
+                          <div className="p-8 flex flex-col h-full">
+                            <h3 className="text-lg font-bold text-[#221F1F] mb-2 mt-1">
+                              {plan.name}
+                            </h3>
+                            <p className="text-cpu-darkgray text-sm mb-6">
+                              {plan.description}
+                            </p>
+
+                            <div className="mb-6 py-5 border-t border-b border-gray-200">
+                              {plan.isInstitutional ? (
+                                <>
+                                  <p className="text-2xl font-bold text-cpu-green mb-1">
+                                    Sur devis
+                                  </p>
+                                  <p className="text-sm text-cpu-darkgray">
+                                    À partir de{" "}
+                                    {plan.priceYearly.toLocaleString("fr-FR")}{" "}
+                                    FCFA/an
+                                  </p>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="flex items-baseline justify-center gap-2 mb-2">
+                                    <p className="text-2xl font-bold text-cpu-orange">
+                                      {plan.priceYearly.toLocaleString("fr-FR")}{" "}
+                                      FCFA
+                                    </p>
+                                    <span className="text-lg text-cpu-darkgray">
+                                      /an
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-cpu-darkgray text-center">
+                                    ou {plan.priceMonthly.toLocaleString("fr-FR")}{" "}
+                                    FCFA/mois
+                                  </p>
+                                </>
+                              )}
+                            </div>
+
+                            <ul className="space-y-3 mb-6 flex-1">
+                              {plan.features.map((feature, idx) => (
+                                <li key={idx} className="flex items-start gap-3">
+                                  <Check className="h-5 w-5 text-cpu-green flex-shrink-0 mt-0.5" />
+                                  <span className="text-sm text-[#221F1F]">
+                                    {feature}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+
+                            <Button
+                              onClick={() => {
+                                setActiveTab("adhesion");
+                                const params = new URLSearchParams(searchParams.toString());
+                                params.set("tab", "adhesion");
+                                params.set("plan", plan.name);
+                                router.replace(`/membres?${params.toString()}`, {
+                                  scroll: false,
+                                });
+                                setTimeout(() => {
+                                  const adhesionSection = document.getElementById("adhesion-form");
+                                  if (adhesionSection) {
+                                    adhesionSection.scrollIntoView({ behavior: "smooth", block: "start" });
+                                  }
+                                }, 100);
+                              }}
+                              className={`w-full py-3 font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer ${
+                                plan.isInstitutional
+                                  ? "bg-cpu-green text-white hover:bg-green-700 hover:border-green-700 active:bg-green-800 focus:ring-cpu-green"
+                                  : plan.name.includes("Fédération")
+                                  ? "bg-cpu-orange text-white hover:bg-orange-700 hover:border-orange-700 active:bg-orange-800 focus:ring-cpu-orange"
+                                  : "border border-cpu-orange text-cpu-orange bg-white hover:bg-cpu-orange hover:text-white active:bg-cpu-orange active:text-white focus:ring-cpu-orange"
+                              }`}
+                            >
+                              Choisir cette formule
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
                 </div>
               </div>
             </TabsContent>
@@ -2871,7 +3101,7 @@ const MembersContent = () => {
                     Vous êtes partenaire ? Rejoignez notre programme Pass PME
                     et offrez des avantages exclusifs aux membres CPU-PME.CI
                   </p>
-                  <Button className="bg-cpu-orange hover:bg-[#D97420] text-white px-8 py-6 text-lg font-semibold">
+                  <Button className="bg-cpu-orange hover:bg-[#D97420] text-white px-8 py-6 text-lg font-semibold cursor-pointer">
                     Devenir partenaire
                   </Button>
                 </div>
@@ -2879,7 +3109,7 @@ const MembersContent = () => {
             </TabsContent>
 
             <TabsContent value="adhesion" className="mt-4">
-              <div className="max-w-5xl mx-auto">
+              <div id="adhesion-form" className="max-w-5xl mx-auto">
                 <div className="text-center mb-12">
                   <h2 className="text-3xl font-bold mb-4 text-[#221F1F]">
                     Demande d'Adhésion
@@ -2912,6 +3142,7 @@ const MembersContent = () => {
                                 setSelectedAdhesionType(value as MemberType);
                                 setSelectedSubProfile("");
                                 setIsCompetitionSubcontractor(null);
+                                setSelectedBadge(""); // Réinitialiser le badge quand le type change
                               }}
                               required
                             >
@@ -2945,7 +3176,10 @@ const MembersContent = () => {
                             <Label htmlFor="subProfile">Sous-profil</Label>
                             <Select
                               value={selectedSubProfile}
-                              onValueChange={setSelectedSubProfile}
+                              onValueChange={(value) => {
+                                setSelectedSubProfile(value);
+                                setSelectedBadge(""); // Réinitialiser le badge quand le sous-profil change
+                              }}
                               disabled={!selectedAdhesionType}
                             >
                               <SelectTrigger className="border-gray-300 bg-white text-gray-700">
@@ -2993,7 +3227,9 @@ const MembersContent = () => {
                         </div>
 
                         {/* Checkbox appartenance à une organisation (pour individuel, entreprise et associatif - PAS pour institutionnel) */}
-                        {(selectedAdhesionType === "individuel" || selectedAdhesionType === "entreprise" || selectedAdhesionType === "associatif") && (
+                        {/* Ne pas afficher si associatif avec sous-profil "federation_filiere" */}
+                        {((selectedAdhesionType === "individuel" || selectedAdhesionType === "entreprise" || selectedAdhesionType === "associatif") && 
+                          !(selectedAdhesionType === "associatif" && selectedSubProfile === "federation_filiere")) && (
                           <div className="mt-4">
                             <div className="flex items-start space-x-2">
                               <input
@@ -3008,68 +3244,104 @@ const MembersContent = () => {
                                 }}
                               />
                               <Label htmlFor="belongsToOrg" className="text-sm cursor-pointer font-normal">
-                                J'appartiens à une organisation (fédération, coopérative, association, groupement)
+                                {selectedAdhesionType === "associatif" && selectedSubProfile !== "federation_filiere"
+                                  ? "Notre organisation est affiliée à une fédération de filière"
+                                  : "J'appartiens à une organisation (fédération, coopérative, association, groupement)"}
                               </Label>
                             </div>
 
                             {/* Champs Type d'organisation et Sélection organisation (conditionnel avec trait orange) */}
                             {hasAffiliation && (
                               <div className="ml-2 mt-6 pl-4 border-l-2 border-cpu-orange space-y-4">
-                                {/* Type d'organisation et Sélection sur la même ligne */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  {/* Type d'organisation */}
+                                {/* Cas spécial : Associatif (sauf federation_filiere) → Afficher directement "Sélectionnez la fédération" */}
+                                {selectedAdhesionType === "associatif" && selectedSubProfile !== "federation_filiere" ? (
                                   <div className="space-y-2">
-                                    <Label htmlFor="orgType">Type d'organisation</Label>
+                                    <Label htmlFor="organisation">Sélectionnez la fédération</Label>
                                     <Select
-                                      value={selectedOrgType}
+                                      value={selectedOrganisation}
                                       onValueChange={(value) => {
-                                        setSelectedOrgType(value);
-                                        setSelectedOrganisation("");
-                                        setCustomOrganisationName("");
+                                        setSelectedOrganisation(value);
+                                        if (value !== "Autre") {
+                                          setCustomOrganisationName("");
+                                        }
+                                        // Forcer le type à "federation" pour ce cas
+                                        if (!selectedOrgType || selectedOrgType !== "federation") {
+                                          setSelectedOrgType("federation");
+                                        }
                                       }}
                                     >
                                       <SelectTrigger className="border-gray-300 bg-white text-gray-700">
-                                        <SelectValue placeholder="Sélectionnez le type" />
+                                        <SelectValue placeholder="Choisir la fédération" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        <SelectItem value="federation">Fédération</SelectItem>
-                                        <SelectItem value="cooperative">Coopérative</SelectItem>
-                                        <SelectItem value="association">Association</SelectItem>
-                                        <SelectItem value="groupement">Groupement</SelectItem>
+                                        {organisationsByType["federation"]?.map((org) => (
+                                          <SelectItem key={org} value={org}>
+                                            {org}
+                                          </SelectItem>
+                                        ))}
                                       </SelectContent>
                                     </Select>
+                                    <p className="text-xs text-gray-500">
+                                      Si votre fédération est membre, vous bénéficiez de ses avantages
+                                    </p>
                                   </div>
-
-                                  {/* Sélection de l'organisation */}
-                                  {selectedOrgType && (
+                                ) : (
+                                  /* Cas normal : Afficher Type d'organisation puis Sélection organisation */
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Type d'organisation */}
                                     <div className="space-y-2">
-                                      <Label htmlFor="organisation">Sélectionnez votre organisation</Label>
+                                      <Label htmlFor="orgType">Type d'organisation</Label>
                                       <Select
-                                        value={selectedOrganisation}
+                                        value={selectedOrgType}
                                         onValueChange={(value) => {
-                                          setSelectedOrganisation(value);
-                                          if (value !== "Autre") {
-                                            setCustomOrganisationName("");
-                                          }
+                                          setSelectedOrgType(value);
+                                          setSelectedOrganisation("");
+                                          setCustomOrganisationName("");
                                         }}
                                       >
                                         <SelectTrigger className="border-gray-300 bg-white text-gray-700">
-                                          <SelectValue placeholder="Choisir l'organisation" />
+                                          <SelectValue placeholder="Sélectionnez le type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          {organisationsByType[selectedOrgType]?.map((org) => (
-                                            <SelectItem key={org} value={org}>
-                                              {org}
-                                            </SelectItem>
-                                          ))}
+                                          <SelectItem value="federation">Fédération</SelectItem>
+                                          <SelectItem value="cooperative">Coopérative</SelectItem>
+                                          <SelectItem value="association">Association</SelectItem>
+                                          <SelectItem value="groupement">Groupement</SelectItem>
                                         </SelectContent>
                                       </Select>
-                                      <p className="text-xs text-gray-500">
-                                        Si votre organisation est membre, vous bénéficiez de ses avantages
-                                      </p>
                                     </div>
-                                  )}
-                                </div>
+
+                                    {/* Sélection de l'organisation */}
+                                    {selectedOrgType && (
+                                      <div className="space-y-2">
+                                        <Label htmlFor="organisation">Sélectionnez votre organisation</Label>
+                                        <Select
+                                          value={selectedOrganisation}
+                                          onValueChange={(value) => {
+                                            setSelectedOrganisation(value);
+                                            if (value !== "Autre") {
+                                              setCustomOrganisationName("");
+                                            }
+                                          }}
+                                        >
+                                          <SelectTrigger className="border-gray-300 bg-white text-gray-700">
+                                            <SelectValue placeholder="Choisir l'organisation" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {organisationsByType[selectedOrgType]?.map((org) => (
+                                              <SelectItem key={org} value={org}>
+                                                {org}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                        <p className="text-xs text-gray-500">
+                                          Si votre organisation est membre, vous bénéficiez de ses avantages
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
 
                                 {/* Champ texte si "Autre" est sélectionné */}
                                 {selectedOrganisation === "Autre" && (
@@ -3731,6 +4003,8 @@ const MembersContent = () => {
                               placeholder="Prénom et Nom"
                               required
                               className="border-gray-300"
+                              value={formName}
+                              onChange={(e) => setFormName(e.target.value)}
                             />
                           </div>
 
@@ -3740,6 +4014,8 @@ const MembersContent = () => {
                               id="position"
                               placeholder="Ex: Directeur Général"
                               className="border-gray-300"
+                              value={formPosition}
+                              onChange={(e) => setFormPosition(e.target.value)}
                             />
                           </div>
 
@@ -3751,6 +4027,9 @@ const MembersContent = () => {
                               placeholder="email@entreprise.ci"
                               required
                               className="border-gray-300"
+                              value={formEmail}
+                              onChange={(e) => setFormEmail(e.target.value)}
+                              suppressHydrationWarning
                             />
                           </div>
 
@@ -3762,6 +4041,8 @@ const MembersContent = () => {
                               placeholder="+225 XX XX XX XX XX"
                               required
                               className="border-gray-300"
+                              value={formPhone}
+                              onChange={(e) => setFormPhone(e.target.value)}
                             />
                           </div>
                         </div>
@@ -3778,22 +4059,40 @@ const MembersContent = () => {
                         </h3>
                         
                         <div className="space-y-2">
+                          <Label htmlFor="membershipPlan">Formule d'abonnement *</Label>
                           <Select
                             value={selectedBadge}
                             onValueChange={setSelectedBadge}
                             required
+                            disabled={!selectedAdhesionType}
                           >
                             <SelectTrigger className="border-gray-300 bg-white text-gray-700">
-                              <SelectValue placeholder="Choisissez une formule" />
+                              <SelectValue placeholder={
+                                !selectedAdhesionType 
+                                  ? "Sélectionnez d'abord un type de membre" 
+                                  : "Choisissez une formule"
+                              } />
                             </SelectTrigger>
                             <SelectContent>
-                              {membershipPlans.map((plan) => (
-                                <SelectItem key={plan.name} value={plan.name}>
-                                  {plan.name} - {plan.priceYearly.toLocaleString()} {plan.period}/an
-                                </SelectItem>
-                              ))}
+                              {getAvailablePlans().length > 0 ? (
+                                getAvailablePlans().map((plan) => (
+                                  <SelectItem key={plan.name} value={plan.name}>
+                                    {plan.name} - {plan.priceYearly.toLocaleString("fr-FR")} {plan.period}
+                                    {plan.priceMonthly > 0 && ` / ${plan.priceMonthly.toLocaleString("fr-FR")} ${plan.period}/mois`}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <div className="px-2 py-1.5 text-sm text-gray-500">
+                                  Aucune formule disponible
+                                </div>
+                              )}
                             </SelectContent>
                           </Select>
+                          {!selectedAdhesionType && (
+                            <p className="text-xs text-gray-500">
+                              Veuillez d'abord sélectionner un type de membre
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -3808,6 +4107,8 @@ const MembersContent = () => {
                             id="message"
                             placeholder="Décrivez brièvement votre organisation et vos attentes..."
                             className="min-h-[120px] border-gray-300"
+                            value={formMessage}
+                            onChange={(e) => setFormMessage(e.target.value)}
                           />
                         </div>
                       </div>

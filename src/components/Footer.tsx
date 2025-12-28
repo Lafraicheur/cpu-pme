@@ -115,7 +115,7 @@ export default function Footer() {
               <li>
                 <a
                   href="/membres"
-                  className="font-inter text-sm text-gray-300 hover:text-[#F08223] transition-colors"
+                  className="font-inter text-sm text-gray-300 hover:text-[#F08223] transition-colors cursor-pointer"
                 >
                   Membres
                 </a>

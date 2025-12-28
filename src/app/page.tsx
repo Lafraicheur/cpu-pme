@@ -444,8 +444,8 @@ export default function Home() {
         </div>
         <div className="mt-10 flex justify-center">
           <Link
-            href="/membres"
-            className="inline-flex items-center justify-center px-8 py-3 rounded-[6px] font-semibold text-white transition duration-300 hover:opacity-90"
+            href="/membres?tab=adhesion"
+            className="inline-flex items-center justify-center px-8 py-3 rounded-[6px] font-semibold text-white transition duration-300 hover:opacity-90 cursor-pointer"
             style={{ backgroundColor: "var(--color-primary)" }}
           >
             Adhérer maintenant

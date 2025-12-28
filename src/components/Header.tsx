@@ -27,7 +27,7 @@ import {
   FileText,
   Layers,
 } from "lucide-react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -42,6 +42,7 @@ function HeaderContent() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const [isMembersMenuOpen, setIsMembersMenuOpen] = useState(false);
   const [membersMenuTimeout, setMembersMenuTimeout] =
     useState<NodeJS.Timeout | null>(null);
@@ -310,7 +311,10 @@ function HeaderContent() {
                   <LogIn className="w-3.5 h-3.5" />
                   Connexion
                 </Button>
-                <Button className="bg-[#F08223] text-white hover:bg-opacity-90 w-full font-inter text-xs font-semibold px-3 py-1.5 rounded-sm transition-all shadow-sm hover:shadow-md cursor-pointer">
+                <Button 
+                  onClick={() => router.push("/membres?tab=adhesion")}
+                  className="bg-[#F08223] text-white hover:bg-opacity-90 w-full font-inter text-xs font-semibold px-3 py-1.5 rounded-sm transition-all shadow-sm hover:shadow-md cursor-pointer"
+                >
                   <UserPlus className="w-3.5 h-3.5" />
                   Adhérer
                 </Button>
@@ -506,7 +510,13 @@ function HeaderContent() {
                 <LogIn className="w-3.5 h-3.5" />
                 Connexion
               </Button>
-              <Button className="bg-[#F08223] text-white hover:bg-opacity-90 w-full font-inter text-xs font-semibold px-3 py-1.5 rounded-sm transition-all shadow-sm hover:shadow-md cursor-pointer">
+              <Button 
+                onClick={() => {
+                  router.push("/membres?tab=adhesion");
+                  setIsDrawerOpen(false);
+                }}
+                className="bg-[#F08223] text-white hover:bg-opacity-90 w-full font-inter text-xs font-semibold px-3 py-1.5 rounded-sm transition-all shadow-sm hover:shadow-md cursor-pointer"
+              >
                 <UserPlus className="w-3.5 h-3.5" />
                 Adhérer
               </Button>
