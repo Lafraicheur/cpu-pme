@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Forcer le mode dynamique pour cette route API
+export const dynamic = 'force-dynamic';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.cpupme.com/api';
 
 export async function GET(request: NextRequest) {

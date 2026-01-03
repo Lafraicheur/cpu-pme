@@ -934,45 +934,6 @@ const SecteursContent = () => {
             Classification Sectorielle des PME en Côte d'Ivoire
           </h2>
 
-          {/* Navigation par Onglets - Style amélioré */}
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-5 mb-8 px-4 py-3 bg-gray-50/50 rounded-xl border border-gray-100 shadow-sm">
-            {Object.keys(secteursData).map((key) => {
-              const secteur = secteursData[key as SecteurKey];
-              const isActive = activeSecteur === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => {
-                    setActiveSecteur(key as SecteurKey);
-                    setBreadcrumb({ secteur: secteur.nom });
-                    const params = new URLSearchParams(searchParams.toString());
-                    params.set("tab", key);
-                    const newUrl = `/secteurs?${params.toString()}`;
-                    // Mettre à jour l'URL sans recharger la page
-                    window.history.replaceState(
-                      { ...window.history.state, as: newUrl, url: newUrl },
-                      "",
-                      newUrl
-                    );
-                  }}
-                  className={`
-                    relative px-5 sm:px-7 py-3 sm:py-3.5 rounded-lg font-inter text-sm sm:text-base font-semibold 
-                    transition-all duration-300 ease-in-out
-                    ${
-                      isActive
-                        ? "bg-white text-[#221F1F] shadow-md scale-105 z-10"
-                        : "bg-white/60 text-gray-600 hover:bg-white hover:text-[#221F1F] hover:shadow-sm hover:scale-[1.02]"
-                    }
-                  `}
-                >
-                  {secteur.nom}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-cpu-orange rounded-full"></span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
         </div>
       </section>
 
@@ -1094,7 +1055,26 @@ const SecteursContent = () => {
                 newUrl
               );
             }}
+            className="w-full"
           >
+            {/* Navigation par Onglets */}
+            <div className="flex justify-center mb-8">
+              <TabsList className="inline-flex items-center justify-center gap-4 sm:gap-5 md:gap-6 px-4 sm:px-6 md:px-8 py-3 sm:py-4 bg-gray-50/50 rounded-xl border border-gray-100 shadow-sm h-auto w-auto">
+                {Object.keys(secteursData).map((key) => {
+                  const secteur = secteursData[key as SecteurKey];
+                  return (
+                    <TabsTrigger
+                      key={key}
+                      value={key}
+                      className="flex items-center justify-center px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 rounded-lg font-inter text-sm sm:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap relative"
+                    >
+                      {secteur.nom}
+                      <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-cpu-orange rounded-full opacity-0 data-[state=active]:opacity-100 transition-opacity" />
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+            </div>
             {renderTabContent("primaire")}
             {renderTabContent("secondaire")}
             {renderTabContent("tertiaire")}
@@ -1154,7 +1134,8 @@ const SecteursContent = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Button
+                {/* Bouton masqué - sera affiché pour les utilisateurs authentifiés */}
+                {/* <Button
                   variant="outline"
                   size="sm"
                   onClick={exportSelections}
@@ -1162,7 +1143,7 @@ const SecteursContent = () => {
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Exporter ma sélection
-                </Button>
+                </Button> */}
                 <Link href={buildMembersUrl()} className="w-full sm:w-auto">
                   <Button className="w-full sm:w-auto bg-cpu-orange hover:bg-orange-700 text-white px-8 py-3 text-base font-semibold transition-all shadow-md hover:shadow-lg">
                     Voir les membres

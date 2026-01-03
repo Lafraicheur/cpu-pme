@@ -2,10 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  output: "export",
+  // output: "export", // Retiré pour permettre l'utilisation des routes API
   trailingSlash: true,
   images: {
-    unoptimized: true, // <-- crucial pour next export
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -18,9 +18,6 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
-    // Si tu utilises des images externes, tu peux ajouter des domaines :
-    // domains: ['example.com'],
-    // ou remotePatterns: [...]
   },
 };
 

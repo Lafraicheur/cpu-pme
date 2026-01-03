@@ -1815,51 +1815,6 @@ const MembersContent = () => {
             {getPageTitle()}
           </h2>
 
-          {/* Navigation par Onglets - Style amélioré */}
-          <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 md:gap-8 mb-8 px-6 py-3 bg-gray-50/50 rounded-xl border border-gray-100 shadow-sm">
-            {[
-              { value: "annuaire", label: "Annuaire", icon: Users },
-              { value: "pass-pme", label: "Pass PME", icon: CreditCard },
-              { value: "avantages", label: "Avantages", icon: Award },
-              { value: "adhesion", label: "Adhérer", icon: Building2 },
-            ].map((tab) => {
-              const isActive = activeTab === tab.value;
-              const IconComponent = tab.icon;
-              return (
-                <button
-                  key={tab.value}
-                  onClick={() => {
-                    setActiveTab(tab.value);
-                    const params = new URLSearchParams(searchParams.toString());
-                    params.set("tab", tab.value);
-                    // Supprimer passPmeFilter si on change d'onglet (sauf si on va sur pass-pme)
-                    if (tab.value !== "pass-pme") {
-                      params.delete("passPmeFilter");
-                    }
-                    router.replace(`/membres?${params.toString()}`, {
-                      scroll: false,
-                    });
-                  }}
-                  className={`
-                    relative flex items-center gap-2 px-5 sm:px-7 py-3 sm:py-3.5 rounded-lg font-inter text-sm sm:text-base font-semibold 
-                    transition-all duration-300 ease-in-out cursor-pointer
-                    ${
-                      isActive
-                        ? "bg-white text-[#221F1F] shadow-md z-10"
-                        : "bg-slate-100 text-gray-600 hover:bg-slate-200 hover:text-gray-700"
-                    }
-                  `}
-                >
-                  <IconComponent
-                    className={`h-5 w-5 ${
-                      isActive ? "text-[#221F1F]" : "text-gray-600"
-                    }`}
-                  />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
         </div>
       </section>
 
@@ -1882,6 +1837,39 @@ const MembersContent = () => {
             }}
             className="w-full"
           >
+            {/* Navigation par Onglets */}
+            <div className="flex justify-center mb-8">
+              <TabsList className="inline-flex items-center justify-center gap-4 sm:gap-5 md:gap-6 px-4 sm:px-6 md:px-8 py-3 sm:py-4 bg-gray-50/50 rounded-xl border border-gray-100 shadow-sm h-auto w-auto">
+                <TabsTrigger
+                  value="annuaire"
+                  className="flex items-center justify-center gap-2 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 rounded-lg font-inter text-sm sm:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
+                >
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                  <span>Annuaire</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="pass-pme"
+                  className="flex items-center justify-center gap-2 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 rounded-lg font-inter text-sm sm:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
+                >
+                  <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                  <span>Pass PME</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="avantages"
+                  className="flex items-center justify-center gap-2 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 rounded-lg font-inter text-sm sm:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
+                >
+                  <Award className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                  <span>Avantages</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="adhesion"
+                  className="flex items-center justify-center gap-2 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 rounded-lg font-inter text-sm sm:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
+                >
+                  <Building2 className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                  <span>Adhérer</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
             {/* Annuaire Tab */}
             <TabsContent value="annuaire" className="mt-8">
               {/* Recent Members Section */}
