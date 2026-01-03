@@ -88,6 +88,7 @@ import {
 import { secteursData } from "../secteurs/data";
 import { sectorToMemberMapping } from "../secteurs/sectorMapping";
 import { useToast } from "@/components/ui/use-toast";
+import { useTypeMembresForSiteWeb, useRegionsForSiteWeb, useSecteursForSiteWeb } from "@/hooks/use-api";
 import {
   IconBTP,
   IconCommerce,
@@ -600,7 +601,6 @@ const MembersContent = () => {
   const [selectedFiliere, setSelectedFiliere] = useState<string>("");
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
-  const [customActivities, setCustomActivities] = useState<string[]>([""]);
   const [interventionScope, setInterventionScope] = useState<string>("");
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [siegeRegion, setSiegeRegion] = useState<string>("");
@@ -620,6 +620,84 @@ const MembersContent = () => {
   const [selectedFilieresPrioritaires, setSelectedFilieresPrioritaires] = useState<string[]>([]);
   const [hasBureauCI, setHasBureauCI] = useState<boolean>(false);
   const { toast } = useToast();
+
+  // Récupérer les types de membres depuis l'API
+  const { data: typeMembresApi, isLoading: isLoadingTypeMembres, error: errorTypeMembres } = useTypeMembresForSiteWeb();
+  
+  // Debug: Log des données récupérées
+  useEffect(() => {
+    console.log('🔍 [DEBUG PAGE] isLoadingTypeMembres:', isLoadingTypeMembres);
+    console.log('🔍 [DEBUG PAGE] errorTypeMembres:', errorTypeMembres);
+    console.log('🔍 [DEBUG PAGE] typeMembresApi:', typeMembresApi);
+    console.log('🔍 [DEBUG PAGE] typeMembresApi est un tableau?', Array.isArray(typeMembresApi));
+    if (Array.isArray(typeMembresApi)) {
+      console.log('🔍 [DEBUG PAGE] Nombre de types de membres:', typeMembresApi.length);
+      if (typeMembresApi.length > 0) {
+        console.log('🔍 [DEBUG PAGE] Premier type de membre:', typeMembresApi[0]);
+      }
+    }
+  }, [typeMembresApi, isLoadingTypeMembres, errorTypeMembres]);
+  
+  // Trouver le type de membre sélectionné et ses profils
+  const selectedTypeMembre = selectedAdhesionType && Array.isArray(typeMembresApi) && typeMembresApi.length > 0
+    ? (typeMembresApi.find(tm => {
+        const typeName = tm.name.toLowerCase();
+        return typeName.includes(selectedAdhesionType) || 
+               (selectedAdhesionType === 'individuel' && typeName.includes('individuel')) ||
+               (selectedAdhesionType === 'entreprise' && typeName.includes('entreprise')) ||
+               (selectedAdhesionType === 'associatif' && (typeName.includes('associatif') || typeName.includes('organisation'))) ||
+               (selectedAdhesionType === 'institutionnel' && typeName.includes('institutionnel'));
+      }) || null)
+    : null;
+  
+  // Utiliser les profils directement depuis le type de membre (déjà inclus dans la réponse)
+  // Au lieu de faire un appel API séparé qui nécessite une authentification
+  const profilsApi = selectedTypeMembre?.profils || [];
+  const isLoadingProfils = false; // Pas de chargement car les profils sont déjà dans les données
+  
+  // Debug: Log des profils récupérés
+  useEffect(() => {
+    if (selectedTypeMembre) {
+      console.log('🔍 [DEBUG PROFILS] selectedTypeMembre:', selectedTypeMembre);
+      console.log('🔍 [DEBUG PROFILS] profilsApi:', profilsApi);
+      console.log('🔍 [DEBUG PROFILS] Nombre de profils:', profilsApi.length);
+    }
+  }, [selectedTypeMembre, profilsApi]);
+
+  // Récupérer les régions depuis l'API
+  const { data: regionsApi, isLoading: isLoadingRegions, error: errorRegions } = useRegionsForSiteWeb();
+  
+  // Debug: Log des régions récupérées
+  useEffect(() => {
+    if (regionsApi) {
+      console.log('🔍 [DEBUG REGIONS] regionsApi:', regionsApi);
+      console.log('🔍 [DEBUG REGIONS] Nombre de régions:', regionsApi.length);
+    }
+  }, [regionsApi]);
+
+  // Récupérer les secteurs depuis l'API
+  const { data: secteursApi, isLoading: isLoadingSecteurs, error: errorSecteurs } = useSecteursForSiteWeb();
+  
+  // Debug: Log des secteurs récupérés
+  useEffect(() => {
+    if (secteursApi) {
+      console.log('🔍 [DEBUG SECTEURS] secteursApi:', secteursApi);
+      console.log('🔍 [DEBUG SECTEURS] Nombre de secteurs:', secteursApi.length);
+    }
+  }, [secteursApi]);
+
+  // Obtenir la liste des régions (depuis l'API ou données statiques)
+  const getAvailableRegions = (): string[] => {
+    if (interventionScope === "regions_specifiques" && Array.isArray(regionsApi) && regionsApi.length > 0) {
+      // Utiliser les régions de l'API
+      return regionsApi
+        .filter((r) => r.isActive !== false)
+        .map((r) => r.name)
+        .sort();
+    }
+    // Fallback vers les données statiques
+    return Object.keys(regionsData).sort();
+  };
 
   // Simuler le chargement initial
   useEffect(() => {
@@ -646,7 +724,6 @@ const MembersContent = () => {
     setSelectedFiliere("");
     setSelectedSubCategory("");
     setSelectedActivities([]);
-    setCustomActivities([""]);
     setInterventionScope("");
     setSelectedRegions([]);
     setSiegeRegion("");
@@ -658,25 +735,45 @@ const MembersContent = () => {
     setHasBureauCI(false);
   }, [selectedAdhesionType]);
 
-  // Réinitialiser filière et sous-catégorie quand le secteur principal change
+  // Déterminer automatiquement le secteur quand une filière est sélectionnée
   useEffect(() => {
-    setSelectedFiliere("");
-    setSelectedSubCategory("");
-    setSelectedActivities([]);
-    setCustomActivities([""]);
-  }, [selectedMainSector]);
+    if (selectedFiliere) {
+      const sectorInfo = findSectorForFiliere(selectedFiliere);
+      if (sectorInfo && selectedMainSector !== sectorInfo.secteurId) {
+        setSelectedMainSector(sectorInfo.secteurId);
+      }
+    } else {
+      // Si aucune filière n'est sélectionnée, réinitialiser le secteur
+      setSelectedMainSector("");
+    }
+  }, [selectedFiliere]);
 
-  // Réinitialiser sous-catégorie quand la filière change
+  // Déterminer automatiquement la région quand une commune est sélectionnée
+  useEffect(() => {
+    if (siegeCommune) {
+      const regionInfo = findRegionForCommune(siegeCommune);
+      if (regionInfo) {
+        // Utiliser l'ID si disponible, sinon le nom
+        const regionValue = regionInfo.regionId || regionInfo.regionName;
+        if (siegeRegion !== regionValue) {
+          setSiegeRegion(regionValue);
+        }
+      }
+    } else {
+      // Si aucune commune n'est sélectionnée, réinitialiser la région
+      setSiegeRegion("");
+    }
+  }, [siegeCommune]);
+
+  // Réinitialiser sous-catégorie et activités quand la filière change
   useEffect(() => {
     setSelectedSubCategory("");
     setSelectedActivities([]);
-    setCustomActivities([""]);
   }, [selectedFiliere]);
 
   // Réinitialiser activités quand la sous-catégorie change
   useEffect(() => {
     setSelectedActivities([]);
-    setCustomActivities([""]);
   }, [selectedSubCategory]);
 
   // Réinitialiser les champs d'organisation quand hasAffiliation change
@@ -688,53 +785,159 @@ const MembersContent = () => {
     }
   }, [hasAffiliation]);
 
-  // Obtenir les filières du secteur sélectionné
+  // Obtenir toutes les filières de tous les secteurs (depuis l'API ou données statiques)
+  const getAllFilieres = () => {
+    // Utiliser les données de l'API si disponibles
+    if (secteursApi && Array.isArray(secteursApi) && secteursApi.length > 0) {
+      const allFilieres: Array<{ filiere: { id: string; nom: string; sousFiliere: any[] }; secteurId: string; secteurNom: string }> = [];
+      secteursApi.forEach((secteur) => {
+        if (secteur.filieres && secteur.filieres.length > 0) {
+          secteur.filieres.forEach((filiere) => {
+            if (filiere.isActive !== false) {
+              allFilieres.push({
+                filiere: {
+                  id: filiere.id,
+                  nom: filiere.name,
+                  sousFiliere: filiere.sousFiliere || [],
+                },
+                secteurId: secteur.id,
+                secteurNom: secteur.name,
+              });
+            }
+          });
+        }
+      });
+      return allFilieres;
+    }
+    
+    // Fallback vers les données statiques
+    const allFilieres: Array<{ filiere: { id: string; nom: string; sousCategories: any[] }; secteurId: string; secteurNom: string }> = [];
+    Object.values(secteursData).forEach((secteur) => {
+      secteur.filieres.forEach((filiere) => {
+        allFilieres.push({
+          filiere,
+          secteurId: secteur.id,
+          secteurNom: secteur.nom,
+        });
+      });
+    });
+    return allFilieres;
+  };
+
+  // Trouver le secteur d'une filière donnée (depuis l'API ou données statiques)
+  const findSectorForFiliere = (filiereId: string) => {
+    // Utiliser les données de l'API si disponibles
+    if (secteursApi && Array.isArray(secteursApi) && secteursApi.length > 0) {
+      for (const secteur of secteursApi) {
+        if (secteur.filieres && secteur.filieres.length > 0) {
+          const filiere = secteur.filieres.find((f) => f.id === filiereId && f.isActive !== false);
+          if (filiere) {
+            return { secteurId: secteur.id, secteurNom: secteur.name };
+          }
+        }
+      }
+      return null;
+    }
+    
+    // Fallback vers les données statiques
+    for (const secteur of Object.values(secteursData)) {
+      const filiere = secteur.filieres.find((f) => f.id === filiereId);
+      if (filiere) {
+        return { secteurId: secteur.id, secteurNom: secteur.nom };
+      }
+    }
+    return null;
+  };
+
+  // Obtenir les filières du secteur sélectionné (pour compatibilité)
   const getFilieresForSector = () => {
+    // Utiliser les données de l'API si disponibles
+    if (secteursApi && Array.isArray(secteursApi) && secteursApi.length > 0) {
+      const secteur = secteursApi.find((s) => s.id === selectedMainSector);
+      if (secteur && secteur.filieres) {
+        return secteur.filieres.filter((f) => f.isActive !== false);
+      }
+      return [];
+    }
+    
+    // Fallback vers les données statiques
     if (!selectedMainSector || !secteursData[selectedMainSector]) return [];
     return secteursData[selectedMainSector].filieres;
   };
 
-  // Obtenir les sous-catégories de la filière sélectionnée
+  // Obtenir les sous-filières de la filière sélectionnée (depuis l'API ou données statiques)
   const getSubCategoriesForFiliere = () => {
-    if (!selectedMainSector || !selectedFiliere) return [];
-    const filieres = getFilieresForSector();
-    const filiere = filieres.find((f) => f.id === selectedFiliere);
-    return filiere ? filiere.sousCategories : [];
+    if (!selectedFiliere) return [];
+    
+    // Utiliser les données de l'API si disponibles
+    if (secteursApi && Array.isArray(secteursApi) && secteursApi.length > 0) {
+      for (const secteur of secteursApi) {
+        if (secteur.filieres && secteur.filieres.length > 0) {
+          const filiere = secteur.filieres.find((f) => f.id === selectedFiliere && f.isActive !== false);
+          if (filiere && filiere.sousFiliere) {
+            return filiere.sousFiliere
+              .filter((sf) => sf.isActive !== false)
+              .map((sf) => ({ id: sf.id, nom: sf.name }));
+          }
+        }
+      }
+      return [];
+    }
+    
+    // Fallback vers les données statiques
+    const allFilieres = getAllFilieres();
+    const filiereData = allFilieres.find((f) => f.filiere.id === selectedFiliere);
+    if (filiereData) {
+      // Vérifier si c'est une structure API (sousFiliere) ou statique (sousCategories)
+      if ('sousFiliere' in filiereData.filiere) {
+        return (filiereData.filiere as any).sousFiliere
+          .filter((sf: any) => sf.isActive !== false)
+          .map((sf: any) => ({ id: sf.id, nom: sf.name }));
+      } else if ('sousCategories' in filiereData.filiere) {
+        return (filiereData.filiere as any).sousCategories;
+      }
+    }
+    return [];
   };
 
-  // Obtenir les activités de la sous-catégorie sélectionnée
+  // Obtenir les activités de la sous-filière sélectionnée (depuis l'API ou données statiques)
   const getActivitiesForSubCategory = () => {
     if (!selectedSubCategory) return [];
+    
+    // Utiliser les données de l'API si disponibles
+    if (secteursApi && Array.isArray(secteursApi) && secteursApi.length > 0) {
+      for (const secteur of secteursApi) {
+        if (secteur.filieres && secteur.filieres.length > 0) {
+          for (const filiere of secteur.filieres) {
+            if (filiere.isActive !== false && filiere.sousFiliere) {
+              const sousFiliere = filiere.sousFiliere.find(
+                (sf) => (sf.id === selectedSubCategory || sf.name === selectedSubCategory) && sf.isActive !== false
+              );
+              if (sousFiliere && sousFiliere.activites) {
+                return sousFiliere.activites
+                  .filter((a) => a.isActive !== false)
+                  .map((a) => a.name);
+              }
+            }
+          }
+        }
+      }
+      return [];
+    }
+    
+    // Fallback vers les données statiques
     const sousCategories = getSubCategoriesForFiliere();
-    const sousCategorie = sousCategories.find((sc) => sc.nom === selectedSubCategory);
+    const sousCategorie = sousCategories.find((sc: { nom: string; sectionsDeTags: any[] }) => sc.nom === selectedSubCategory);
     if (!sousCategorie) return [];
     
     // Collecter tous les tags de toutes les sections
     const allTags: string[] = [];
-    sousCategorie.sectionsDeTags.forEach((section) => {
-      allTags.push(...section.tags);
-    });
-    return allTags;
-  };
-
-  // Gérer l'ajout d'un champ d'activité personnalisée
-  const addCustomActivityField = () => {
-    setCustomActivities([...customActivities, ""]);
-  };
-
-  // Gérer le changement d'une activité personnalisée
-  const handleCustomActivityChange = (index: number, value: string) => {
-    const newCustomActivities = [...customActivities];
-    newCustomActivities[index] = value;
-    setCustomActivities(newCustomActivities);
-  };
-
-  // Gérer la suppression d'un champ d'activité personnalisée
-  const removeCustomActivityField = (index: number) => {
-    if (customActivities.length > 1) {
-      const newCustomActivities = customActivities.filter((_, i) => i !== index);
-      setCustomActivities(newCustomActivities);
+    if ('sectionsDeTags' in sousCategorie && Array.isArray(sousCategorie.sectionsDeTags)) {
+      sousCategorie.sectionsDeTags.forEach((section: { tags: string[] }) => {
+        allTags.push(...section.tags);
+      });
     }
+    return allTags;
   };
 
   // Gérer la sélection/désélection d'une activité
@@ -757,26 +960,158 @@ const MembersContent = () => {
 
   // Tout sélectionner ou tout désélectionner les régions
   const toggleAllRegions = () => {
-    const allRegions = Object.keys(regionsData);
+    const allRegions = getAvailableRegions();
     if (selectedRegions.length === allRegions.length) {
       // Si toutes sont sélectionnées, tout désélectionner
       setSelectedRegions([]);
     } else {
       // Sinon, tout sélectionner
-      setSelectedRegions(allRegions);
+      setSelectedRegions([...allRegions]);
     }
   };
 
-  // Obtenir les communes d'une région
+  // Obtenir toutes les communes de toutes les régions (depuis l'API ou données statiques)
+  const getAllCommunes = () => {
+    // Utiliser les données de l'API si disponibles
+    if (regionsApi && Array.isArray(regionsApi) && regionsApi.length > 0) {
+      const allCommunes: Array<{ commune: { id: string; name: string; ville_id: string }; regionId: string; regionName: string; villeId: string; villeName: string }> = [];
+      regionsApi.forEach((region) => {
+        if (region.villes && region.villes.length > 0) {
+          region.villes.forEach((ville) => {
+            if (ville.isActive !== false && ville.communes && ville.communes.length > 0) {
+              ville.communes.forEach((commune) => {
+                if (commune.isActive !== false) {
+                  allCommunes.push({
+                    commune: {
+                      id: commune.id,
+                      name: commune.name,
+                      ville_id: commune.ville_id,
+                    },
+                    regionId: region.id,
+                    regionName: region.name,
+                    villeId: ville.id,
+                    villeName: ville.name,
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+      return allCommunes;
+    }
+    
+    // Fallback vers les données statiques
+    const allCommunes: Array<{ commune: { name: string }; regionName: string }> = [];
+    Object.keys(regionsData).forEach((regionName) => {
+      Object.keys(regionsData[regionName]).forEach((communeName) => {
+        allCommunes.push({
+          commune: { name: communeName },
+          regionName: regionName,
+        });
+      });
+    });
+    return allCommunes;
+  };
+
+  // Obtenir les communes disponibles (filtrées par région si une région est sélectionnée)
+  const getAvailableCommunes = () => {
+    const allCommunes = getAllCommunes();
+    
+    // Si une région est sélectionnée et pas de commune, filtrer par région
+    if (siegeRegion && !siegeCommune) {
+      return allCommunes.filter((item) => {
+        // Pour l'API : comparer par ID ou nom
+        if ('regionId' in item) {
+          return item.regionId === siegeRegion || item.regionName === siegeRegion;
+        }
+        // Pour les données statiques : comparer par nom
+        return item.regionName === siegeRegion;
+      });
+    }
+    
+    // Sinon, retourner toutes les communes
+    return allCommunes;
+  };
+
+  // Trouver la région d'une commune donnée (depuis l'API ou données statiques)
+  const findRegionForCommune = (communeName: string) => {
+    // Utiliser les données de l'API si disponibles
+    if (regionsApi && Array.isArray(regionsApi) && regionsApi.length > 0) {
+      for (const region of regionsApi) {
+        if (region.villes && region.villes.length > 0) {
+          for (const ville of region.villes) {
+            if (ville.isActive !== false && ville.communes && ville.communes.length > 0) {
+              const commune = ville.communes.find((c) => (c.name === communeName || c.id === communeName) && c.isActive !== false);
+              if (commune) {
+                return { regionId: region.id, regionName: region.name };
+              }
+            }
+          }
+        }
+      }
+      return null;
+    }
+    
+    // Fallback vers les données statiques
+    for (const regionName of Object.keys(regionsData)) {
+      if (regionsData[regionName][communeName]) {
+        return { regionId: regionName, regionName: regionName };
+      }
+    }
+    return null;
+  };
+
+  // Obtenir les communes d'une région (depuis l'API ou données statiques)
   const getCommunesForRegion = (region: string): string[] => {
+    // Utiliser les données de l'API si disponibles
+    if (regionsApi && Array.isArray(regionsApi) && regionsApi.length > 0) {
+      const regionData = regionsApi.find((r) => (r.id === region || r.name === region) && r.isActive !== false);
+      if (regionData && regionData.villes) {
+        const communes: string[] = [];
+        regionData.villes.forEach((ville) => {
+          if (ville.isActive !== false && ville.communes) {
+            ville.communes.forEach((commune) => {
+              if (commune.isActive !== false) {
+                communes.push(commune.name);
+              }
+            });
+          }
+        });
+        return communes.sort();
+      }
+      return [];
+    }
+    
+    // Fallback vers les données statiques
     if (regionsData[region]) {
       return Object.keys(regionsData[region]).sort();
     }
     return Object.keys(getDefaultCommunes());
   };
 
-  // Obtenir les villes d'une commune
+  // Obtenir les villes d'une commune (depuis l'API ou données statiques)
   const getVillesForCommune = (region: string, commune: string): string[] => {
+    // Utiliser les données de l'API si disponibles
+    if (regionsApi && Array.isArray(regionsApi) && regionsApi.length > 0) {
+      const regionData = regionsApi.find((r) => (r.id === region || r.name === region) && r.isActive !== false);
+      if (regionData && regionData.villes) {
+        for (const ville of regionData.villes) {
+          if (ville.isActive !== false && ville.communes) {
+            const communeData = ville.communes.find((c) => (c.name === commune || c.id === commune) && c.isActive !== false);
+            if (communeData && communeData.quartiers) {
+              return communeData.quartiers
+                .filter((q) => q.isActive !== false)
+                .map((q) => q.name)
+                .sort();
+            }
+          }
+        }
+      }
+      return [];
+    }
+    
+    // Fallback vers les données statiques
     if (regionsData[region] && regionsData[region][commune]) {
       return regionsData[region][commune];
     }
@@ -1426,7 +1761,7 @@ const MembersContent = () => {
       }
       // Vérifier si le type de membre sélectionné est dans la liste des types autorisés
       return plan.memberTypes.includes(selectedAdhesionType);
-    });
+      });
   };
 
   return (
@@ -2692,7 +3027,7 @@ const MembersContent = () => {
                         </Button>
                       </div>
                     </div>
-                      ))}
+                  ))}
                   </div>
                 </div>
 
@@ -3108,34 +3443,41 @@ const MembersContent = () => {
               </div>
             </TabsContent>
 
-            <TabsContent value="adhesion" className="mt-4">
-              <div id="adhesion-form" className="max-w-5xl mx-auto">
-                <div className="text-center mb-12">
-                  <h2 className="text-3xl font-bold mb-4 text-[#221F1F]">
+            <TabsContent value="adhesion" className="mt-8">
+              <div id="adhesion-form" className="max-w-6xl mx-auto px-4">
+                {/* Header Section */}
+                <div className="text-center mb-10">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-cpu-green to-emerald-600 mb-4 shadow-lg">
+                    <Users className="h-8 w-8 text-white" />
+                  </div>
+                  <h2 className="text-4xl font-extrabold mb-3 text-gray-900 tracking-tight">
                     Demande d'Adhésion
                   </h2>
-                  <p className="text-cpu-darkgray">
-                    Remplissez le formulaire ci-dessous pour rejoindre notre
-                    confédération. Notre équipe vous contactera dans les 48
-                    heures.
+                  <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                    Rejoignez notre confédération en quelques minutes. Notre équipe vous contactera sous 48 heures.
                   </p>
                 </div>
 
-                <div className="border border-gray-200 rounded-lg shadow-sm bg-white">
-                  <div className="p-8">
+                {/* Form Card */}
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                  <div className="p-8 md:p-10 lg:p-12">
                     <form onSubmit={handleSubmit} className="space-y-0">
                       
                       {/* SECTION: Type de membre */}
-                      <div className="pb-6">
-                        <h3 className="text-base font-semibold text-cpu-green flex items-center mb-4">
-                          <Users className="h-5 w-5 mr-2" />
+                      <div className="pb-8">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-green/10">
+                            <Users className="h-5 w-5 text-cpu-green" />
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-900">
                           Type de membre
                         </h3>
+                        </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {/* Type de membre */}
-                          <div className="space-y-2">
-                            <Label htmlFor="memberType">Type de membre *</Label>
+                          <div className="space-y-3">
+                            <Label htmlFor="memberType" className="text-sm font-semibold text-gray-700">Type de membre *</Label>
                             <Select
                               value={selectedAdhesionType}
                               onValueChange={(value) => {
@@ -3146,34 +3488,73 @@ const MembersContent = () => {
                               }}
                               required
                             >
-                              <SelectTrigger className="border-gray-300 bg-white text-gray-700">
+                              <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium">
                                 <SelectValue placeholder="Sélectionnez un type" />
                               </SelectTrigger>
                               <SelectContent>
-                                {memberTypes.map((type) => (
-                                  <SelectItem key={type.value} value={type.value}>
-                                    {type.label}
+                                {isLoadingTypeMembres ? (
+                                  <div className="px-2 py-1.5 text-sm text-gray-500">Chargement...</div>
+                                ) : Array.isArray(typeMembresApi) && typeMembresApi.length > 0 ? (
+                                  typeMembresApi
+                                    .filter((tm) => tm.isActive !== false)
+                                    .map((type) => {
+                                      // Mapper le nom de l'API vers les valeurs utilisées dans le code
+                                      const typeName = type.name.toLowerCase();
+                                      let mappedValue: MemberType | null = null;
+                                      
+                                      if (typeName.includes('individuel')) {
+                                        mappedValue = 'individuel';
+                                      } else if (typeName.includes('entreprise') && !typeName.includes('institutionnel')) {
+                                        mappedValue = 'entreprise';
+                                      } else if (typeName.includes('associatif') || typeName.includes('organisation')) {
+                                        mappedValue = 'associatif';
+                                      } else if (typeName.includes('institutionnel')) {
+                                        mappedValue = 'institutionnel';
+                                      }
+                                      
+                                      if (!mappedValue) {
+                                        return null;
+                                      }
+                                      
+                                      return (
+                                        <SelectItem key={type.id} value={mappedValue}>
+                                          {type.name}
                                   </SelectItem>
-                                ))}
+                                      );
+                                    })
+                                    .filter(Boolean)
+                                ) : errorTypeMembres ? (
+                                  <div className="px-2 py-1.5 text-sm text-red-500">
+                                    <div className="font-semibold mb-1">Erreur de chargement</div>
+                                    <div>{errorTypeMembres.message || 'Impossible de charger les types de membres'}</div>
+                                    {'status' in errorTypeMembres && typeof errorTypeMembres.status === 'number' && (
+                                      <div className="text-xs mt-1">Code: {errorTypeMembres.status}</div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="px-2 py-1.5 text-sm text-orange-500">
+                                    Aucun type de membre disponible
+                                  </div>
+                                )}
                               </SelectContent>
                             </Select>
                             {selectedAdhesionType === "individuel" && (
-                              <p className="text-xs text-gray-500">Pour une personne physique, même sans entreprise.</p>
+                              <p className="text-sm text-gray-600 leading-relaxed">Pour une personne physique, même sans entreprise.</p>
                             )}
                             {selectedAdhesionType === "entreprise" && (
-                              <p className="text-xs text-gray-500">Pour une entreprise (micro, petite, moyenne entreprise ou startup).</p>
+                              <p className="text-sm text-gray-600 leading-relaxed">Pour une entreprise (micro, petite, moyenne entreprise ou startup).</p>
                             )}
                             {selectedAdhesionType === "associatif" && (
-                              <p className="text-xs text-gray-500">Pour une structure associative (coopérative, fédération, association professionnelle, groupement/GIE).</p>
+                              <p className="text-sm text-gray-600 leading-relaxed">Pour une structure associative (coopérative, fédération, association professionnelle, groupement/GIE).</p>
                             )}
                             {selectedAdhesionType === "institutionnel" && (
-                              <p className="text-xs text-gray-500">Grandes entreprises et institutions.</p>
+                              <p className="text-sm text-gray-600 leading-relaxed">Grandes entreprises et institutions.</p>
                             )}
                           </div>
 
                           {/* Sous-profil */}
-                          <div className="space-y-2">
-                            <Label htmlFor="subProfile">Sous-profil</Label>
+                          <div className="space-y-3">
+                            <Label htmlFor="subProfile" className="text-sm font-semibold text-gray-700">Sous-profil</Label>
                             <Select
                               value={selectedSubProfile}
                               onValueChange={(value) => {
@@ -3182,44 +3563,90 @@ const MembersContent = () => {
                               }}
                               disabled={!selectedAdhesionType}
                             >
-                              <SelectTrigger className="border-gray-300 bg-white text-gray-700">
+                              <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium disabled:opacity-60 disabled:cursor-not-allowed">
                                 <SelectValue placeholder="Précisez votre profil" />
                               </SelectTrigger>
                               <SelectContent>
-                                {selectedAdhesionType === "individuel" && (
-                                  <>
-                                    <SelectItem value="jeune_etudiant">Jeune / Étudiant</SelectItem>
-                                    <SelectItem value="entrepreneur_projet">Entrepreneur en projet</SelectItem>
-                                    <SelectItem value="professionnel_expert">Professionnel / Expert</SelectItem>
-                                    <SelectItem value="salarie_cadre">Salarié / Cadre</SelectItem>
-                                  </>
-                                )}
-                                {selectedAdhesionType === "entreprise" && (
-                                  <>
-                                    <SelectItem value="micro_entreprise">Micro entreprise</SelectItem>
-                                    <SelectItem value="petite_entreprise">Petite entreprise</SelectItem>
-                                    <SelectItem value="moyenne_entreprise">Moyenne entreprise</SelectItem>
-                                    <SelectItem value="startup">Startup</SelectItem>
-                                  </>
-                                )}
-                                {selectedAdhesionType === "associatif" && (
-                                  <>
-                                    <SelectItem value="cooperative">Coopérative</SelectItem>
-                                    <SelectItem value="federation_filiere">Fédération / Filière</SelectItem>
-                                    <SelectItem value="association_professionnelle">Association professionnelle</SelectItem>
-                                    <SelectItem value="groupement_gie">Groupement / GIE</SelectItem>
-                                  </>
-                                )}
-                                {selectedAdhesionType === "institutionnel" && (
-                                  <>
-                                    <SelectItem value="grande_entreprise">Grande entreprise</SelectItem>
-                                    <SelectItem value="banque">Banque</SelectItem>
-                                    <SelectItem value="assureur">Assureur</SelectItem>
-                                    <SelectItem value="bailleur">Bailleur</SelectItem>
-                                    <SelectItem value="agence_publique">Agence publique</SelectItem>
-                                    <SelectItem value="collectivite">Collectivité</SelectItem>
-                                    <SelectItem value="programme_international">Programme international</SelectItem>
-                                  </>
+                                {isLoadingProfils ? (
+                                  <div className="px-2 py-1.5 text-sm text-gray-500">Chargement des profils...</div>
+                                ) : Array.isArray(profilsApi) && profilsApi.length > 0 ? (
+                                  profilsApi
+                                    .filter((p) => p.isActive !== false)
+                                    .map((profil) => {
+                                      // Mapper le nom du profil vers les valeurs utilisées dans le code
+                                      const profilName = profil.name.toLowerCase();
+                                      let mappedValue: string | null = null;
+                                      
+                                      // Mapping pour les profils individuels
+                                      if (selectedAdhesionType === "individuel") {
+                                        if (profilName.includes('jeune') || profilName.includes('étudiant')) {
+                                          mappedValue = 'jeune_etudiant';
+                                        } else if (profilName.includes('entrepreneur') || profilName.includes('projet')) {
+                                          mappedValue = 'entrepreneur_projet';
+                                        } else if (profilName.includes('professionnel') || profilName.includes('expert')) {
+                                          mappedValue = 'professionnel_expert';
+                                        } else if (profilName.includes('salarié') || profilName.includes('cadre')) {
+                                          mappedValue = 'salarie_cadre';
+                                        }
+                                      }
+                                      // Mapping pour les profils entreprise
+                                      else if (selectedAdhesionType === "entreprise") {
+                                        if (profilName.includes('micro')) {
+                                          mappedValue = 'micro_entreprise';
+                                        } else if (profilName.includes('petite')) {
+                                          mappedValue = 'petite_entreprise';
+                                        } else if (profilName.includes('moyenne')) {
+                                          mappedValue = 'moyenne_entreprise';
+                                        } else if (profilName.includes('startup')) {
+                                          mappedValue = 'startup';
+                                        }
+                                      }
+                                      // Mapping pour les profils associatifs
+                                      else if (selectedAdhesionType === "associatif") {
+                                        if (profilName.includes('coopérative') || profilName.includes('cooperative')) {
+                                          mappedValue = 'cooperative';
+                                        } else if (profilName.includes('fédération') || profilName.includes('federation') || profilName.includes('filière') || profilName.includes('filiere')) {
+                                          mappedValue = 'federation_filiere';
+                                        } else if (profilName.includes('association') && profilName.includes('professionnelle')) {
+                                          mappedValue = 'association_professionnelle';
+                                        } else if (profilName.includes('groupement') || profilName.includes('gie')) {
+                                          mappedValue = 'groupement_gie';
+                                        }
+                                      }
+                                      // Mapping pour les profils institutionnels
+                                      else if (selectedAdhesionType === "institutionnel") {
+                                        if (profilName.includes('grande') && profilName.includes('entreprise')) {
+                                          mappedValue = 'grande_entreprise';
+                                        } else if (profilName.includes('banque')) {
+                                          mappedValue = 'banque';
+                                        } else if (profilName.includes('assureur')) {
+                                          mappedValue = 'assureur';
+                                        } else if (profilName.includes('bailleur')) {
+                                          mappedValue = 'bailleur';
+                                        } else if (profilName.includes('agence') && profilName.includes('publique')) {
+                                          mappedValue = 'agence_publique';
+                                        } else if (profilName.includes('collectivité') || profilName.includes('collectivite')) {
+                                          mappedValue = 'collectivite';
+                                        } else if (profilName.includes('programme') && profilName.includes('international')) {
+                                          mappedValue = 'programme_international';
+                                        }
+                                      }
+                                      
+                                      // Si aucun mapping trouvé, utiliser l'ID du profil comme valeur
+                                      const value = mappedValue || profil.id;
+                                      
+                                      return (
+                                        <SelectItem key={profil.id} value={value}>
+                                          {profil.name}
+                                        </SelectItem>
+                                      );
+                                    })
+                                ) : (
+                                  <div className="px-2 py-1.5 text-sm text-orange-500">
+                                    {selectedAdhesionType 
+                                      ? "Aucun profil disponible pour ce type de membre"
+                                      : "Sélectionnez d'abord un type de membre"}
+                                  </div>
                                 )}
                               </SelectContent>
                             </Select>
@@ -3230,20 +3657,20 @@ const MembersContent = () => {
                         {/* Ne pas afficher si associatif avec sous-profil "federation_filiere" */}
                         {((selectedAdhesionType === "individuel" || selectedAdhesionType === "entreprise" || selectedAdhesionType === "associatif") && 
                           !(selectedAdhesionType === "associatif" && selectedSubProfile === "federation_filiere")) && (
-                          <div className="mt-4">
-                            <div className="flex items-start space-x-2">
+                          <div className="mt-6 p-5 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border-2 border-orange-100">
+                            <div className="flex items-start space-x-3">
                               <input
                                 type="checkbox"
                                 id="belongsToOrg"
                                 checked={hasAffiliation}
                                 onChange={(e) => setHasAffiliation(e.target.checked)}
-                                className="h-4 w-4 border-2 border-cpu-orange rounded focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-1 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange"
+                                className="h-5 w-5 border-2 border-cpu-orange rounded-md focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange transition-all"
                                 style={{ 
                                   accentColor: '#F27A20',
                                   colorScheme: 'light'
                                 }}
                               />
-                              <Label htmlFor="belongsToOrg" className="text-sm cursor-pointer font-normal">
+                              <Label htmlFor="belongsToOrg" className="text-sm cursor-pointer font-medium text-gray-800">
                                 {selectedAdhesionType === "associatif" && selectedSubProfile !== "federation_filiere"
                                   ? "Notre organisation est affiliée à une fédération de filière"
                                   : "J'appartiens à une organisation (fédération, coopérative, association, groupement)"}
@@ -3252,11 +3679,11 @@ const MembersContent = () => {
 
                             {/* Champs Type d'organisation et Sélection organisation (conditionnel avec trait orange) */}
                             {hasAffiliation && (
-                              <div className="ml-2 mt-6 pl-4 border-l-2 border-cpu-orange space-y-4">
+                              <div className="ml-2 mt-5 pl-5 border-l-4 border-cpu-orange space-y-5">
                                 {/* Cas spécial : Associatif (sauf federation_filiere) → Afficher directement "Sélectionnez la fédération" */}
                                 {selectedAdhesionType === "associatif" && selectedSubProfile !== "federation_filiere" ? (
-                                  <div className="space-y-2">
-                                    <Label htmlFor="organisation">Sélectionnez la fédération</Label>
+                                  <div className="space-y-3">
+                                    <Label htmlFor="organisation" className="text-sm font-semibold text-gray-700">Sélectionnez la fédération</Label>
                                     <Select
                                       value={selectedOrganisation}
                                       onValueChange={(value) => {
@@ -3270,7 +3697,7 @@ const MembersContent = () => {
                                         }
                                       }}
                                     >
-                                      <SelectTrigger className="border-gray-300 bg-white text-gray-700">
+                                      <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl bg-white text-gray-900 font-medium">
                                         <SelectValue placeholder="Choisir la fédération" />
                                       </SelectTrigger>
                                       <SelectContent>
@@ -3287,72 +3714,73 @@ const MembersContent = () => {
                                   </div>
                                 ) : (
                                   /* Cas normal : Afficher Type d'organisation puis Sélection organisation */
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {/* Type d'organisation */}
-                                    <div className="space-y-2">
-                                      <Label htmlFor="orgType">Type d'organisation</Label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {/* Type d'organisation */}
+                                  <div className="space-y-3">
+                                    <Label htmlFor="orgType">Type d'organisation</Label>
+                                    <Select
+                                      value={selectedOrgType}
+                                      onValueChange={(value) => {
+                                        setSelectedOrgType(value);
+                                        setSelectedOrganisation("");
+                                        setCustomOrganisationName("");
+                                      }}
+                                    >
+                                      <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl bg-white text-gray-900 font-medium">
+                                        <SelectValue placeholder="Sélectionnez le type" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="federation">Fédération</SelectItem>
+                                        <SelectItem value="cooperative">Coopérative</SelectItem>
+                                        <SelectItem value="association">Association</SelectItem>
+                                        <SelectItem value="groupement">Groupement</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+
+                                  {/* Sélection de l'organisation */}
+                                  {selectedOrgType && (
+                                    <div className="space-y-3">
+                                      <Label htmlFor="organisation" className="text-sm font-semibold text-gray-700">Sélectionnez votre organisation</Label>
                                       <Select
-                                        value={selectedOrgType}
+                                        value={selectedOrganisation}
                                         onValueChange={(value) => {
-                                          setSelectedOrgType(value);
-                                          setSelectedOrganisation("");
-                                          setCustomOrganisationName("");
+                                          setSelectedOrganisation(value);
+                                          if (value !== "Autre") {
+                                            setCustomOrganisationName("");
+                                          }
                                         }}
                                       >
-                                        <SelectTrigger className="border-gray-300 bg-white text-gray-700">
-                                          <SelectValue placeholder="Sélectionnez le type" />
+                                        <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl bg-white text-gray-900 font-medium">
+                                          <SelectValue placeholder="Choisir l'organisation" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          <SelectItem value="federation">Fédération</SelectItem>
-                                          <SelectItem value="cooperative">Coopérative</SelectItem>
-                                          <SelectItem value="association">Association</SelectItem>
-                                          <SelectItem value="groupement">Groupement</SelectItem>
+                                          {organisationsByType[selectedOrgType]?.map((org) => (
+                                            <SelectItem key={org} value={org}>
+                                              {org}
+                                            </SelectItem>
+                                          ))}
                                         </SelectContent>
                                       </Select>
+                                      <p className="text-sm text-gray-600 flex items-center gap-2">
+                                        <Info className="h-4 w-4 text-cpu-orange" />
+                                        Si votre organisation est membre, vous bénéficiez de ses avantages
+                                      </p>
                                     </div>
-
-                                    {/* Sélection de l'organisation */}
-                                    {selectedOrgType && (
-                                      <div className="space-y-2">
-                                        <Label htmlFor="organisation">Sélectionnez votre organisation</Label>
-                                        <Select
-                                          value={selectedOrganisation}
-                                          onValueChange={(value) => {
-                                            setSelectedOrganisation(value);
-                                            if (value !== "Autre") {
-                                              setCustomOrganisationName("");
-                                            }
-                                          }}
-                                        >
-                                          <SelectTrigger className="border-gray-300 bg-white text-gray-700">
-                                            <SelectValue placeholder="Choisir l'organisation" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {organisationsByType[selectedOrgType]?.map((org) => (
-                                              <SelectItem key={org} value={org}>
-                                                {org}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-                                        <p className="text-xs text-gray-500">
-                                          Si votre organisation est membre, vous bénéficiez de ses avantages
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
+                                  )}
+                                </div>
                                 )}
 
                                 {/* Champ texte si "Autre" est sélectionné */}
                                 {selectedOrganisation === "Autre" && (
-                                  <div className="space-y-2">
-                                    <Label htmlFor="customOrgName">Nom de votre organisation</Label>
+                                  <div className="space-y-3">
+                                    <Label htmlFor="customOrgName" className="text-sm font-semibold text-gray-700">Nom de votre organisation</Label>
                                     <Input
                                       id="customOrgName"
                                       value={customOrganisationName}
                                       onChange={(e) => setCustomOrganisationName(e.target.value)}
                                       placeholder="Entrez le nom de votre organisation"
-                                      className="border-gray-300"
+                                      className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900"
                                     />
                                   </div>
                                 )}
@@ -3362,70 +3790,78 @@ const MembersContent = () => {
                         )}
                       </div>
 
+                      {/* Séparateur moderne */}
+                      <div className="border-t-2 border-gray-100 my-8"></div>
+
                       {/* SECTION: Coordonnées (pour Membre institutionnel uniquement) */}
                       {selectedAdhesionType === "institutionnel" && (
                         <>
-                          {/* Trait de séparation */}
-                          <div className="border-t border-gray-200"></div>
-
-                          <div className="py-6">
-                            <h3 className="text-base font-semibold text-cpu-green flex items-center mb-4">
-                              <MapPin className="h-5 w-5 mr-2" />
-                              Coordonnées
-                            </h3>
-                            
-                            <div className="space-y-4">
-                              {/* Adresse complète */}
-                              <div className="space-y-2">
-                                <Label htmlFor="fullAddress">Adresse complète</Label>
-                                <Input
-                                  id="fullAddress"
-                                  placeholder="Ex: Boulevard Latrille, Cocody"
-                                  className="border-gray-300"
-                                />
+                          <div className="pb-8">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-green/10">
+                                <MapPin className="h-5 w-5 text-cpu-green" />
                               </div>
-
-                              {/* Ligne: Ville et Pays */}
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor="city">Ville</Label>
-                                  <Input
-                                    id="city"
-                                    placeholder="Ex: Abidjan"
-                                    className="border-gray-300"
-                                  />
-                                </div>
-
-                                <div className="space-y-2">
-                                  <Label htmlFor="country">Pays</Label>
-                                  <Input
-                                    id="country"
-                                    placeholder="Côte d'Ivoire"
-                                    defaultValue="Côte d'Ivoire"
-                                    className="border-gray-300"
-                                  />
-                                </div>
-                              </div>
+                              <h3 className="text-xl font-bold text-gray-900">
+                          Coordonnées
+                        </h3>
                             </div>
+                        
+                        <div className="space-y-5">
+                          {/* Adresse complète */}
+                          <div className="space-y-3">
+                            <Label htmlFor="fullAddress" className="text-sm font-semibold text-gray-700">Adresse complète</Label>
+                            <Input
+                              id="fullAddress"
+                              placeholder="Ex: Boulevard Latrille, Cocody"
+                              className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900"
+                            />
                           </div>
 
-                          {/* Trait de séparation */}
-                          <div className="border-t border-gray-200"></div>
+                          {/* Ligne: Ville et Pays */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="space-y-3">
+                              <Label htmlFor="city" className="text-sm font-semibold text-gray-700">Ville</Label>
+                              <Input
+                                id="city"
+                                placeholder="Ex: Abidjan"
+                                className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900"
+                              />
+                            </div>
+
+                            <div className="space-y-3">
+                              <Label htmlFor="country" className="text-sm font-semibold text-gray-700">Pays</Label>
+                              <Input
+                                id="country"
+                                placeholder="Côte d'Ivoire"
+                                defaultValue="Côte d'Ivoire"
+                                className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900 font-medium"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Séparateur moderne */}
+                      <div className="border-t-2 border-gray-100 my-8"></div>
                         </>
                       )}
 
                       {/* SECTION: Axes d'intérêt (pour Membre institutionnel uniquement) */}
                       {selectedAdhesionType === "institutionnel" && (
                         <>
-                          <div className="py-6">
-                            <h3 className="text-base font-semibold text-cpu-orange flex items-center mb-4">
-                              <Target className="h-5 w-5 mr-2" />
-                              Axes d'intérêt (cochez un ou plusieurs)
+                          <div className="pb-8">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
+                                <Target className="h-5 w-5 text-cpu-orange" />
+                              </div>
+                              <h3 className="text-xl font-bold text-gray-900">
+                                Axes d'intérêt <span className="text-gray-500 text-base font-normal">(cochez un ou plusieurs)</span>
                             </h3>
+                            </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6 border-2 border-gray-100 rounded-2xl bg-gradient-to-br from-gray-50 to-white shadow-sm">
                               {axesInteretOptions.map((axe) => (
-                                <div key={axe} className="flex items-start space-x-2">
+                                <div key={axe} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-white transition-colors">
                                   <input
                                     type="checkbox"
                                     id={`axe-${axe}`}
@@ -3437,13 +3873,13 @@ const MembersContent = () => {
                                           : [...prev, axe]
                                       );
                                     }}
-                                    className="h-4 w-4 border-2 border-cpu-orange rounded focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange"
+                                    className="h-5 w-5 border-2 border-cpu-orange rounded-md focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange transition-all"
                                     style={{ 
                                       accentColor: '#F27A20',
                                       colorScheme: 'light'
                                     }}
                                   />
-                                  <Label htmlFor={`axe-${axe}`} className="text-sm cursor-pointer font-normal">
+                                  <Label htmlFor={`axe-${axe}`} className="text-sm cursor-pointer font-medium text-gray-700 leading-tight">
                                     {axe}
                                   </Label>
                                 </div>
@@ -3451,23 +3887,27 @@ const MembersContent = () => {
                             </div>
                           </div>
 
-                          {/* Trait de séparation */}
-                          <div className="border-t border-gray-200"></div>
+                          {/* Séparateur moderne */}
+                          <div className="border-t-2 border-gray-100 my-8"></div>
                         </>
                       )}
 
                       {/* SECTION: Zones d'intervention (pour Membre individuel, Entreprise et Associatif) */}
                       {(selectedAdhesionType === "individuel" || selectedAdhesionType === "entreprise" || selectedAdhesionType === "associatif") && (
                         <>
-                          <div className="py-6">
-                            <h3 className="text-base font-semibold text-cpu-orange flex items-center mb-4">
-                              <MapPin className="h-5 w-5 mr-2" />
+                          <div className="pb-8">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
+                                <MapPin className="h-5 w-5 text-cpu-orange" />
+                              </div>
+                              <h3 className="text-xl font-bold text-gray-900">
                               Zones d'intervention
                             </h3>
+                            </div>
                             
-                            <div className="space-y-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="interventionScope">Portée de l'intervention</Label>
+                            <div className="space-y-5">
+                              <div className="space-y-3">
+                                <Label htmlFor="interventionScope" className="text-sm font-semibold text-gray-700">Portée de l'intervention</Label>
                                 <Select
                                   value={interventionScope}
                                   onValueChange={(value) => {
@@ -3477,7 +3917,7 @@ const MembersContent = () => {
                                     }
                                   }}
                                 >
-                                  <SelectTrigger className="border-gray-300 bg-white text-gray-700">
+                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl bg-white text-gray-900 font-medium">
                                     <SelectValue placeholder="Sélectionnez la portée" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -3489,11 +3929,11 @@ const MembersContent = () => {
 
                               {/* Liste des régions en checkboxes */}
                               {interventionScope === "regions_specifiques" && (
-                                <div className="space-y-3">
+                                <div className="space-y-4">
                                   <div className="flex items-center justify-between">
                                     <div>
-                                      <Label className="text-base">Sélectionnez les régions</Label>
-                                      <p className="text-xs text-gray-500 mt-1">
+                                      <Label className="text-base font-bold text-gray-900">Sélectionnez les régions</Label>
+                                      <p className="text-sm text-gray-600 mt-1">
                                         Cochez toutes les régions dans lesquelles vous intervenez
                                       </p>
                                     </div>
@@ -3502,23 +3942,36 @@ const MembersContent = () => {
                                       variant="outline"
                                       size="sm"
                                       onClick={toggleAllRegions}
-                                      className="border-cpu-orange text-cpu-orange hover:bg-orange-50"
+                                      className="border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold rounded-lg transition-all cursor-pointer"
                                     >
-                                      {selectedRegions.length === Object.keys(regionsData).length
+                                      {selectedRegions.length === getAvailableRegions().length
                                         ? "Tout décocher"
                                         : "Tout cocher"}
                                     </Button>
                                   </div>
                                   
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4 border border-gray-200 rounded-lg bg-gray-50 max-h-96 overflow-y-auto">
-                                    {Object.keys(regionsData).sort().map((region) => (
-                                      <div key={region} className="flex items-start space-x-2">
+                                  {isLoadingRegions ? (
+                                    <div className="p-6 border-2 border-gray-100 rounded-2xl bg-gray-50 text-center text-gray-500 font-medium">
+                                      Chargement des régions...
+                                    </div>
+                                  ) : errorRegions ? (
+                                    <div className="p-6 border-2 border-red-200 rounded-2xl bg-red-50 text-red-600">
+                                      <div className="font-bold mb-2">Erreur de chargement</div>
+                                      <div className="text-sm">{errorRegions.message || 'Impossible de charger les régions'}</div>
+                                      {'status' in errorRegions && typeof errorRegions.status === 'number' && (
+                                        <div className="text-xs mt-2 opacity-75">Code: {errorRegions.status}</div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-6 border-2 border-gray-100 rounded-2xl bg-gradient-to-br from-gray-50 to-white max-h-96 overflow-y-auto shadow-sm">
+                                      {getAvailableRegions().map((region) => (
+                                        <div key={region} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-white transition-colors">
                                         <input
                                           type="checkbox"
                                           id={`region-${region}`}
                                           checked={selectedRegions.includes(region)}
                                           onChange={() => toggleRegion(region)}
-                                          className="h-4 w-4 border-2 border-cpu-orange rounded focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange"
+                                            className="h-5 w-5 border-2 border-cpu-orange rounded-md focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange transition-all"
                                           style={{ 
                                             accentColor: '#F27A20',
                                             colorScheme: 'light'
@@ -3526,18 +3979,19 @@ const MembersContent = () => {
                                         />
                                         <Label 
                                           htmlFor={`region-${region}`} 
-                                          className="text-sm cursor-pointer font-normal leading-tight"
+                                            className="text-sm cursor-pointer font-medium text-gray-700 leading-tight"
                                         >
                                           {region}
                                         </Label>
                                       </div>
                                     ))}
                                   </div>
+                                  )}
 
                                   {selectedRegions.length > 0 && (
-                                    <div className="flex items-center gap-2 text-sm text-cpu-green">
-                                      <Check className="h-4 w-4" />
-                                      <span className="font-medium">
+                                    <div className="flex items-center gap-2 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-100">
+                                      <Check className="h-5 w-5 text-cpu-green" />
+                                      <span className="font-bold text-cpu-green">
                                         {selectedRegions.length} région{selectedRegions.length > 1 ? 's' : ''} sélectionnée{selectedRegions.length > 1 ? 's' : ''}
                                       </span>
                                     </div>
@@ -3547,8 +4001,8 @@ const MembersContent = () => {
                             </div>
                           </div>
 
-                          {/* Trait de séparation */}
-                          <div className="border-t border-gray-200"></div>
+                          {/* Séparateur moderne */}
+                          <div className="border-t-2 border-gray-100 my-8"></div>
                         </>
                       )}
 
@@ -3669,112 +4123,187 @@ const MembersContent = () => {
                       )}
 
                       {/* SECTION: Informations sur l'organisation */}
-                      <div className="py-6">
-                        <h3 className="text-base font-semibold text-cpu-green flex items-center mb-4">
-                          <Building2 className="h-5 w-5 mr-2" />
+                      <div className="pb-8">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-green/10">
+                            <Building2 className="h-5 w-5 text-cpu-green" />
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-900">
                           Informations sur l'organisation
                         </h3>
+                        </div>
                         
                         <div className="space-y-6">
-                          {/* Ligne 1: Nom et Secteur */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="orgName">Nom de l'organisation *</Label>
+                          {/* Ligne 1: Nom de l'organisation */}
+                          <div className="grid grid-cols-1 gap-4">
+                            <div className="space-y-3">
+                              <Label htmlFor="orgName" className="text-sm font-semibold text-gray-700">Nom de l'organisation *</Label>
                               <Input
                                 id="orgName"
                                 placeholder="Ex: Ma Société SARL"
                                 required
-                                className="border-gray-300"
+                                className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900"
                               />
                             </div>
+                        </div>
 
-                            <div className="space-y-2">
-                              <Label htmlFor="sector">Secteur d'activité *</Label>
+                          {/* Ligne 2: Filière et Secteur */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-3 relative isolate">
+                              <Label htmlFor="filiere" className="text-sm font-semibold text-gray-700">Filière *</Label>
+                          <Select
+                                value={selectedFiliere}
+                                onValueChange={setSelectedFiliere}
+                            required
+                            disabled={isLoadingSecteurs}
+                          >
+                                <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium w-full disabled:opacity-60 disabled:cursor-not-allowed">
+                                  <SelectValue placeholder={isLoadingSecteurs ? "Chargement..." : "Sélectionnez une filière"} />
+                            </SelectTrigger>
+                                <SelectContent 
+                                  className="z-[9999] max-h-[300px] overflow-y-auto"
+                                  position="popper"
+                                  sideOffset={4}
+                                  align="start"
+                                >
+                                  {isLoadingSecteurs ? (
+                                    <div className="px-2 py-1.5 text-sm text-gray-500">Chargement des filières...</div>
+                                  ) : errorSecteurs ? (
+                                    <div className="px-2 py-1.5 text-sm text-red-500">
+                                      Erreur lors du chargement des filières. Veuillez réessayer.
+                                    </div>
+                                  ) : getAllFilieres().length === 0 ? (
+                                    <div className="px-2 py-1.5 text-sm text-gray-500">Aucune filière disponible</div>
+                                  ) : (
+                                    getAllFilieres().map(({ filiere, secteurNom }) => {
+                                      // Déterminer le nom à afficher selon la structure (API ou statique)
+                                      const filiereAny = filiere as any;
+                                      const filiereName = filiereAny.nom || filiereAny.name || filiereAny.id;
+                                      return (
+                                        <SelectItem key={filiere.id} value={filiere.id} className="cursor-pointer">
+                                          <span className="font-medium">{filiereName}</span>
+                                          <span className="text-gray-400 text-xs ml-2">({secteurNom})</span>
+                                        </SelectItem>
+                                      );
+                                    })
+                                  )}
+                            </SelectContent>
+                          </Select>
+                          {errorSecteurs && (
+                            <p className="text-sm text-red-600 flex items-center gap-2">
+                              <Info className="h-4 w-4" />
+                              Erreur lors du chargement des filières depuis l'API
+                            </p>
+                          )}
+                        </div>
+
+                            <div className="space-y-3 relative isolate">
+                              <Label htmlFor="sector" className="text-sm font-semibold text-gray-700">Secteur d'activité *</Label>
                               <Select
                                 value={selectedMainSector}
                                 onValueChange={setSelectedMainSector}
                                 required
+                                disabled={!!selectedFiliere || isLoadingSecteurs}
                               >
-                                <SelectTrigger className="border-gray-300 bg-white text-gray-700">
-                                  <SelectValue placeholder="Sélectionnez un secteur" />
+                                <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium w-full disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-gray-50">
+                                  <SelectValue placeholder={isLoadingSecteurs ? "Chargement..." : "Sélectionnez un secteur"} />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  {Object.values(secteursData).map((secteur) => (
-                                    <SelectItem key={secteur.id} value={secteur.id}>
-                                      {secteur.nom}
-                                    </SelectItem>
-                                  ))}
+                                <SelectContent 
+                                  className="z-[9999]"
+                                  position="popper"
+                                  sideOffset={4}
+                                  align="start"
+                                >
+                                  {isLoadingSecteurs ? (
+                                    <div className="px-2 py-1.5 text-sm text-gray-500">Chargement des secteurs...</div>
+                                  ) : errorSecteurs ? (
+                                    <div className="px-2 py-1.5 text-sm text-red-500">
+                                      Erreur lors du chargement des secteurs. Utilisation des données statiques.
+                                    </div>
+                                  ) : (() => {
+                                    // Utiliser les données de l'API si disponibles, sinon fallback vers données statiques
+                                    const secteurs = secteursApi && Array.isArray(secteursApi) && secteursApi.length > 0
+                                      ? secteursApi.map((s) => ({ id: s.id, nom: s.name }))
+                                      : Object.values(secteursData).map((s) => ({ id: s.id, nom: s.nom }));
+                                    
+                                    return secteurs.map((secteur) => (
+                                      <SelectItem key={secteur.id} value={secteur.id} className="cursor-pointer">
+                                        {secteur.nom}
+                                      </SelectItem>
+                                    ));
+                                  })()}
                                 </SelectContent>
                               </Select>
+                              {selectedFiliere && (
+                                <p className="text-sm text-gray-600 flex items-center gap-2">
+                                  <Info className="h-4 w-4 text-cpu-green" />
+                                  Secteur déterminé automatiquement à partir de la filière
+                                </p>
+                              )}
                             </div>
                           </div>
 
-                          {/* Ligne 2: Filière et Sous-filière (conditionnels) */}
-                          {selectedMainSector && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="filiere">Filière *</Label>
-                                <Select
-                                  value={selectedFiliere}
-                                  onValueChange={setSelectedFiliere}
-                                  required
-                                >
-                                  <SelectTrigger className="border-gray-300 bg-white text-gray-700">
-                                    <SelectValue placeholder="Sélectionnez une filière" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {getFilieresForSector().map((filiere) => (
-                                      <SelectItem key={filiere.id} value={filiere.id}>
-                                        {filiere.nom}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-
+                          {/* Ligne 3: Sous-filière */}
                               {selectedFiliere && (
-                                <div className="space-y-2">
-                                  <Label htmlFor="subFiliere">Sous-filière *</Label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="space-y-3 relative isolate">
+                                <Label htmlFor="subFiliere" className="text-sm font-semibold text-gray-700">Sous-filière *</Label>
                                   <Select
                                     value={selectedSubCategory}
                                     onValueChange={setSelectedSubCategory}
                                     required
+                                    disabled={isLoadingSecteurs}
                                   >
-                                    <SelectTrigger className="border-gray-300 bg-white text-gray-700">
-                                      <SelectValue placeholder="Sélectionnez une sous-filière" />
+                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium w-full disabled:opacity-60 disabled:cursor-not-allowed">
+                                      <SelectValue placeholder={isLoadingSecteurs ? "Chargement..." : "Sélectionnez une sous-filière"} />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                      {getSubCategoriesForFiliere().map((subCat) => (
-                                        <SelectItem key={subCat.nom} value={subCat.nom}>
-                                          {subCat.nom}
-                                        </SelectItem>
-                                      ))}
+                                  <SelectContent 
+                                    className="z-[9999]"
+                                    position="popper"
+                                    sideOffset={4}
+                                    align="start"
+                                  >
+                                    {isLoadingSecteurs ? (
+                                      <div className="px-2 py-1.5 text-sm text-gray-500">Chargement des sous-filières...</div>
+                                    ) : getSubCategoriesForFiliere().length === 0 ? (
+                                      <div className="px-2 py-1.5 text-sm text-gray-500">Aucune sous-filière disponible pour cette filière</div>
+                                    ) : (
+                                      getSubCategoriesForFiliere().map((subCat: { id?: string; nom: string }) => {
+                                        // Utiliser l'ID si disponible (API), sinon le nom (données statiques)
+                                        const value = subCat.id || subCat.nom;
+                                        const displayName = subCat.nom;
+                                        return (
+                                          <SelectItem key={value} value={value} className="cursor-pointer">
+                                            {displayName}
+                                          </SelectItem>
+                                        );
+                                      })
+                                    )}
                                     </SelectContent>
                                   </Select>
                                 </div>
-                              )}
                             </div>
                           )}
 
                           {/* Activités / Corps de métiers (conditionnels) */}
                           {selectedSubCategory && (
-                            <div className="space-y-4">
-                              <div>
-                                <Label className="text-base">Activités / Corps de métiers (sélectionnez une ou plusieurs)</Label>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Vous ne trouvez pas votre activité ? Ajoutez-la manuellement ci-dessous.
+                            <div className="space-y-5">
+                              <div className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-100">
+                                <Label className="text-base font-bold text-gray-900">Activités / Corps de métiers</Label>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Sélectionnez une ou plusieurs activités. Vous ne trouvez pas votre activité ? Ajoutez-la manuellement ci-dessous.
                                 </p>
                               </div>
                               
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-6 border-2 border-gray-100 rounded-2xl bg-gradient-to-br from-gray-50 to-white shadow-sm">
                                 {getActivitiesForSubCategory().map((activity) => (
-                                  <div key={activity} className="flex items-start space-x-2">
+                                  <div key={activity} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-white transition-colors">
                                     <input
                                       type="checkbox"
                                       id={`activity-${activity}`}
                                       checked={selectedActivities.includes(activity)}
                                       onChange={() => toggleActivity(activity)}
-                                      className="h-4 w-4 border-2 border-cpu-orange rounded focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange"
+                                      className="h-5 w-5 border-2 border-cpu-orange rounded-md focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange transition-all"
                                       style={{ 
                                         accentColor: '#F27A20',
                                         colorScheme: 'light'
@@ -3782,47 +4311,10 @@ const MembersContent = () => {
                                     />
                                     <Label 
                                       htmlFor={`activity-${activity}`} 
-                                      className="text-sm cursor-pointer font-normal leading-tight"
+                                      className="text-sm cursor-pointer font-medium text-gray-700 leading-tight"
                                     >
                                       {activity}
                                     </Label>
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Activités personnalisées */}
-                              <div className="space-y-3">
-                                <Label className="text-sm font-medium">Saisir une autre activité</Label>
-                                {customActivities.map((activity, index) => (
-                                  <div key={index} className="flex items-center gap-2">
-                                    <Input
-                                      value={activity}
-                                      onChange={(e) => handleCustomActivityChange(index, e.target.value)}
-                                      placeholder="Entrez le nom de l'activité"
-                                      className="border-gray-300 flex-1"
-                                    />
-                                    {customActivities.length > 1 && (
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => removeCustomActivityField(index)}
-                                        className="border-red-300 text-red-600 hover:bg-red-50"
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    )}
-                                    {index === customActivities.length - 1 && (
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={addCustomActivityField}
-                                        className="border-cpu-orange text-cpu-orange hover:bg-orange-50"
-                                      >
-                                        +
-                                      </Button>
-                                    )}
                                   </div>
                                 ))}
                               </div>
@@ -3831,11 +4323,11 @@ const MembersContent = () => {
 
                           {/* Nombre d'employés (non affiché pour les membres institutionnels) */}
                           {selectedAdhesionType !== "institutionnel" && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="employees">Nombre d'employés</Label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="space-y-3">
+                                <Label htmlFor="employees" className="text-sm font-semibold text-gray-700">Nombre d'employés</Label>
                                 <Select>
-                                  <SelectTrigger className="border-gray-300 bg-white text-gray-700">
+                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium">
                                     <SelectValue placeholder="Sélectionnez" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -3852,34 +4344,38 @@ const MembersContent = () => {
                         </div>
                       </div>
 
-                      {/* Trait de séparation */}
-                      <div className="border-t border-gray-200"></div>
+                      {/* Séparateur moderne */}
+                      <div className="border-t-2 border-gray-100 my-8"></div>
 
                       {/* SECTION: Localisation du siège / bureaux */}
-                      <div className="py-6">
-                        <h3 className="text-base font-semibold text-cpu-orange flex items-center mb-4">
-                          <MapPin className="h-5 w-5 mr-2" />
+                      <div className="pb-8">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
+                            <MapPin className="h-5 w-5 text-cpu-orange" />
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-900">
                           {selectedAdhesionType === "institutionnel" 
                             ? "Localisation des bureaux en Côte d'Ivoire"
                             : "Localisation du siège"}
                         </h3>
+                        </div>
 
                         {/* Question pour les membres institutionnels */}
                         {selectedAdhesionType === "institutionnel" && (
-                          <div className="mb-4">
-                            <div className="flex items-center space-x-2">
+                          <div className="mb-6 p-5 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border-2 border-orange-100">
+                            <div className="flex items-center space-x-3">
                               <input
                                 type="checkbox"
                                 id="hasBureauCI"
                                 checked={hasBureauCI}
                                 onChange={(e) => setHasBureauCI(e.target.checked)}
-                                className="h-4 w-4 border-2 border-cpu-orange rounded focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange"
+                                className="h-5 w-5 border-2 border-cpu-orange rounded-md focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange transition-all"
                                 style={{ 
                                   accentColor: '#F27A20',
                                   colorScheme: 'light'
                                 }}
                               />
-                              <Label htmlFor="hasBureauCI" className="text-sm cursor-pointer font-normal">
+                              <Label htmlFor="hasBureauCI" className="text-sm cursor-pointer font-medium text-gray-800">
                                 Avez-vous des bureaux en Côte d'Ivoire ?
                               </Label>
                             </div>
@@ -3888,11 +4384,66 @@ const MembersContent = () => {
                         
                         {/* Afficher les champs de localisation : toujours pour non-institutionnel, conditionnellement pour institutionnel */}
                         {(selectedAdhesionType !== "institutionnel" || hasBureauCI) && (
-                          <div className="space-y-4">
-                            {/* Ligne 1: Région et Commune */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="siegeRegion">Région *</Label>
+                          <div className="space-y-5">
+                            {/* Ligne 1: Commune et Région */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-3 relative isolate">
+                              <Label htmlFor="siegeCommune" className="text-sm font-semibold text-gray-700">Commune *</Label>
+                              <Select
+                                value={siegeCommune}
+                                onValueChange={(value) => {
+                                  setSiegeCommune(value);
+                                  setSiegeVille(""); // Réinitialiser la ville
+                                  setSiegeVillage(""); // Réinitialiser le village
+                                }}
+                                required
+                                disabled={isLoadingRegions}
+                              >
+                                <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl bg-white text-gray-900 font-medium w-full disabled:opacity-60 disabled:cursor-not-allowed">
+                                  <SelectValue placeholder={isLoadingRegions ? "Chargement..." : "Sélectionnez une commune"} />
+                                </SelectTrigger>
+                                <SelectContent 
+                                  className="z-[9999] max-h-[300px] overflow-y-auto"
+                                  position="popper"
+                                  sideOffset={4}
+                                  align="start"
+                                >
+                                  {isLoadingRegions ? (
+                                    <div className="px-2 py-1.5 text-sm text-gray-500">Chargement des communes...</div>
+                                  ) : errorRegions ? (
+                                    <div className="px-2 py-1.5 text-sm text-red-500">
+                                      Erreur lors du chargement des communes. Veuillez réessayer.
+                                    </div>
+                                  ) : getAvailableCommunes().length === 0 ? (
+                                    <div className="px-2 py-1.5 text-sm text-gray-500">
+                                      {siegeRegion ? "Aucune commune disponible pour cette région" : "Aucune commune disponible"}
+                                    </div>
+                                  ) : (
+                                    getAvailableCommunes().map(({ commune, regionName }) => {
+                                      const communeName = 'name' in commune ? commune.name : (commune as any).name;
+                                      const communeValue = 'id' in commune ? commune.id : communeName;
+                                      return (
+                                        <SelectItem key={communeValue} value={communeName} className="cursor-pointer">
+                                          <span className="font-medium">{communeName}</span>
+                                          {!siegeRegion && (
+                                            <span className="text-gray-400 text-xs ml-2">({regionName})</span>
+                                          )}
+                                        </SelectItem>
+                                      );
+                                    })
+                                  )}
+                                </SelectContent>
+                              </Select>
+                              {errorRegions && (
+                                <p className="text-sm text-red-600 flex items-center gap-2">
+                                  <Info className="h-4 w-4" />
+                                  Erreur lors du chargement des communes depuis l'API
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="space-y-3 relative isolate">
+                              <Label htmlFor="siegeRegion" className="text-sm font-semibold text-gray-700">Région *</Label>
                               <Select
                                 value={siegeRegion}
                                 onValueChange={(value) => {
@@ -3902,80 +4453,82 @@ const MembersContent = () => {
                                   setSiegeVillage(""); // Réinitialiser le village
                                 }}
                                 required
+                                disabled={!!siegeCommune || isLoadingRegions}
                               >
-                                <SelectTrigger className="border-gray-300 bg-white text-gray-700">
-                                  <SelectValue placeholder="Sélectionnez une région" />
+                                <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl bg-white text-gray-900 font-medium w-full disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-gray-50">
+                                  <SelectValue placeholder={isLoadingRegions ? "Chargement..." : "Sélectionnez une région"} />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  {Object.keys(regionsData).sort().map((region) => (
-                                    <SelectItem key={region} value={region}>
-                                      {region}
-                                    </SelectItem>
-                                  ))}
+                                <SelectContent 
+                                  className="z-[9999]"
+                                  position="popper"
+                                  sideOffset={4}
+                                  align="start"
+                                >
+                                  {isLoadingRegions ? (
+                                    <div className="px-2 py-1.5 text-sm text-gray-500">Chargement des régions...</div>
+                                  ) : errorRegions ? (
+                                    <div className="px-2 py-1.5 text-sm text-red-500">
+                                      Erreur lors du chargement des régions. Utilisation des données statiques.
+                                    </div>
+                                  ) : (() => {
+                                    // Utiliser les données de l'API si disponibles, sinon fallback vers données statiques
+                                    const regions = regionsApi && Array.isArray(regionsApi) && regionsApi.length > 0
+                                      ? regionsApi
+                                          .filter((r) => r.isActive !== false)
+                                          .map((r) => ({ id: r.id, name: r.name }))
+                                      : Object.keys(regionsData).map((regionName) => ({ id: regionName, name: regionName }));
+                                    
+                                    return regions.map((region) => (
+                                      <SelectItem key={region.id} value={region.id} className="cursor-pointer">
+                                        {region.name}
+                                      </SelectItem>
+                                    ));
+                                  })()}
                                 </SelectContent>
                               </Select>
+                              {siegeCommune && (
+                                <p className="text-sm text-gray-600 flex items-center gap-2">
+                                  <Info className="h-4 w-4 text-cpu-orange" />
+                                  Région déterminée automatiquement à partir de la commune
+                                </p>
+                              )}
                             </div>
-
-                            {siegeRegion && (
-                              <div className="space-y-2">
-                                <Label htmlFor="siegeCommune">Commune *</Label>
-                                <Select
-                                  value={siegeCommune}
-                                  onValueChange={(value) => {
-                                    setSiegeCommune(value);
-                                    setSiegeVille(""); // Réinitialiser la ville
-                                    setSiegeVillage(""); // Réinitialiser le village
-                                  }}
-                                  required
-                                >
-                                  <SelectTrigger className="border-gray-300 bg-white text-gray-700">
-                                    <SelectValue placeholder="Sélectionnez une commune" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {getCommunesForRegion(siegeRegion).map((commune) => (
-                                      <SelectItem key={commune} value={commune}>
-                                        {commune}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            )}
                           </div>
 
                           {/* Ligne 2: Ville et Village/Quartier (conditionnels) */}
                           {siegeCommune && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="siegeVille">Ville *</Label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="space-y-3">
+                                <Label htmlFor="siegeVille" className="text-sm font-semibold text-gray-700">Ville *</Label>
                                 <Select
                                   value={siegeVille}
                                   onValueChange={setSiegeVille}
                                   required
                                 >
-                                  <SelectTrigger className="border-gray-300 bg-white text-gray-700">
+                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl bg-white text-gray-900 font-medium">
                                     <SelectValue placeholder="Sélectionnez une ville" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {getVillesForCommune(siegeRegion, siegeCommune).map((ville) => (
                                       <SelectItem key={ville} value={ville}>
                                         {ville}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
 
-                              <div className="space-y-2">
-                                <Label htmlFor="siegeVillage">Village / Quartier</Label>
+                            <div className="space-y-3">
+                                <Label htmlFor="siegeVillage" className="text-sm font-semibold text-gray-700">Village / Quartier</Label>
                                 <Input
                                   id="siegeVillage"
                                   value={siegeVillage}
                                   onChange={(e) => setSiegeVillage(e.target.value)}
                                   placeholder="Ex: Abobo-Gare, Cocody-Angré..."
-                                  className="border-gray-300"
+                                  className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900"
                                 />
-                                <p className="text-xs text-gray-500">
+                                <p className="text-sm text-gray-600 flex items-center gap-2">
+                                  <Info className="h-4 w-4 text-cpu-orange" />
                                   Précisez le quartier ou le village si possible
                                 </p>
                               </div>
@@ -3985,62 +4538,66 @@ const MembersContent = () => {
                         )}
                       </div>
 
-                      {/* Trait de séparation */}
-                      <div className="border-t border-gray-200"></div>
+                      {/* Séparateur moderne */}
+                      <div className="border-t-2 border-gray-100 my-8"></div>
 
                       {/* SECTION: Informations de contact */}
-                      <div className="py-6">
-                        <h3 className="text-base font-semibold text-cpu-orange flex items-center mb-4">
-                          <Users className="h-5 w-5 mr-2" />
+                      <div className="pb-8">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
+                            <Users className="h-5 w-5 text-cpu-orange" />
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-900">
                           Informations de contact
                         </h3>
+                        </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="representativeName">Nom du représentant *</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-3">
+                            <Label htmlFor="representativeName" className="text-sm font-semibold text-gray-700">Nom du représentant *</Label>
                             <Input
                               id="representativeName"
                               placeholder="Prénom et Nom"
                               required
-                              className="border-gray-300"
+                              className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900"
                               value={formName}
                               onChange={(e) => setFormName(e.target.value)}
                             />
                           </div>
 
-                          <div className="space-y-2">
-                            <Label htmlFor="position">Fonction</Label>
+                          <div className="space-y-3">
+                            <Label htmlFor="position" className="text-sm font-semibold text-gray-700">Fonction</Label>
                             <Input
                               id="position"
                               placeholder="Ex: Directeur Général"
-                              className="border-gray-300"
+                              className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900"
                               value={formPosition}
                               onChange={(e) => setFormPosition(e.target.value)}
                             />
                           </div>
 
-                          <div className="space-y-2">
-                            <Label htmlFor="email">Email professionnel *</Label>
+                          <div className="space-y-3">
+                            <Label htmlFor="email" className="text-sm font-semibold text-gray-700">Email professionnel *</Label>
                             <Input
                               id="email"
                               type="email"
                               placeholder="email@entreprise.ci"
                               required
-                              className="border-gray-300"
+                              className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900"
                               value={formEmail}
                               onChange={(e) => setFormEmail(e.target.value)}
                               suppressHydrationWarning
                             />
                           </div>
 
-                          <div className="space-y-2">
-                            <Label htmlFor="phone">Téléphone *</Label>
+                          <div className="space-y-3">
+                            <Label htmlFor="phone" className="text-sm font-semibold text-gray-700">Téléphone *</Label>
                             <Input
                               id="phone"
                               type="tel"
                               placeholder="+225 XX XX XX XX XX"
                               required
-                              className="border-gray-300"
+                              className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900"
                               value={formPhone}
                               onChange={(e) => setFormPhone(e.target.value)}
                             />
@@ -4048,25 +4605,29 @@ const MembersContent = () => {
                         </div>
                       </div>
 
-                      {/* Trait de séparation */}
-                      <div className="border-t border-gray-200"></div>
+                      {/* Séparateur moderne */}
+                      <div className="border-t-2 border-gray-100 my-8"></div>
 
                       {/* SECTION: Formule souhaitée */}
-                      <div className="py-6">
-                        <h3 className="text-base font-semibold text-cpu-green flex items-center mb-4">
-                          <Award className="h-5 w-5 mr-2" />
+                      <div className="pb-8">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-green/10">
+                            <Award className="h-5 w-5 text-cpu-green" />
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-900">
                           Formule souhaitée
                         </h3>
+                        </div>
                         
-                        <div className="space-y-2">
-                          <Label htmlFor="membershipPlan">Formule d'abonnement *</Label>
+                        <div className="space-y-3">
+                          <Label htmlFor="membershipPlan" className="text-sm font-semibold text-gray-700">Formule d'abonnement *</Label>
                           <Select
                             value={selectedBadge}
                             onValueChange={setSelectedBadge}
                             required
                             disabled={!selectedAdhesionType}
                           >
-                            <SelectTrigger className="border-gray-300 bg-white text-gray-700">
+                            <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-gray-50">
                               <SelectValue placeholder={
                                 !selectedAdhesionType 
                                   ? "Sélectionnez d'abord un type de membre" 
@@ -4076,37 +4637,38 @@ const MembersContent = () => {
                             <SelectContent>
                               {getAvailablePlans().length > 0 ? (
                                 getAvailablePlans().map((plan) => (
-                                  <SelectItem key={plan.name} value={plan.name}>
+                                <SelectItem key={plan.name} value={plan.name}>
                                     {plan.name} - {plan.priceYearly.toLocaleString("fr-FR")} {plan.period}
                                     {plan.priceMonthly > 0 && ` / ${plan.priceMonthly.toLocaleString("fr-FR")} ${plan.period}/mois`}
-                                  </SelectItem>
+                                </SelectItem>
                                 ))
                               ) : (
                                 <div className="px-2 py-1.5 text-sm text-gray-500">
                                   Aucune formule disponible
-                                </div>
+                        </div>
                               )}
-                            </SelectContent>
-                          </Select>
+                                </SelectContent>
+                              </Select>
                           {!selectedAdhesionType && (
-                            <p className="text-xs text-gray-500">
+                            <p className="text-sm text-gray-600 flex items-center gap-2">
+                              <Info className="h-4 w-4 text-cpu-orange" />
                               Veuillez d'abord sélectionner un type de membre
                             </p>
                           )}
-                        </div>
-                      </div>
+                            </div>
+                            </div>
 
-                      {/* Trait de séparation */}
-                      <div className="border-t border-gray-200"></div>
+                      {/* Séparateur moderne */}
+                      <div className="border-t-2 border-gray-100 my-8"></div>
 
                       {/* SECTION: Message */}
-                      <div className="py-6">
-                        <div className="space-y-2">
-                          <Label htmlFor="message">Message ou informations complémentaires</Label>
+                      <div className="pb-8">
+                            <div className="space-y-3">
+                          <Label htmlFor="message" className="text-sm font-semibold text-gray-700">Message ou informations complémentaires</Label>
                           <Textarea
                             id="message"
                             placeholder="Décrivez brièvement votre organisation et vos attentes..."
-                            className="min-h-[120px] border-gray-300"
+                            className="min-h-[140px] border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 py-3 text-gray-900 resize-none"
                             value={formMessage}
                             onChange={(e) => setFormMessage(e.target.value)}
                           />
@@ -4114,13 +4676,19 @@ const MembersContent = () => {
                       </div>
 
                       {/* Bouton de soumission */}
-                      <div className="pt-4">
+                      <div className="pt-6">
                         <Button
                           type="submit"
-                          className="w-full bg-cpu-orange hover:bg-orange-700 text-white py-6 text-lg"
+                          className="w-full h-14 bg-gradient-to-r from-cpu-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5"
                         >
+                          <span className="flex items-center justify-center gap-2">
+                            <Award className="h-6 w-6" />
                           Soumettre ma demande d'adhésion
+                          </span>
                         </Button>
+                        <p className="text-center text-sm text-gray-500 mt-4">
+                          Notre équipe vous contactera sous 48 heures
+                        </p>
                       </div>
                     </form>
                   </div>

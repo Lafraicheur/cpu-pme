@@ -3,6 +3,7 @@ import { Montserrat, Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { QueryProvider } from "@/providers/query-provider";
 
 // Police pour les titres - Montserrat
 const montserrat = Montserrat({
@@ -36,6 +37,7 @@ export default function RootLayout({
       <body
         className={`${montserrat.variable} ${inter.variable} antialiased`}
       >
+        <QueryProvider>
         <div className="min-h-screen bg-white flex flex-col">
           <Header />
           <main className="flex-1">
@@ -43,6 +45,7 @@ export default function RootLayout({
           </main>
           <Footer />
         </div>
+        </QueryProvider>
       </body>
     </html>
   );
