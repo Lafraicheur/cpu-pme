@@ -3,6 +3,7 @@
  */
 
 import { apiClient } from '../client';
+import { proxyApiClient } from '../proxy-client';
 import { API_ENDPOINTS } from '../config';
 
 export interface TypeMembre {
@@ -27,8 +28,8 @@ export const typeMembresService = {
    */
   async getTypeMembresForSiteWeb(): Promise<TypeMembre[]> {
     try {
-      console.log('🔍 [DEBUG] Appel API:', API_ENDPOINTS.TYPE_MEMBRES.FOR_SITE_WEB);
-      const response = await apiClient.get<any>(API_ENDPOINTS.TYPE_MEMBRES.FOR_SITE_WEB);
+      console.log('🔍 [DEBUG] Appel API via proxy:', API_ENDPOINTS.TYPE_MEMBRES.FOR_SITE_WEB);
+      const response = await proxyApiClient.get<any>(API_ENDPOINTS.TYPE_MEMBRES.FOR_SITE_WEB);
       console.log('📦 [DEBUG] Réponse brute:', response);
       console.log('📦 [DEBUG] response.data:', response.data);
       console.log('📦 [DEBUG] Type de response.data:', typeof response.data);

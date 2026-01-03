@@ -3,6 +3,7 @@
  */
 
 import { apiClient } from '../client';
+import { proxyApiClient } from '../proxy-client';
 import { API_ENDPOINTS } from '../config';
 
 export interface Quartier {
@@ -43,8 +44,8 @@ export const regionsService = {
    */
   async getRegionsForSiteWeb(): Promise<Region[]> {
     try {
-      console.log('🔍 [DEBUG REGIONS] Appel API:', API_ENDPOINTS.REGIONS.FOR_SITE_WEB);
-      const response = await apiClient.get<any>(API_ENDPOINTS.REGIONS.FOR_SITE_WEB);
+      console.log('🔍 [DEBUG REGIONS] Appel API via proxy:', API_ENDPOINTS.REGIONS.FOR_SITE_WEB);
+      const response = await proxyApiClient.get<any>(API_ENDPOINTS.REGIONS.FOR_SITE_WEB);
       console.log('📦 [DEBUG REGIONS] Réponse brute:', response);
       console.log('📦 [DEBUG REGIONS] response.data:', response.data);
       

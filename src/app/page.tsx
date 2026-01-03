@@ -121,17 +121,17 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in">
             <a
-              href="#"
-              className="bg-white text-black hover:bg-white/90 px-6 py-3 rounded-lg font-semibold"
+              href="#services"
+              className="bg-white text-black hover:bg-white/90 px-6 py-3 rounded-lg font-semibold cursor-pointer"
             >
               Découvrir nos services
             </a>
-            <a
-              href="#"
-              className="border border-white text-white hover:bg-white/10 px-6 py-3 rounded-lg font-semibold"
+            <Link
+              href="/membres?tab=adhesion"
+              className="border border-white text-white hover:bg-white/10 px-6 py-3 rounded-lg font-semibold cursor-pointer"
             >
               Devenir membre
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -205,7 +205,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16">
+      <section id="services" className="py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-[var(--color-neutral-dark)] mb-4">

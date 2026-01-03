@@ -3,6 +3,7 @@
  */
 
 import { apiClient } from '../client';
+import { proxyApiClient } from '../proxy-client';
 import { API_ENDPOINTS } from '../config';
 
 export interface Activite {
@@ -40,8 +41,8 @@ export const secteursService = {
    */
   async getSecteursForSiteWeb(): Promise<Secteur[]> {
     try {
-      console.log('🔍 [DEBUG SECTEURS] Appel API:', API_ENDPOINTS.SECTEURS.FOR_SITE_WEB);
-      const response = await apiClient.get<any>(API_ENDPOINTS.SECTEURS.FOR_SITE_WEB);
+      console.log('🔍 [DEBUG SECTEURS] Appel API via proxy:', API_ENDPOINTS.SECTEURS.FOR_SITE_WEB);
+      const response = await proxyApiClient.get<any>(API_ENDPOINTS.SECTEURS.FOR_SITE_WEB);
       console.log('📦 [DEBUG SECTEURS] Réponse brute:', response);
       console.log('📦 [DEBUG SECTEURS] response.data:', response.data);
       

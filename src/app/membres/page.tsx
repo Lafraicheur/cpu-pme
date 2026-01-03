@@ -3554,7 +3554,7 @@ const MembersContent = () => {
 
                           {/* Sous-profil */}
                           <div className="space-y-3">
-                            <Label htmlFor="subProfile" className="text-sm font-semibold text-gray-700">Sous-profil</Label>
+                            <Label htmlFor="subProfile" className="text-sm font-semibold text-gray-700">Profil</Label>
                             <Select
                               value={selectedSubProfile}
                               onValueChange={(value) => {
