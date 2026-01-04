@@ -29,19 +29,41 @@ export default function Home() {
     text: string;
   } | null>(null);
 
+  // Fonction pour créer une nouvelle date cible (15 jours dans le futur)
+  const createNewTargetDate = () => {
+    const newTargetDate = new Date();
+    newTargetDate.setDate(newTargetDate.getDate() + 15);
+    localStorage.setItem("countdownTargetDate", newTargetDate.toISOString());
+    localStorage.setItem("countdownVersion", "v2"); // Marquer la nouvelle version
+    return newTargetDate;
+  };
+
   // Initialiser ou récupérer la date cible
   useEffect(() => {
     const storedDate = localStorage.getItem("countdownTargetDate");
+    const version = localStorage.getItem("countdownVersion");
+
+    // Si c'est l'ancienne version (30 jours), forcer la migration vers 15 jours
+    if (storedDate && version !== "v2") {
+      setTargetDate(createNewTargetDate());
+      return;
+    }
 
     if (storedDate) {
-      // Utiliser la date sauvegardée
-      setTargetDate(new Date(storedDate));
+      const stored = new Date(storedDate);
+      const now = new Date();
+
+      // Vérifier si la date stockée est déjà passée
+      if (stored.getTime() <= now.getTime()) {
+        // Créer une nouvelle date de 15 jours
+        setTargetDate(createNewTargetDate());
+      } else {
+        // Utiliser la date sauvegardée
+        setTargetDate(stored);
+      }
     } else {
-      // Créer une nouvelle date (30 jours dans le futur)
-      const newTargetDate = new Date();
-      newTargetDate.setDate(newTargetDate.getDate() + 30);
-      localStorage.setItem("countdownTargetDate", newTargetDate.toISOString());
-      setTargetDate(newTargetDate);
+      // Créer une nouvelle date (15 jours dans le futur)
+      setTargetDate(createNewTargetDate());
     }
   }, []);
 
@@ -54,9 +76,9 @@ export default function Home() {
       const distance = targetDate.getTime() - now;
 
       if (distance < 0) {
-        // Le compte à rebours est terminé
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        clearInterval(timer);
+        // Le compte à rebours est terminé, redémarrer avec 15 jours
+        const newTarget = createNewTargetDate();
+        setTargetDate(newTarget);
         return;
       }
 
@@ -124,10 +146,10 @@ export default function Home() {
       <div
         className="absolute inset-0 opacity-30"
         style={{
-          backgroundImage: 'url(/couverture_cpu_coming_soon.png)',
-          backgroundSize: '150px 150px',
-          backgroundRepeat: 'repeat',
-          backgroundPosition: 'center',
+          backgroundImage: "url(/couverture_cpu_coming_soon.png)",
+          backgroundSize: "150px 150px",
+          backgroundRepeat: "repeat",
+          backgroundPosition: "center",
         }}
       ></div>
 
@@ -217,7 +239,10 @@ export default function Home() {
               <p className="font-inter text-base sm:text-lg text-[#221F1F] font-medium">
                 Soyez informé du lancement
               </p>
-              <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <form
+                onSubmit={handleSubmit}
+                className="flex flex-col sm:flex-row gap-3 sm:gap-4"
+              >
                 <input
                   type="email"
                   name="user_email"
