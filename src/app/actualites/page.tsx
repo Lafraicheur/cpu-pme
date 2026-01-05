@@ -691,7 +691,7 @@ const NewsContent = () => {
                           ? Array.from({ length: 9 }).map((_, index) => (
                               <Card
                                 key={index}
-                                className="overflow-hidden animate-pulse border-0 bg-white"
+                                className="overflow-hidden animate-pulse border-gray-200 bg-white"
                               >
                                 <div className="h-52 bg-gray-200" />
                                 <CardContent className="p-6">
@@ -705,7 +705,7 @@ const NewsContent = () => {
                           : paginatedNews.map((news) => (
                               <Card
                                 key={news.id}
-                                className="overflow-hidden transition-all duration-300 cursor-pointer group border-0 bg-white flex flex-col"
+                                className="overflow-hidden transition-all duration-300 cursor-pointer group border-gray-200 bg-white flex flex-col"
                                 onClick={() =>
                                   router.push(`/actualites/${news.id}`)
                                 }
@@ -972,7 +972,7 @@ const NewsContent = () => {
                             // Format document avec téléchargement et preview
                             <Card
                               key={publication.id}
-                              className="overflow-hidden transition-all duration-300 cursor-pointer group border-0 bg-white hover:shadow-xl flex flex-col"
+                              className="overflow-hidden transition-all duration-300 cursor-pointer group border-gray-200 bg-white hover:shadow-xl flex flex-col"
                             >
                               {/* Preview du document */}
                               <div className="relative h-52 overflow-hidden bg-gradient-to-br from-red-50 via-orange-50 to-amber-50">
@@ -1043,7 +1043,7 @@ const NewsContent = () => {
                             // Format carte visuelle classique
                             <Card
                               key={publication.id}
-                              className="overflow-hidden transition-all duration-300 cursor-pointer group border-0 bg-white flex flex-col"
+                              className="overflow-hidden transition-all duration-300 cursor-pointer group border-gray-200 bg-white flex flex-col"
                               onClick={() =>
                                 router.push(`/actualites/${publication.id}`)
                               }

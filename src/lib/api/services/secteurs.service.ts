@@ -41,10 +41,7 @@ export const secteursService = {
    */
   async getSecteursForSiteWeb(): Promise<Secteur[]> {
     try {
-      console.log('🔍 [DEBUG SECTEURS] Appel API via proxy:', API_ENDPOINTS.SECTEURS.FOR_SITE_WEB);
       const response = await proxyApiClient.get<any>(API_ENDPOINTS.SECTEURS.FOR_SITE_WEB);
-      console.log('📦 [DEBUG SECTEURS] Réponse brute:', response);
-      console.log('📦 [DEBUG SECTEURS] response.data:', response.data);
       
       // La réponse a une structure imbriquée : { success: true, data: { success: true, data: Secteur[] } }
       let data: Secteur[] = [];
@@ -57,26 +54,19 @@ export const secteursService = {
           const innerData = responseData.data;
           if (innerData && typeof innerData === 'object' && 'data' in innerData) {
             // Structure: { success: true, data: { success: true, data: [...] } }
-            console.log('🔍 [DEBUG SECTEURS] Structure doublement imbriquée détectée');
             data = Array.isArray(innerData.data) ? innerData.data : [];
           } else if (Array.isArray(innerData)) {
             // Structure: { success: true, data: [...] }
-            console.log('🔍 [DEBUG SECTEURS] Structure simple détectée');
             data = innerData;
           }
         } else if (Array.isArray(responseData)) {
           // Structure directe: [...]
-          console.log('🔍 [DEBUG SECTEURS] Structure directe détectée');
           data = responseData;
         }
       }
       
-      console.log('✅ [DEBUG SECTEURS] Données extraites:', data);
-      console.log('✅ [DEBUG SECTEURS] Nombre de secteurs:', data.length);
-      
       // Filtrer uniquement les secteurs actifs avec des filières
       const activeSecteurs = data.filter(secteur => secteur.isActive && secteur.filieres && secteur.filieres.length > 0);
-      console.log('✅ [DEBUG SECTEURS] Secteurs actifs avec filières:', activeSecteurs.length);
       
       // S'assurer que c'est un tableau
       if (!Array.isArray(data)) {

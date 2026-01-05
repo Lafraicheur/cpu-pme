@@ -213,7 +213,7 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-[#F08223] shrink-0 mt-0.5" />
                 <span className="font-inter text-sm text-gray-300">
-                  Rue de la République, Abidjan, Côte d&apos;Ivoire
+                  Résidence Fougère, Boulevard Mitterrand, Abidjan
                 </span>
               </li>
               <li className="flex items-center gap-3">
@@ -243,7 +243,7 @@ export default function Footer() {
         <div className="border-t border-gray-700 mt-8 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="font-inter text-sm text-gray-400 text-center md:text-left">
-              © {new Date().getFullYear()} Confédération Patronale Unique des
+              © {new Date().getFullYear()} CPU-PME.CI - Confédération Patronale Unique des
               PME de Côte d'Ivoire. Tous droits réservés.
             </p>
             <div className="flex gap-6">

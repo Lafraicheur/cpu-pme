@@ -6,8 +6,6 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.cpupme.com/
 
 // Debug: Log de l'URL de base
 if (typeof window !== 'undefined') {
-  console.log('🔧 [DEBUG CONFIG] API_BASE_URL:', API_BASE_URL);
-  console.log('🔧 [DEBUG CONFIG] NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
 }
 
 export const API_ENDPOINTS = {

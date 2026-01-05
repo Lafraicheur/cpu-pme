@@ -32,12 +32,8 @@ class ApiClient {
     };
 
     try {
-      console.log('🌐 [DEBUG CLIENT] URL appelée:', url);
-      console.log('🌐 [DEBUG CLIENT] Config:', { method: config.method, headers: config.headers });
-      
+     
       const response = await fetch(url, config);
-      console.log('🌐 [DEBUG CLIENT] Status:', response.status, response.statusText);
-      console.log('🌐 [DEBUG CLIENT] Headers:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         let errorData = {};
@@ -62,8 +58,6 @@ class ApiClient {
       }
 
       const data = await response.json();
-      console.log('✅ [DEBUG CLIENT] Données reçues:', data);
-      console.log('✅ [DEBUG CLIENT] Type de données:', typeof data);
       return { data };
     } catch (error) {
       if (error && typeof error === 'object' && 'message' in error) {

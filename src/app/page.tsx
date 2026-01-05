@@ -218,7 +218,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="shadow-sm transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-gray-200">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <div
@@ -246,7 +246,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-gray-200">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <div
@@ -275,7 +275,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-gray-200">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <div
@@ -301,7 +301,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-gray-200">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <div
@@ -329,7 +329,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-gray-200">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <div
@@ -355,7 +355,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm transition-shadow border-0">
+            <Card className="shadow-sm transition-shadow border-gray-200">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <div
@@ -471,7 +471,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Article 1 */}
-            <Card className="overflow-hidden shadow-sm transition-shadow border-0">
+            <Card className="overflow-hidden shadow-sm transition-shadow border-gray-200">
               <div
                 className="h-48 bg-gradient-to-br from-orange-100 to-orange-200"
                 style={{
@@ -506,7 +506,7 @@ export default function Home() {
             </Card>
 
             {/* Article 2 */}
-            <Card className="overflow-hidden shadow-sm transition-shadow border-0">
+            <Card className="overflow-hidden shadow-sm transition-shadow border-gray-200">
               <div
                 className="h-48 bg-gradient-to-br from-green-100 to-green-200"
                 style={{
@@ -542,7 +542,7 @@ export default function Home() {
             </Card>
 
             {/* Article 3 */}
-            <Card className="overflow-hidden shadow-sm transition-shadow border-0">
+            <Card className="overflow-hidden shadow-sm transition-shadow border-gray-200">
               <div
                 className="h-48 bg-gradient-to-br from-orange-100 to-orange-200"
                 style={{
@@ -598,7 +598,7 @@ export default function Home() {
             }}
             plugins={[
               Autoplay({
-                delay: 2000,
+                delay: 1000,
               }),
             ]}
             className="w-full"

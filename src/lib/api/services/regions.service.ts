@@ -44,10 +44,7 @@ export const regionsService = {
    */
   async getRegionsForSiteWeb(): Promise<Region[]> {
     try {
-      console.log('🔍 [DEBUG REGIONS] Appel API via proxy:', API_ENDPOINTS.REGIONS.FOR_SITE_WEB);
       const response = await proxyApiClient.get<any>(API_ENDPOINTS.REGIONS.FOR_SITE_WEB);
-      console.log('📦 [DEBUG REGIONS] Réponse brute:', response);
-      console.log('📦 [DEBUG REGIONS] response.data:', response.data);
       
       // La réponse a une structure imbriquée : { success: true, data: { success: true, data: Region[] } }
       let data: Region[] = [];
@@ -60,22 +57,17 @@ export const regionsService = {
           const innerData = responseData.data;
           if (innerData && typeof innerData === 'object' && 'data' in innerData) {
             // Structure: { success: true, data: { success: true, data: [...] } }
-            console.log('🔍 [DEBUG REGIONS] Structure doublement imbriquée détectée');
             data = Array.isArray(innerData.data) ? innerData.data : [];
           } else if (Array.isArray(innerData)) {
             // Structure: { success: true, data: [...] }
-            console.log('🔍 [DEBUG REGIONS] Structure simple détectée');
             data = innerData;
           }
         } else if (Array.isArray(responseData)) {
           // Structure directe: [...]
-          console.log('🔍 [DEBUG REGIONS] Structure directe détectée');
           data = responseData;
         }
       }
       
-      console.log('✅ [DEBUG REGIONS] Données extraites:', data);
-      console.log('✅ [DEBUG REGIONS] Nombre de régions:', data.length);
       
       // S'assurer que c'est un tableau
       if (!Array.isArray(data)) {

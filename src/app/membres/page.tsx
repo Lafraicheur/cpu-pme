@@ -626,14 +626,8 @@ const MembersContent = () => {
   
   // Debug: Log des données récupérées
   useEffect(() => {
-    console.log('🔍 [DEBUG PAGE] isLoadingTypeMembres:', isLoadingTypeMembres);
-    console.log('🔍 [DEBUG PAGE] errorTypeMembres:', errorTypeMembres);
-    console.log('🔍 [DEBUG PAGE] typeMembresApi:', typeMembresApi);
-    console.log('🔍 [DEBUG PAGE] typeMembresApi est un tableau?', Array.isArray(typeMembresApi));
     if (Array.isArray(typeMembresApi)) {
-      console.log('🔍 [DEBUG PAGE] Nombre de types de membres:', typeMembresApi.length);
       if (typeMembresApi.length > 0) {
-        console.log('🔍 [DEBUG PAGE] Premier type de membre:', typeMembresApi[0]);
       }
     }
   }, [typeMembresApi, isLoadingTypeMembres, errorTypeMembres]);
@@ -658,9 +652,6 @@ const MembersContent = () => {
   // Debug: Log des profils récupérés
   useEffect(() => {
     if (selectedTypeMembre) {
-      console.log('🔍 [DEBUG PROFILS] selectedTypeMembre:', selectedTypeMembre);
-      console.log('🔍 [DEBUG PROFILS] profilsApi:', profilsApi);
-      console.log('🔍 [DEBUG PROFILS] Nombre de profils:', profilsApi.length);
     }
   }, [selectedTypeMembre, profilsApi]);
 
@@ -670,8 +661,6 @@ const MembersContent = () => {
   // Debug: Log des régions récupérées
   useEffect(() => {
     if (regionsApi) {
-      console.log('🔍 [DEBUG REGIONS] regionsApi:', regionsApi);
-      console.log('🔍 [DEBUG REGIONS] Nombre de régions:', regionsApi.length);
     }
   }, [regionsApi]);
 
@@ -681,8 +670,6 @@ const MembersContent = () => {
   // Debug: Log des secteurs récupérés
   useEffect(() => {
     if (secteursApi) {
-      console.log('🔍 [DEBUG SECTEURS] secteursApi:', secteursApi);
-      console.log('🔍 [DEBUG SECTEURS] Nombre de secteurs:', secteursApi.length);
     }
   }, [secteursApi]);
 

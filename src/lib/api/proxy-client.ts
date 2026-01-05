@@ -26,11 +26,8 @@ class ProxyApiClient {
     };
 
     try {
-      console.log('🌐 [PROXY CLIENT] URL appelée:', url);
-      console.log('🌐 [PROXY CLIENT] Config:', { method: config.method, headers: config.headers });
       
       const response = await fetch(url, config);
-      console.log('🌐 [PROXY CLIENT] Status:', response.status, response.statusText);
       
       if (!response.ok) {
         let errorData = {};
@@ -54,7 +51,6 @@ class ProxyApiClient {
       }
 
       const data = await response.json();
-      console.log('✅ [PROXY CLIENT] Données reçues:', data);
       return { data };
     } catch (error) {
       if (error && typeof error === 'object' && 'message' in error) {

@@ -28,11 +28,7 @@ export const typeMembresService = {
    */
   async getTypeMembresForSiteWeb(): Promise<TypeMembre[]> {
     try {
-      console.log('🔍 [DEBUG] Appel API via proxy:', API_ENDPOINTS.TYPE_MEMBRES.FOR_SITE_WEB);
       const response = await proxyApiClient.get<any>(API_ENDPOINTS.TYPE_MEMBRES.FOR_SITE_WEB);
-      console.log('📦 [DEBUG] Réponse brute:', response);
-      console.log('📦 [DEBUG] response.data:', response.data);
-      console.log('📦 [DEBUG] Type de response.data:', typeof response.data);
       
       // La réponse a une structure imbriquée : { success: true, data: { success: true, data: TypeMembre[] } }
       // Donc les données sont dans response.data.data.data
@@ -45,43 +41,30 @@ export const typeMembresService = {
       // Et response.data.data = { success: true, data: [...] }
       // Et response.data.data.data = [...]
       
-      console.log('🔍 [DEBUG] responseData:', JSON.stringify(responseData, null, 2));
       
       // Gérer la structure imbriquée
       if (responseData && typeof responseData === 'object') {
-        console.log('🔍 [DEBUG] responseData est un objet, clés:', Object.keys(responseData));
         
         if ('data' in responseData && responseData.data) {
           const innerData = responseData.data;
-          console.log('🔍 [DEBUG] innerData (responseData.data):', JSON.stringify(innerData, null, 2));
-          console.log('🔍 [DEBUG] Type de innerData:', typeof innerData);
-          console.log('🔍 [DEBUG] innerData est un tableau?', Array.isArray(innerData));
-          console.log('🔍 [DEBUG] innerData a une propriété "data"?', innerData && typeof innerData === 'object' && 'data' in innerData);
           
           if (innerData && typeof innerData === 'object' && 'data' in innerData) {
             // Structure: { success: true, data: { success: true, data: [...] } }
-            console.log('🔍 [DEBUG] Structure doublement imbriquée détectée');
-            console.log('🔍 [DEBUG] innerData.data:', JSON.stringify(innerData.data, null, 2));
-            console.log('🔍 [DEBUG] innerData.data est un tableau?', Array.isArray(innerData.data));
             data = Array.isArray(innerData.data) ? innerData.data : [];
           } else if (Array.isArray(innerData)) {
             // Structure: { success: true, data: [...] }
-            console.log('🔍 [DEBUG] Structure simple détectée (data est un tableau)');
             data = innerData;
           } else {
             console.warn('⚠️ [DEBUG] Structure inattendue pour innerData:', innerData);
           }
         } else if (Array.isArray(responseData)) {
           // Structure directe: [...]
-          console.log('🔍 [DEBUG] Structure directe détectée (responseData est un tableau)');
           data = responseData;
         } else {
           console.warn('⚠️ [DEBUG] Structure inattendue pour responseData:', responseData);
         }
       }
       
-      console.log('✅ [DEBUG] Données extraites:', data);
-      console.log('✅ [DEBUG] Nombre de types de membres:', data.length);
       
       // S'assurer que c'est un tableau
       if (!Array.isArray(data)) {
