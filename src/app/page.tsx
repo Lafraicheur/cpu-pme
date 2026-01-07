@@ -24,6 +24,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import Link from "next/link";
+import { bannersService, Banner } from "@/lib/api/services/banners.service";
 
 // Composant de décompte animé
 function CountUp({
@@ -95,18 +96,92 @@ function CountUp({
 }
 
 export default function Home() {
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [isLoadingBanners, setIsLoadingBanners] = useState(true);
+
+  // Charger les banners au montage du composant
+  useEffect(() => {
+    const loadBanners = async () => {
+      try {
+        setIsLoadingBanners(true);
+        const data = await bannersService.getBanners({
+          position: "homepage",
+          type: "custom",
+          activeOnly: true,
+        });
+        setBanners(data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des banners:", error);
+      } finally {
+        setIsLoadingBanners(false);
+      }
+    };
+
+    loadBanners();
+  }, []);
+
   return (
     <>
       {/* Hero Section */}
       <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
-        {/* BACKGROUND IMAGE */}
+        {/* BACKGROUND IMAGE / CAROUSEL */}
         <div className="absolute inset-0">
-          <img
-            src="/logo.png"
-            alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+          {isLoadingBanners ? (
+            // Image par défaut pendant le chargement
+            <>
+              <img
+                src="/logo.png"
+                alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+            </>
+          ) : banners.length > 0 ? (
+            // Carousel des banners si disponibles
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              plugins={[
+                Autoplay({
+                  delay: 5000,
+                }),
+              ]}
+              className="w-full h-full"
+            >
+              <CarouselContent className="h-full">
+                {banners.map((banner) => (
+                  <CarouselItem key={banner.id} className="h-full">
+                    <div className="relative h-full w-full">
+                      <img
+                        src={banner.image_url || "/logo.png"}
+                        alt={banner.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {banners.length > 1 && (
+                <>
+                  <CarouselPrevious className="left-4 bg-[#F17C21] border-amber-50 text-white" />
+                  <CarouselNext className="right-4 bg-[#F17C21] border-amber-50 text-white" />
+                </>
+              )}
+            </Carousel>
+          ) : (
+            // Image par défaut si aucun banner
+            <>
+              <img
+                src="/logo.png"
+                alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+            </>
+          )}
         </div>
 
         {/* CONTENU */}

@@ -14,10 +14,10 @@ import {
   Clock,
   ArrowRight,
   ImageOff,
+  FileText,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
-import Image from "next/image";
-import type { StaticImageData } from "next/image";
 
 interface NewsItem {
   id: string;
@@ -27,16 +27,20 @@ interface NewsItem {
   created_at: number;
   auteur: string;
   couverture: {
-    url: string;
+    url: string | null;
   };
-  image?: StaticImageData | null;
+  image?: string | null;
+  type?: string;
+  status?: string;
+  fileUrl?: string | null;
 }
 
 interface NewsDetailClientProps {
   newsItem: NewsItem;
-  newsImage: StaticImageData | null;
+  newsImage: string | null;
   relatedNews: NewsItem[];
   categories: Array<{ id: string; name: string }>;
+  isPublication?: boolean;
 }
 
 export default function NewsDetailClient({
@@ -44,6 +48,7 @@ export default function NewsDetailClient({
   newsImage,
   relatedNews,
   categories,
+  isPublication = false,
 }: NewsDetailClientProps) {
   const router = useRouter();
 
@@ -61,6 +66,9 @@ export default function NewsDetailClient({
     return category ? category.name : categoryId;
   };
 
+  // Détecter si le fichier est une image
+  const isImageFile = newsItem.fileUrl && /\.(jpg|jpeg|png|gif|webp)$/i.test(newsItem.fileUrl);
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Barre de navigation sticky */}
@@ -68,48 +76,150 @@ export default function NewsDetailClient({
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between max-w-7xl mx-auto">
             <Button
-              onClick={() => router.push("/actualites")}
+              onClick={() => router.push(isPublication ? "/actualites?tab=publications" : "/actualites")}
               variant="ghost"
               size="sm"
               className="hover:bg-slate-100 rounded-full"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour aux actualités
+              {isPublication ? "Retour aux publications" : "Retour aux actualités"}
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Hero Image pleine largeur */}
-      <section className="relative h-[400px] md:h-[550px] bg-slate-900">
-        {newsImage ? (
-          <Image
-            src={newsImage}
-            alt={newsItem.titre}
-            fill
-            className="object-cover opacity-90"
-            priority
-          />
-        ) : (
-          <div className="w-full h-full bg-slate-300 flex flex-col items-center justify-center text-slate-600">
-            <ImageOff className="h-32 w-32 mb-4 opacity-50" />
-            <p className="text-2xl font-medium">Image non disponible</p>
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+      {/* Hero Section - Différent pour actualités et publications */}
+      {isPublication ? (
+        isImageFile ? (
+          // Hero pour publications avec image
+          <section className="relative h-[400px] md:h-[550px] bg-slate-900">
+            {newsItem.fileUrl ? (
+              <>
+                <img
+                  src={newsItem.fileUrl}
+                  alt={newsItem.titre}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+              </>
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                <ImageOff className="h-32 w-32 text-primary/40" />
+              </div>
+            )}
 
-        {/* Contenu du hero */}
-        <div className="absolute bottom-0 left-0 right-0 pb-12">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <Badge className="mb-4 px-4 py-1.5 text-sm font-semibold bg-primary text-white shadow-lg">
-              {getCategoryName(newsItem.categorie)}
-            </Badge>
-            <h1 className="text-xl md:text-2xl lg:text-6xl font-heading font-bold mb-4 leading-tight text-white">
-              {newsItem.titre}
-            </h1>
+            <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 text-white">
+              <div className="container mx-auto max-w-4xl">
+                <Badge className="mb-4 px-4 py-1.5 text-sm font-semibold bg-white text-slate-900 shadow-lg">
+                  {getCategoryName(newsItem.categorie)}
+                </Badge>
+                <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4 leading-tight">
+                  {newsItem.titre}
+                </h1>
+                <div className="flex flex-wrap items-center gap-4 text-white/90">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      {formatDate(newsItem.created_at)}
+                    </span>
+                  </div>
+                  {newsItem.auteur && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">Par {newsItem.auteur}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : (
+          // Hero pour publications (avec icône PDF/document)
+          <section className="relative bg-gradient-to-br from-red-50 via-orange-50 to-amber-50 py-16">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                {/* Icône PDF */}
+                <div className="relative flex-shrink-0">
+                  <div className="w-48 h-64 bg-white rounded-lg shadow-2xl flex items-center justify-center">
+                    <FileText className="h-32 w-32 text-red-600" strokeWidth={1.5} />
+                  </div>
+                  <div className="absolute -bottom-3 -right-3 bg-red-600 text-white text-sm font-bold px-4 py-2 rounded shadow-lg">
+                    PDF
+                  </div>
+                </div>
+
+              {/* Informations */}
+              <div className="flex-1">
+                <Badge className="mb-4 px-4 py-1.5 text-sm font-semibold bg-primary text-white shadow-lg">
+                  {getCategoryName(newsItem.categorie)}
+                </Badge>
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4 leading-tight text-slate-900">
+                  {newsItem.titre}
+                </h1>
+                <div className="flex items-center gap-4 text-sm text-slate-600 mb-6">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>{formatDate(newsItem.created_at)}</span>
+                  </div>
+                  {newsItem.type && (
+                    <Badge variant="outline" className="text-xs">
+                      {newsItem.type.toUpperCase()}
+                    </Badge>
+                  )}
+                  {newsItem.status && (
+                    <Badge variant="outline" className="text-xs">
+                      {newsItem.status}
+                    </Badge>
+                  )}
+                </div>
+                {newsItem.fileUrl && !isImageFile && (
+                  <Button
+                    size="lg"
+                    className="w-full md:w-auto"
+                    onClick={() => {
+                      if (newsItem.fileUrl) {
+                        window.open(newsItem.fileUrl, "_blank");
+                      }
+                    }}
+                  >
+                    <Download className="mr-2 h-5 w-5" />
+                    Télécharger le document
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+        )
+      ) : (
+        // Hero pour actualités (avec image)
+        <section className="relative h-[400px] md:h-[550px] bg-slate-900">
+          {newsImage ? (
+            <img
+              src={newsImage}
+              alt={newsItem.titre}
+              className="w-full h-full object-cover opacity-90"
+            />
+          ) : (
+            <div className="w-full h-full bg-slate-300 flex flex-col items-center justify-center text-slate-600">
+              <ImageOff className="h-32 w-32 mb-4 opacity-50" />
+              <p className="text-2xl font-medium">Image non disponible</p>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+
+          {/* Contenu du hero */}
+          <div className="absolute bottom-0 left-0 right-0 pb-12">
+            <div className="container mx-auto px-4 max-w-4xl">
+              {/* <Badge className="mb-4 px-4 py-1.5 text-sm font-semibold bg-primary text-white shadow-lg">
+                {getCategoryName(newsItem.categorie)}
+              </Badge> */}
+              <h1 className="text-xl md:text-2xl lg:text-6xl font-heading font-bold mb-4 leading-tight text-white">
+                {newsItem.titre}
+              </h1>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Contenu principal */}
       <article className="py-12">
@@ -160,7 +270,7 @@ export default function NewsDetailClient({
         </div>
       </article>
 
-      {/* Actualités similaires */}
+      {/* Actualités/Publications similaires */}
       {relatedNews.length > 0 && (
         <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
           <div className="container mx-auto px-4">
@@ -169,7 +279,7 @@ export default function NewsDetailClient({
               <div className="flex items-center gap-3 mb-12">
                 <div className="flex-shrink-0 w-1 h-10 bg-primary rounded-full"></div>
                 <h2 className="text-3xl md:text-4xl font-heading font-bold tracking-tight">
-                  Articles similaires
+                  {isPublication ? "Publications similaires" : "Articles similaires"}
                 </h2>
               </div>
 
@@ -185,11 +295,10 @@ export default function NewsDetailClient({
                   >
                     <div className="relative h-56 overflow-hidden">
                       {news.image ? (
-                        <Image
+                        <img
                           src={news.image}
                           alt={news.titre}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-700"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                       ) : (
                         <div className="w-full h-full bg-slate-200 flex flex-col items-center justify-center text-slate-500">
@@ -238,10 +347,10 @@ export default function NewsDetailClient({
                 <Button
                   variant="outline"
                   size="lg"
-                  onClick={() => router.push("/actualites")}
+                  onClick={() => router.push(isPublication ? "/actualites?tab=publications" : "/actualites")}
                   className="rounded-full border-2 hover:bg-primary hover:text-white hover:border-primary"
                 >
-                  Voir toutes les actualités
+                  {isPublication ? "Voir toutes les publications" : "Voir toutes les actualités"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>

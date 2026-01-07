@@ -67,9 +67,7 @@ function HeaderContent() {
   const searchParams = useSearchParams();
 
   // Debug: afficher le pathname
-  useEffect(() => {
-    console.log("Current pathname:", pathname);
-  }, [pathname]);
+  useEffect(() => {}, [pathname]);
 
   // Nettoyer le timeout au démontage
   useEffect(() => {
@@ -311,7 +309,7 @@ function HeaderContent() {
                   <LogIn className="w-3.5 h-3.5" />
                   Connexion
                 </Button>
-                <Button 
+                <Button
                   onClick={() => router.push("/membres?tab=adhesion")}
                   className="bg-[#F08223] text-white hover:bg-opacity-90 w-full font-inter text-xs font-semibold px-3 py-1.5 rounded-sm transition-all shadow-sm hover:shadow-md cursor-pointer"
                 >
@@ -510,7 +508,7 @@ function HeaderContent() {
                 <LogIn className="w-3.5 h-3.5" />
                 Connexion
               </Button>
-              <Button 
+              <Button
                 onClick={() => {
                   router.push("/membres?tab=adhesion");
                   setIsDrawerOpen(false);

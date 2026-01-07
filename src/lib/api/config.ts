@@ -32,6 +32,20 @@ export const API_ENDPOINTS = {
     FOR_SITE_WEB: '/secteurs/for-site-web',
     GET: (id: string) => `/secteurs/${id}`,
   },
+  // Actualités
+  ACTUALITIES: {
+    LIST: '/actualities/for-site-web',
+    GET: (id: string) => `/actualities/${id}`,
+  },
+  // Publications
+  PUBLICATIONS: {
+    LIST: '/publications/for-site-web',
+    GET: (id: string) => `/publications/${id}`,
+  },
+  // Banners
+  BANNERS: {
+    FOR_SITE_WEB: '/banners/for-site-web',
+  },
 };
 
 export { API_BASE_URL };

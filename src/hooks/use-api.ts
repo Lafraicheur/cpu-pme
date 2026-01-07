@@ -6,6 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import { typeMembresService, TypeMembre, Profil } from '@/lib/api/services/type-membres.service';
 import { regionsService, Region } from '@/lib/api/services/regions.service';
 import { secteursService, Secteur, Filiere, SousFiliere, Activite } from '@/lib/api/services/secteurs.service';
+import { actualitiesService, Actuality, GetActualitiesParams } from '@/lib/api/services/actualities.service';
+import { publicationsService, Publication, GetPublicationsParams } from '@/lib/api/services/publications.service';
 
 /**
  * Hook pour récupérer tous les types de membres pour le site web
@@ -69,6 +71,60 @@ export function useSecteursForSiteWeb() {
   });
 }
 
+/**
+ * Hook pour récupérer toutes les actualités
+ * @param params - Paramètres de filtrage optionnels (category, featuredOnly)
+ */
+export function useActualities(params?: GetActualitiesParams) {
+  return useQuery<Actuality[], Error>({
+    queryKey: ['actualities', params],
+    queryFn: () => actualitiesService.getActualities(params),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
+}
+
+/**
+ * Hook pour récupérer une actualité par son ID
+ * @param id - ID de l'actualité
+ */
+export function useActuality(id: string) {
+  return useQuery<Actuality | null, Error>({
+    queryKey: ['actuality', id],
+    queryFn: () => actualitiesService.getActualityById(id),
+    enabled: !!id, // Ne récupère que si id est fourni
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+}
+
+/**
+ * Hook pour récupérer toutes les publications
+ * @param params - Paramètres de filtrage optionnels (category, type, status)
+ */
+export function usePublications(params?: GetPublicationsParams) {
+  return useQuery<Publication[], Error>({
+    queryKey: ['publications', params],
+    queryFn: () => publicationsService.getPublications(params),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
+}
+
+/**
+ * Hook pour récupérer une publication par son ID
+ * @param id - ID de la publication
+ */
+export function usePublication(id: string) {
+  return useQuery<Publication | null, Error>({
+    queryKey: ['publication', id],
+    queryFn: () => publicationsService.getPublicationById(id),
+    enabled: !!id, // Ne récupère que si id est fourni
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+}
+
 // Export des types pour utilisation dans les composants
-export type { TypeMembre, Profil, Region, Secteur, Filiere, SousFiliere, Activite };
+export type { TypeMembre, Profil, Region, Secteur, Filiere, SousFiliere, Activite, Actuality, Publication };
 
