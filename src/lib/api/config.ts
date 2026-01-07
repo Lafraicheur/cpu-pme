@@ -2,49 +2,57 @@
  * Configuration de l'API
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.cpupme.com/api';
+// Utiliser les routes proxy Next.js côté client pour éviter les problèmes CORS
+// En SSR (server-side), appeler directement l'API externe
+const API_BASE_URL = typeof window !== 'undefined'
+  ? '/api/proxy' // Côté client : utiliser les routes proxy
+  : (process.env.NEXT_PUBLIC_API_URL || 'https://api.cpupme.com/api'); // Côté serveur : API externe
 
 // Debug: Log de l'URL de base
 if (typeof window !== 'undefined') {
+  console.log('🔧 API Base URL (client):', API_BASE_URL);
 }
+
+// Les endpoints changent selon qu'on est côté client ou serveur
+const isClient = typeof window !== 'undefined';
 
 export const API_ENDPOINTS = {
   // Types de membres
   TYPE_MEMBRES: {
-    LIST: '/type-membres',
-    FOR_SITE_WEB: '/type-membres/for-site-web',
-    GET: (id: string) => `/type-membres/${id}`,
+    LIST: isClient ? '/type-membres' : '/type-membres',
+    FOR_SITE_WEB: isClient ? '/type-membres/for-site-web' : '/type-membres/for-site-web',
+    GET: (id: string) => isClient ? `/type-membres/${id}` : `/type-membres/${id}`,
   },
   // Profils
   PROFILS: {
-    LIST: '/profils',
-    GET: (id: string) => `/profils/${id}`,
+    LIST: isClient ? '/profils' : '/profils',
+    GET: (id: string) => isClient ? `/profils/${id}` : `/profils/${id}`,
   },
   // Régions
   REGIONS: {
-    LIST: '/regions',
-    FOR_SITE_WEB: '/regions/for-site-web',
-    GET: (id: string) => `/regions/${id}`,
+    LIST: isClient ? '/regions' : '/regions',
+    FOR_SITE_WEB: isClient ? '/regions/for-site-web' : '/regions/for-site-web',
+    GET: (id: string) => isClient ? `/regions/${id}` : `/regions/${id}`,
   },
   // Secteurs
   SECTEURS: {
-    LIST: '/secteurs',
-    FOR_SITE_WEB: '/secteurs/for-site-web',
-    GET: (id: string) => `/secteurs/${id}`,
+    LIST: isClient ? '/secteurs' : '/secteurs',
+    FOR_SITE_WEB: isClient ? '/secteurs/for-site-web' : '/secteurs/for-site-web',
+    GET: (id: string) => isClient ? `/secteurs/${id}` : `/secteurs/${id}`,
   },
   // Actualités
   ACTUALITIES: {
-    LIST: '/actualities/for-site-web',
-    GET: (id: string) => `/actualities/${id}`,
+    LIST: isClient ? '/actualities' : '/actualities/for-site-web',
+    GET: (id: string) => isClient ? `/actualities/${id}` : `/actualities/${id}`,
   },
   // Publications
   PUBLICATIONS: {
-    LIST: '/publications/for-site-web',
-    GET: (id: string) => `/publications/${id}`,
+    LIST: isClient ? '/publications' : '/publications/for-site-web',
+    GET: (id: string) => isClient ? `/publications/${id}` : `/publications/${id}`,
   },
   // Banners
   BANNERS: {
-    FOR_SITE_WEB: '/banners/for-site-web',
+    FOR_SITE_WEB: isClient ? '/banners' : '/banners/for-site-web',
   },
 };
 
