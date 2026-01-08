@@ -70,6 +70,7 @@ export default function NewsDetailPage() {
       couverture: {
         url: actualityData.imageUrl,
       },
+      other_images: actualityData.other_images_url || [],
     };
 
     // Actualités similaires
@@ -115,6 +116,7 @@ export default function NewsDetailPage() {
       type: publicationData.type,
       status: publicationData.status,
       fileUrl: publicationData.fileUrl,
+      otherFiles: publicationData.otherFilesUrl || [],
     };
 
     // Publications similaires

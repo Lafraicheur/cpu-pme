@@ -26,6 +26,33 @@ function fixFileUrl(url: string | null): string | null {
   return url;
 }
 
+/**
+ * Parse et corrige un tableau d'URLs de fichiers (peut être une chaîne JSON ou un tableau)
+ */
+function parseAndFixFileUrls(data: string | string[] | null): string[] {
+  if (!data) return [];
+
+  let urls: string[] = [];
+
+  // Si c'est déjà un tableau
+  if (Array.isArray(data)) {
+    urls = data;
+  }
+  // Si c'est une chaîne JSON
+  else if (typeof data === 'string') {
+    try {
+      const parsed = JSON.parse(data);
+      urls = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      // Si ce n'est pas du JSON valide, essayer de splitter par virgule
+      urls = data.split(',').map(url => url.trim()).filter(url => url.length > 0);
+    }
+  }
+
+  // Corriger toutes les URLs
+  return urls.map(url => fixFileUrl(url)).filter((url): url is string => url !== null);
+}
+
 export interface Publication {
   id: string;
   title: string;
@@ -35,7 +62,7 @@ export interface Publication {
   status: string;
   publicationDate: string;
   fileUrl: string | null;
-  otherFilesUrl: string | null;
+  otherFilesUrl: string[];
   linksUrl: string | null;
   createdById: string | null;
   createdAt: string;
@@ -117,7 +144,7 @@ export const publicationsService = {
       const fixedData = data.map(publication => ({
         ...publication,
         fileUrl: fixFileUrl(publication.fileUrl),
-        otherFilesUrl: fixFileUrl(publication.otherFilesUrl),
+        otherFilesUrl: parseAndFixFileUrls(publication.otherFilesUrl as any),
         linksUrl: fixFileUrl(publication.linksUrl),
       }));
 
@@ -171,7 +198,7 @@ export const publicationsService = {
         return {
           ...publication,
           fileUrl: fixFileUrl(publication.fileUrl),
-          otherFilesUrl: fixFileUrl(publication.otherFilesUrl),
+          otherFilesUrl: parseAndFixFileUrls(publication.otherFilesUrl as any),
           linksUrl: fixFileUrl(publication.linksUrl),
         };
       }

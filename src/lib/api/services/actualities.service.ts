@@ -26,6 +26,33 @@ function fixImageUrl(url: string | null): string | null {
   return url;
 }
 
+/**
+ * Parse et corrige un tableau d'URLs (peut être une chaîne JSON ou un tableau)
+ */
+function parseAndFixImageUrls(data: string | string[] | null): string[] {
+  if (!data) return [];
+
+  let urls: string[] = [];
+
+  // Si c'est déjà un tableau
+  if (Array.isArray(data)) {
+    urls = data;
+  }
+  // Si c'est une chaîne JSON
+  else if (typeof data === 'string') {
+    try {
+      const parsed = JSON.parse(data);
+      urls = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      // Si ce n'est pas du JSON valide, essayer de splitter par virgule
+      urls = data.split(',').map(url => url.trim()).filter(url => url.length > 0);
+    }
+  }
+
+  // Corriger toutes les URLs
+  return urls.map(url => fixImageUrl(url)).filter((url): url is string => url !== null);
+}
+
 export interface Actuality {
   id: string;
   title: string;
@@ -34,7 +61,7 @@ export interface Actuality {
   publicationDate: string | null;
   isFeatured: boolean;
   imageUrl: string | null;
-  other_images_url: string | null;
+  other_images_url: string[];
   createdById: string | null;
   createdAt: string;
   updatedAt: string;
@@ -110,7 +137,7 @@ export const actualitiesService = {
       const fixedData = data.map(actuality => ({
         ...actuality,
         imageUrl: fixImageUrl(actuality.imageUrl),
-        other_images_url: fixImageUrl(actuality.other_images_url),
+        other_images_url: parseAndFixImageUrls(actuality.other_images_url as any),
       }));
 
       return fixedData;
@@ -163,7 +190,7 @@ export const actualitiesService = {
         return {
           ...actuality,
           imageUrl: fixImageUrl(actuality.imageUrl),
-          other_images_url: fixImageUrl(actuality.other_images_url),
+          other_images_url: parseAndFixImageUrls(actuality.other_images_url as any),
         };
       }
 

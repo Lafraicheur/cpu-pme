@@ -33,6 +33,8 @@ interface NewsItem {
   type?: string;
   status?: string;
   fileUrl?: string | null;
+  other_images?: string[];
+  otherFiles?: string[];
 }
 
 interface NewsDetailClientProps {
@@ -262,7 +264,85 @@ export default function NewsDetailClient({
                     <p className="text-lg leading-relaxed text-slate-700 whitespace-pre-line first-letter:text-5xl first-letter:font-bold first-letter:text-primary first-letter:mr-1 first-letter:float-left first-letter:leading-none first-letter:mt-1">
                       {newsItem.description}
                     </p>
-                  </div>                
+                  </div>
+
+                  {/* Galerie d'images supplémentaires pour les actualités */}
+                  {!isPublication && newsItem.other_images && newsItem.other_images.length > 0 && (
+                    <div className="mt-8 pt-8 border-t border-slate-200">
+                      <h3 className="text-2xl font-heading font-bold mb-6 text-slate-900">
+                        Galerie d'images
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {newsItem.other_images.map((imageUrl, index) => (
+                          <div
+                            key={index}
+                            className="relative h-64 rounded-xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-shadow"
+                            onClick={() => window.open(imageUrl, "_blank")}
+                          >
+                            <img
+                              src={imageUrl}
+                              alt={`Image ${index + 1}`}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 rounded-full p-3">
+                                <ImageOff className="h-6 w-6 text-slate-900" />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Section fichiers associés pour les publications */}
+                  {isPublication && newsItem.otherFiles && newsItem.otherFiles.length > 0 && (
+                    <div className="mt-8 pt-8 border-t border-slate-200">
+                      <h3 className="text-2xl font-heading font-bold mb-6 text-slate-900">
+                        Fichiers associés
+                      </h3>
+                      <div className="space-y-3">
+                        {newsItem.otherFiles.map((fileUrl, index) => {
+                          const fileName = fileUrl.split('/').pop() || `Fichier ${index + 1}`;
+                          const extension = fileName.split('.').pop()?.toUpperCase() || 'FILE';
+
+                          return (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer group"
+                              onClick={() => window.open(fileUrl, "_blank")}
+                            >
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                                  <FileText className="h-6 w-6 text-primary" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-slate-900 truncate group-hover:text-primary transition-colors">
+                                    {fileName}
+                                  </p>
+                                  <p className="text-sm text-slate-500">
+                                    {extension}
+                                  </p>
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="flex-shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(fileUrl, "_blank");
+                                }}
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Télécharger
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
