@@ -1358,13 +1358,20 @@ const MembersContent = () => {
         // Trouver l'ID de la commune sélectionnée
         let communeId = '';
         for (const region of regionsApi) {
-          const foundCommune = region.communes?.find(
-            (c: any) => c.name === siegeCommune
-          );
-          if (foundCommune) {
-            communeId = foundCommune.id;
-            break;
+          // Itérer sur les villes de chaque région
+          if (region.villes) {
+            for (const ville of region.villes) {
+              // Chercher la commune dans les communes de chaque ville
+              const foundCommune = ville.communes?.find(
+                (c: any) => c.name === siegeCommune
+              );
+              if (foundCommune) {
+                communeId = foundCommune.id;
+                break;
+              }
+            }
           }
+          if (communeId) break;
         }
 
         if (communeId) {

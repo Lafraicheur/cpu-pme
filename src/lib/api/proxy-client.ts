@@ -18,7 +18,7 @@ class ProxyApiClient {
     const url = `/api/proxy${endpoint}`;
     
     const method = (options.method || 'GET').toUpperCase();
-    const baseHeaders: HeadersInit = { ...options.headers };
+    const baseHeaders: Record<string, string> = { ...(options.headers as Record<string, string>) };
     // Éviter d'imposer Content-Type sur GET sans corps (limite certains serveurs / évite preflight inutiles)
     if (method !== 'GET' && method !== 'HEAD') {
       baseHeaders['Content-Type'] = baseHeaders['Content-Type'] || 'application/json';

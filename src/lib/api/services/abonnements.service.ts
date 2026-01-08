@@ -25,7 +25,7 @@ export interface Abonnement {
 export const abonnementsService = {
   // Récupérer tous les abonnements pour le site web
   getAllForSiteWeb: async (): Promise<Abonnement[]> => {
-    const response = await proxyApiClient.get('/abonnements/for-site-web');
+    const response = await proxyApiClient.get<any>('/abonnements/for-site-web');
     // L'API retourne { success: true, data: { success: true, data: [...] } }
     if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
       return response.data.data.data;
@@ -35,7 +35,7 @@ export const abonnementsService = {
 
   // Récupérer tous les abonnements
   getAll: async (): Promise<Abonnement[]> => {
-    const response = await proxyApiClient.get('/abonnements');
+    const response = await proxyApiClient.get<any>('/abonnements');
     if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
       return response.data.data.data;
     }
@@ -44,7 +44,7 @@ export const abonnementsService = {
 
   // Récupérer un abonnement par ID
   getById: async (id: string): Promise<Abonnement> => {
-    const response = await proxyApiClient.get(`/abonnements/${id}`);
+    const response = await proxyApiClient.get<Abonnement>(`/abonnements/${id}`);
     return response.data;
   },
 };
