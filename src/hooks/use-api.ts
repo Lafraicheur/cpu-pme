@@ -8,6 +8,7 @@ import { regionsService, Region } from '@/lib/api/services/regions.service';
 import { secteursService, Secteur, Filiere, SousFiliere, Activite } from '@/lib/api/services/secteurs.service';
 import { actualitiesService, Actuality, GetActualitiesParams } from '@/lib/api/services/actualities.service';
 import { publicationsService, Publication, GetPublicationsParams } from '@/lib/api/services/publications.service';
+import { abonnementsService, Abonnement } from '@/lib/api/services/abonnements.service';
 
 /**
  * Hook pour récupérer tous les types de membres pour le site web
@@ -125,6 +126,30 @@ export function usePublication(id: string) {
   });
 }
 
+/**
+ * Hook pour récupérer tous les abonnements pour le site web
+ */
+export function useAbonnementsForSiteWeb() {
+  return useQuery<Abonnement[], Error>({
+    queryKey: ['abonnements', 'for-site-web'],
+    queryFn: () => abonnementsService.getAllForSiteWeb(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
+}
+
+/**
+ * Hook pour récupérer tous les abonnements
+ */
+export function useAbonnements() {
+  return useQuery<Abonnement[], Error>({
+    queryKey: ['abonnements'],
+    queryFn: () => abonnementsService.getAll(),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+}
+
 // Export des types pour utilisation dans les composants
-export type { TypeMembre, Profil, Region, Secteur, Filiere, SousFiliere, Activite, Actuality, Publication };
+export type { TypeMembre, Profil, Region, Secteur, Filiere, SousFiliere, Activite, Actuality, Publication, Abonnement };
 

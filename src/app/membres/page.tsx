@@ -88,7 +88,8 @@ import {
 import { secteursData } from "../secteurs/data";
 import { sectorToMemberMapping } from "../secteurs/sectorMapping";
 import { useToast } from "@/components/ui/use-toast";
-import { useTypeMembresForSiteWeb, useRegionsForSiteWeb, useSecteursForSiteWeb } from "@/hooks/use-api";
+import { useTypeMembresForSiteWeb, useRegionsForSiteWeb, useSecteursForSiteWeb, useAbonnementsForSiteWeb } from "@/hooks/use-api";
+import { quartiersService } from "@/lib/api/services/quartiers.service";
 import {
   IconBTP,
   IconCommerce,
@@ -666,6 +667,9 @@ const MembersContent = () => {
 
   // Récupérer les secteurs depuis l'API
   const { data: secteursApi, isLoading: isLoadingSecteurs, error: errorSecteurs } = useSecteursForSiteWeb();
+  
+  // Récupérer les abonnements depuis l'API
+  const { data: abonnementsApi, isLoading: isLoadingAbonnements, error: errorAbonnements } = useAbonnementsForSiteWeb();
   
   // Debug: Log des secteurs récupérés
   useEffect(() => {
@@ -1345,26 +1349,75 @@ const MembersContent = () => {
     return () => clearInterval(interval);
   }, [recentMembers.length]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Demande envoyée !",
-      description:
-        "Nous avons bien reçu votre demande d'adhésion. Notre équipe vous contactera sous 48h.",
-    });
-    // Réinitialiser le formulaire
-    setSelectedAdhesionType("");
-    setSelectedSubProfile("");
-    setIsCompetitionSubcontractor(null);
-    setHasFinancingProject(null);
-    setSelectedBadge("");
-    setSelectedMainSector("");
-    setSelectedFiliere("");
-    setFormName("");
-    setFormPosition("");
-    setFormEmail("");
-    setFormPhone("");
-    setFormMessage("");
+    
+    try {
+      // Si un village/quartier est renseigné et qu'une commune est sélectionnée, créer le quartier
+      if (siegeVillage && siegeCommune && regionsApi) {
+        // Trouver l'ID de la commune sélectionnée
+        let communeId = '';
+        for (const region of regionsApi) {
+          const foundCommune = region.communes?.find(
+            (c: any) => c.name === siegeCommune
+          );
+          if (foundCommune) {
+            communeId = foundCommune.id;
+            break;
+          }
+        }
+
+        if (communeId) {
+          try {
+            // Créer le quartier/village via l'API
+            await quartiersService.create({
+              commune_id: communeId,
+              name: siegeVillage,
+              type: 'quartier', // Par défaut, on peut adapter selon le contexte
+              isActive: true,
+            });
+            
+            console.log('Quartier/Village créé avec succès:', siegeVillage);
+          } catch (error) {
+            console.error('Erreur lors de la création du quartier:', error);
+            // On continue même si la création du quartier échoue
+            // Car l'utilisateur a quand même rempli le formulaire
+          }
+        }
+      }
+
+      // Afficher le toast de succès
+      toast({
+        title: "Demande envoyée !",
+        description:
+          "Nous avons bien reçu votre demande d'adhésion. Notre équipe vous contactera sous 48h.",
+      });
+
+      // Réinitialiser le formulaire
+      setSelectedAdhesionType("");
+      setSelectedSubProfile("");
+      setIsCompetitionSubcontractor(null);
+      setHasFinancingProject(null);
+      setSelectedBadge("");
+      setSelectedMainSector("");
+      setSelectedFiliere("");
+      setFormName("");
+      setFormPosition("");
+      setFormEmail("");
+      setFormPhone("");
+      setFormMessage("");
+      setSiegeCommune("");
+      setSiegeRegion("");
+      setSiegeVille("");
+      setSiegeVillage("");
+    } catch (error) {
+      console.error('Erreur lors de la soumission:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'envoi de votre demande. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getBenefitIcon = (icon: string) => {
@@ -1736,19 +1789,34 @@ const MembersContent = () => {
       return [];
     }
     
-    // Cas spécial : Si associatif avec sous-profil "federation_filiere", seul "Abonnement Fédération" est disponible
-    if (selectedAdhesionType === "associatif" && selectedSubProfile === "federation_filiere") {
-      return membershipPlans.filter((plan) => plan.name === "Abonnement Fédération");
+    // Utiliser uniquement les données de l'API et vérifier que c'est un tableau
+    if (!abonnementsApi || !Array.isArray(abonnementsApi) || abonnementsApi.length === 0) {
+      return [];
     }
     
-    return membershipPlans.filter((plan) => {
-      // Si le plan n'a pas de memberTypes défini, on le garde pour compatibilité
-      if (!plan.memberTypes || plan.memberTypes.length === 0) {
-        return false;
-      }
-      // Vérifier si le type de membre sélectionné est dans la liste des types autorisés
-      return plan.memberTypes.includes(selectedAdhesionType);
-      });
+    // Trouver l'ID du type de membre sélectionné
+    const selectedTypeMembreId = selectedTypeMembre?.id;
+    
+    if (!selectedTypeMembreId) {
+      return [];
+    }
+    
+    // Filtrer les abonnements par typeMembreId
+    const filteredPlans = abonnementsApi.filter((plan) => {
+      return plan.isActive && plan.typeMembreId === selectedTypeMembreId;
+    });
+    
+    // Transformer les abonnements API en format compatible avec le Select
+    return filteredPlans.map((plan) => ({
+      id: plan.id,
+      name: plan.libelle,
+      description: plan.description,
+      priceYearly: parseFloat(plan.tarifAnnuel),
+      priceMonthly: parseFloat(plan.tarifMensuel),
+      surDevis: plan.surDevis,
+      period: plan.surDevis ? 'Sur devis' : 'FCFA',
+      popular: plan.popular || false,
+    }));
   };
 
   return (
@@ -4360,6 +4428,22 @@ const MembersContent = () => {
                         {/* Afficher les champs de localisation : toujours pour non-institutionnel, conditionnellement pour institutionnel */}
                         {(selectedAdhesionType !== "institutionnel" || hasBureauCI) && (
                           <div className="space-y-5">
+                            {/* Champ Village/Quartier en premier - indépendant */}
+                            <div className="space-y-3 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-100">
+                              <Label htmlFor="siegeVillage" className="text-sm font-semibold text-gray-700">Village / Quartier</Label>
+                              <Input
+                                id="siegeVillage"
+                                value={siegeVillage}
+                                onChange={(e) => setSiegeVillage(e.target.value)}
+                                placeholder="Ex: Abobo-Gare, Cocody-Angré, Plateau..."
+                                className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900 bg-white"
+                              />
+                              <p className="text-sm text-gray-600 flex items-center gap-2">
+                                <Info className="h-4 w-4 text-cpu-orange" />
+                                Vous pouvez renseigner ce champ avant ou indépendamment de la commune
+                              </p>
+                            </div>
+
                             {/* Ligne 1: Commune et Région */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-3 relative isolate">
@@ -4369,7 +4453,6 @@ const MembersContent = () => {
                                 onValueChange={(value) => {
                                   setSiegeCommune(value);
                                   setSiegeVille(""); // Réinitialiser la ville
-                                  setSiegeVillage(""); // Réinitialiser le village
                                 }}
                                 required
                                 disabled={isLoadingRegions}
@@ -4425,7 +4508,6 @@ const MembersContent = () => {
                                   setSiegeRegion(value);
                                   setSiegeCommune(""); // Réinitialiser la commune
                                   setSiegeVille(""); // Réinitialiser la ville
-                                  setSiegeVillage(""); // Réinitialiser le village
                                 }}
                                 required
                                 disabled={!!siegeCommune || isLoadingRegions}
@@ -4470,44 +4552,27 @@ const MembersContent = () => {
                             </div>
                           </div>
 
-                          {/* Ligne 2: Ville et Village/Quartier (conditionnels) */}
+                          {/* Ligne 2: Ville (conditionnel après sélection de commune) */}
                           {siegeCommune && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <div className="space-y-3">
-                                <Label htmlFor="siegeVille" className="text-sm font-semibold text-gray-700">Ville *</Label>
-                                <Select
-                                  value={siegeVille}
-                                  onValueChange={setSiegeVille}
-                                  required
-                                >
-                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl bg-white text-gray-900 font-medium">
-                                    <SelectValue placeholder="Sélectionnez une ville" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {getVillesForCommune(siegeRegion, siegeCommune).map((ville) => (
-                                      <SelectItem key={ville} value={ville}>
-                                        {ville}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
                             <div className="space-y-3">
-                                <Label htmlFor="siegeVillage" className="text-sm font-semibold text-gray-700">Village / Quartier</Label>
-                                <Input
-                                  id="siegeVillage"
-                                  value={siegeVillage}
-                                  onChange={(e) => setSiegeVillage(e.target.value)}
-                                  placeholder="Ex: Abobo-Gare, Cocody-Angré..."
-                                  className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900"
-                                />
-                                <p className="text-sm text-gray-600 flex items-center gap-2">
-                                  <Info className="h-4 w-4 text-cpu-orange" />
-                                  Précisez le quartier ou le village si possible
-                                </p>
-                              </div>
-                            </div>
+                              <Label htmlFor="siegeVille" className="text-sm font-semibold text-gray-700">Ville *</Label>
+                              <Select
+                                value={siegeVille}
+                                onValueChange={setSiegeVille}
+                                required
+                              >
+                                <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl bg-white text-gray-900 font-medium">
+                                  <SelectValue placeholder="Sélectionnez une ville" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {getVillesForCommune(siegeRegion, siegeCommune).map((ville) => (
+                                    <SelectItem key={ville} value={ville}>
+                                      {ville}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                           )}
                           </div>
                         )}
@@ -4612,9 +4677,11 @@ const MembersContent = () => {
                             <SelectContent>
                               {getAvailablePlans().length > 0 ? (
                                 getAvailablePlans().map((plan) => (
-                                <SelectItem key={plan.name} value={plan.name}>
-                                    {plan.name} - {plan.priceYearly.toLocaleString("fr-FR")} {plan.period}
-                                    {plan.priceMonthly > 0 && ` / ${plan.priceMonthly.toLocaleString("fr-FR")} ${plan.period}/mois`}
+                                <SelectItem key={plan.id || plan.name} value={plan.name}>
+                                    {plan.surDevis 
+                                      ? `${plan.name} - ${plan.period}` 
+                                      : `${plan.name} - ${plan.priceYearly.toLocaleString("fr-FR")} ${plan.period}${plan.priceMonthly > 0 ? ` / ${plan.priceMonthly.toLocaleString("fr-FR")} ${plan.period}/mois` : ''}`
+                                    }
                                 </SelectItem>
                                 ))
                               ) : (
