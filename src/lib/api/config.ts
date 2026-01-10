@@ -54,6 +54,14 @@ export const API_ENDPOINTS = {
   BANNERS: {
     FOR_SITE_WEB: isClient ? '/banners' : '/banners/for-site-web',
   },
+  // Partenaires
+  PARTENAIRES: {
+    FOR_SITE_WEB: isClient ? '/partenaire/for-site-web' : '/partenaire/for-site-web',
+  },
+  // Équipe
+  EQUIPE: {
+    FOR_SITE_WEB: isClient ? '/siteequipe/for-site-web' : '/siteequipe/for-site-web',
+  },
 };
 
 export { API_BASE_URL };

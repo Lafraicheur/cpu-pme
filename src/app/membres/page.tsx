@@ -88,7 +88,7 @@ import {
 import { secteursData } from "../secteurs/data";
 import { sectorToMemberMapping } from "../secteurs/sectorMapping";
 import { useToast } from "@/components/ui/use-toast";
-import { useTypeMembresForSiteWeb, useRegionsForSiteWeb, useSecteursForSiteWeb, useAbonnementsForSiteWeb } from "@/hooks/use-api";
+import { useTypeMembresForSiteWeb, useRegionsForSiteWeb, useSecteursForSiteWeb, useAbonnementsForSiteWeb, usePartenairesForSiteWeb } from "@/hooks/use-api";
 import { quartiersService } from "@/lib/api/services/quartiers.service";
 import {
   IconBTP,
@@ -635,9 +635,8 @@ const MembersContent = () => {
   const [hasBureauCI, setHasBureauCI] = useState<boolean>(false);
   const { toast } = useToast();
 
-  // États pour les partenaires Pass PME
-  const [partenairesPassPME, setPartenairesPassPME] = useState<PartenaireAPI[]>([]);
-  const [isLoadingPartenairesPME, setIsLoadingPartenairesPME] = useState(true);
+  // Récupérer les partenaires Pass PME depuis l'API
+  const { data: partenairesPassPME = [], isLoading: isLoadingPartenairesPME } = usePartenairesForSiteWeb({ type: 'simple' });
 
   // Récupérer les types de membres depuis l'API
   const { data: typeMembresApi, isLoading: isLoadingTypeMembres, error: errorTypeMembres } = useTypeMembresForSiteWeb();
@@ -1365,33 +1364,6 @@ const MembersContent = () => {
 
     return () => clearInterval(interval);
   }, [recentMembers.length]);
-
-  // Récupérer les partenaires Pass PME depuis l'API
-  useEffect(() => {
-    const fetchPartenairesPME = async () => {
-      try {
-        setIsLoadingPartenairesPME(true);
-        const response = await fetch(
-          "https://api.cpupme.com/api/partenaire/for-site-web?type=simple"
-        );
-        const result = await response.json();
-
-        if (result.success && result.data?.success && result.data?.data) {
-          // Filtrer uniquement les partenaires de type "simple"
-          const partenairesSimples = result.data.data.filter(
-            (p: PartenaireAPI) => p.type === "simple"
-          );
-          setPartenairesPassPME(partenairesSimples);
-        }
-      } catch (error) {
-        console.error("Erreur lors du chargement des partenaires Pass PME:", error);
-      } finally {
-        setIsLoadingPartenairesPME(false);
-      }
-    };
-
-    fetchPartenairesPME();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

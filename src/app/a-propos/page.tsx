@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -13,84 +13,16 @@ import {
   History,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-
-interface Partenaire {
-  id: string;
-  type: string;
-  nom: string;
-  logo: string;
-  description: string | null;
-  lien: string | null;
-}
-
-interface EquipeMembre {
-  id: string;
-  nom: string;
-  role: string;
-  photo: string;
-  bio: string;
-  reseauxSociaux?: {
-    linkedin?: string;
-    email?: string;
-  };
-}
+import { usePartenairesForSiteWeb, useEquipeForSiteWeb } from "@/hooks/use-api";
 
 function AProposContent() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") || "mission";
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [partenaires, setPartenaires] = useState<Partenaire[]>([]);
-  const [isLoadingPartenaires, setIsLoadingPartenaires] = useState(true);
-  const [equipe, setEquipe] = useState<EquipeMembre[]>([]);
-  const [isLoadingEquipe, setIsLoadingEquipe] = useState(true);
 
-  useEffect(() => {
-    const fetchPartenaires = async () => {
-      try {
-        setIsLoadingPartenaires(true);
-        const response = await fetch(
-          "https://api.cpupme.com/api/partenaire/for-site-web?type=strategique"
-        );
-        const result = await response.json();
-
-        if (result.success && result.data?.success && result.data?.data) {
-          // Filtrer uniquement les partenaires stratégiques
-          const partenairesStrategiques = result.data.data.filter(
-            (p: Partenaire) => p.type === "strategique"
-          );
-          setPartenaires(partenairesStrategiques);
-        }
-      } catch (error) {
-        console.error("Erreur lors du chargement des partenaires:", error);
-      } finally {
-        setIsLoadingPartenaires(false);
-      }
-    };
-
-    fetchPartenaires();
-  }, []);
-
-  useEffect(() => {
-    const fetchEquipe = async () => {
-      try {
-        setIsLoadingEquipe(true);
-        const response = await fetch(
-          "https://api.cpupme.com/api/siteequipe/for-site-web"
-        );
-        const result = await response.json();
-
-        if (result.success && result.data?.success && result.data?.data) {
-          setEquipe(result.data.data);
-        }
-      } catch (error) {
-        console.error("Erreur lors du chargement de l'équipe:", error);
-      } finally {
-        setIsLoadingEquipe(false);
-      }
-    };
-
-    fetchEquipe();
-  }, []);
+  // Utiliser les hooks pour récupérer les données
+  const { data: partenaires = [], isLoading: isLoadingPartenaires } = usePartenairesForSiteWeb({ type: 'strategique' });
+  const { data: equipe = [], isLoading: isLoadingEquipe } = useEquipeForSiteWeb();
 
   return (
     <>
