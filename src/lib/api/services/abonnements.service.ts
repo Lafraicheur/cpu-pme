@@ -1,5 +1,21 @@
 import { proxyApiClient } from '../proxy-client';
 
+export interface Avantage {
+  id: string;
+  libelle: string;
+  description: string;
+  icone: string;
+  actif: boolean;
+}
+
+export interface Limites {
+  nombreProjets: number;
+  nombreFormations: number;
+  espaceStockage: number;
+  supportPrioritaire: boolean;
+  accesModules: string[];
+}
+
 export interface Abonnement {
   id: string;
   typeMembreId: string;
@@ -10,15 +26,22 @@ export interface Abonnement {
   tarifAnnuel: string;
   surDevis: boolean;
   tarifMinAnnuel?: string;
-  avantages?: string | null;
-  limites?: string | null;
+  avantages?: Avantage[];
+  limites?: Limites;
   ordre: number;
   isActive: boolean;
   popular?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
   typeMembre?: {
     id: string;
     name: string;
     description?: string;
+    isActive?: boolean;
+    created_at?: string;
+    updated_at?: string;
+    deleted_at?: string | null;
   };
 }
 

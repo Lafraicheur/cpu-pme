@@ -58,17 +58,8 @@ function AProposContent() {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <div className="flex justify-center mb-8">
-              <TabsList
-                className="
-      grid grid-cols-2 md:grid-cols-4
-      w-full max-w-5xl
-      gap-4
-      p-3
-      bg-gray-50/50
-      rounded-sm
-    "
-              >
+            <div className="flex justify-center mb-12 sm:mb-16 px-4 sm:px-6">
+              <TabsList className="!grid grid-cols-2 md:!grid-cols-4 w-full max-w-5xl gap-2 sm:gap-3 md:gap-4 p-2 sm:p-3 rounded-xl !flex-none">
                 {[
                   { value: "mission", label: "Mission & Vision" },
                   { value: "histoire", label: "Histoire" },
@@ -78,21 +69,7 @@ function AProposContent() {
                   <TabsTrigger
                     key={tab.value}
                     value={tab.value}
-                    className="
-          w-full
-          flex items-center justify-center
-          px-6 py-4
-          rounded-lg
-          font-semibold
-          text-sm sm:text-base
-          transition-all duration-300
-          data-[state=active]:bg-white
-          data-[state=active]:text-[#221F1F]
-          data-[state=active]:shadow-md
-          data-[state=inactive]:bg-slate-100
-          data-[state=inactive]:text-gray-600
-          hover:bg-slate-200
-        "
+                    className="w-full flex items-center justify-center px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 rounded-lg font-semibold text-xs sm:text-sm md:text-base transition-all duration-300 data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-slate-100 data-[state=inactive]:text-gray-600 hover:bg-slate-200 whitespace-nowrap"
                   >
                     {tab.label}
                   </TabsTrigger>
@@ -101,7 +78,7 @@ function AProposContent() {
             </div>
 
             {/* Mission & Vision Content */}
-            <TabsContent value="mission" className="mt-4">
+            <TabsContent value="mission" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div>
                   <div className="flex items-center mb-4">
@@ -382,7 +359,7 @@ function AProposContent() {
             </TabsContent>
 
             {/* Histoire Content */}
-            <TabsContent value="histoire" className="mt-4">
+            <TabsContent value="histoire" className="mt-0">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-1">
                   <div className="sticky top-24">
@@ -652,7 +629,7 @@ function AProposContent() {
             </TabsContent>
 
             {/* Équipe Content */}
-            <TabsContent value="equipe" className="mt-4">
+            <TabsContent value="equipe" className="mt-0">
               {/* Direction */}
               <div>
                 <div className="flex items-center mb-6">
@@ -764,7 +741,7 @@ function AProposContent() {
             </TabsContent>
 
             {/* Partenaires Content */}
-            <TabsContent value="partenaires" className="mt-4">
+            <TabsContent value="partenaires" className="mt-0">
               <div className="grid grid-cols-1 gap-12">
                 {/* Partenaires */}
                 <div>

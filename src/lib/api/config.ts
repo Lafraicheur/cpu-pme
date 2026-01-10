@@ -40,6 +40,12 @@ export const API_ENDPOINTS = {
     FOR_SITE_WEB: isClient ? '/secteurs/for-site-web' : '/secteurs/for-site-web',
     GET: (id: string) => isClient ? `/secteurs/${id}` : `/secteurs/${id}`,
   },
+  // Abonnements
+  ABONNEMENTS: {
+    LIST: isClient ? '/abonnements' : '/abonnements',
+    FOR_SITE_WEB: isClient ? '/abonnements/for-site-web' : '/abonnements/for-site-web',
+    GET: (id: string) => isClient ? `/abonnements/${id}` : `/abonnements/${id}`,
+  },
   // Actualités
   ACTUALITIES: {
     LIST: isClient ? '/actualities' : '/actualities/for-site-web',

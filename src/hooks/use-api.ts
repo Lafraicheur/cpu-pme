@@ -8,7 +8,7 @@ import { regionsService, Region } from '@/lib/api/services/regions.service';
 import { secteursService, Secteur, Filiere, SousFiliere, Activite } from '@/lib/api/services/secteurs.service';
 import { actualitiesService, Actuality, GetActualitiesParams } from '@/lib/api/services/actualities.service';
 import { publicationsService, Publication, GetPublicationsParams } from '@/lib/api/services/publications.service';
-import { abonnementsService, Abonnement } from '@/lib/api/services/abonnements.service';
+import { abonnementsService, Abonnement, Avantage, Limites } from '@/lib/api/services/abonnements.service';
 import { partenairesService, Partenaire, GetPartenairesParams } from '@/lib/api/services/partenaires.service';
 import { equipeService, EquipeMembre } from '@/lib/api/services/equipe.service';
 
@@ -178,5 +178,5 @@ export function useEquipeForSiteWeb() {
 }
 
 // Export des types pour utilisation dans les composants
-export type { TypeMembre, Profil, Region, Secteur, Filiere, SousFiliere, Activite, Actuality, Publication, Abonnement, Partenaire, EquipeMembre };
+export type { TypeMembre, Profil, Region, Secteur, Filiere, SousFiliere, Activite, Actuality, Publication, Abonnement, Avantage, Limites, Partenaire, EquipeMembre };
 
