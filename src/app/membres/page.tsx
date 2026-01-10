@@ -294,6 +294,19 @@ interface RegionData {
   [region: string]: CommuneData;
 }
 
+interface PartenaireAPI {
+  id: string;
+  type: string;
+  nom: string;
+  logo: string;
+  description: string | null;
+  lien: string | null;
+  categorie: string | null;
+  offre: string | null;
+  reduction: string | null;
+  note: string | null;
+}
+
 // Données hiérarchiques des régions de Côte d'Ivoire
 const regionsData: RegionData = {
   "Abidjan": {
@@ -621,6 +634,10 @@ const MembersContent = () => {
   const [selectedFilieresPrioritaires, setSelectedFilieresPrioritaires] = useState<string[]>([]);
   const [hasBureauCI, setHasBureauCI] = useState<boolean>(false);
   const { toast } = useToast();
+
+  // États pour les partenaires Pass PME
+  const [partenairesPassPME, setPartenairesPassPME] = useState<PartenaireAPI[]>([]);
+  const [isLoadingPartenairesPME, setIsLoadingPartenairesPME] = useState(true);
 
   // Récupérer les types de membres depuis l'API
   const { data: typeMembresApi, isLoading: isLoadingTypeMembres, error: errorTypeMembres } = useTypeMembresForSiteWeb();
@@ -1348,6 +1365,33 @@ const MembersContent = () => {
 
     return () => clearInterval(interval);
   }, [recentMembers.length]);
+
+  // Récupérer les partenaires Pass PME depuis l'API
+  useEffect(() => {
+    const fetchPartenairesPME = async () => {
+      try {
+        setIsLoadingPartenairesPME(true);
+        const response = await fetch(
+          "https://api.cpupme.com/api/partenaire/for-site-web?type=simple"
+        );
+        const result = await response.json();
+
+        if (result.success && result.data?.success && result.data?.data) {
+          // Filtrer uniquement les partenaires de type "simple"
+          const partenairesSimples = result.data.data.filter(
+            (p: PartenaireAPI) => p.type === "simple"
+          );
+          setPartenairesPassPME(partenairesSimples);
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des partenaires Pass PME:", error);
+      } finally {
+        setIsLoadingPartenairesPME(false);
+      }
+    };
+
+    fetchPartenairesPME();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -3232,118 +3276,151 @@ const MembersContent = () => {
                   {/* Cartes de membre - 3 niveaux */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Carte Basic - Orange */}
-                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg transform hover:scale-105 transition-transform duration-300">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-2 bg-white/20 rounded-lg px-3 py-1">
-                          <CreditCard className="h-4 w-4" />
-                          <span className="font-semibold text-sm">Pass PME</span>
-                        </div>
-                        <span className="bg-white/20 rounded-full px-3 py-1 text-xs font-semibold">
-                          Basic
-                        </span>
-                      </div>
-                      
-                      <div className="mb-4">
-                        <p className="text-xs opacity-80 mb-1">CPU-PME.CI</p>
+                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg transform hover:scale-105 transition-transform duration-300 relative overflow-hidden">
+                      {/* Logo en arrière-plan */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
+                        <img
+                          src="/logo.png"
+                          alt="CPU-PME Logo"
+                          className="w-full h-full object-cover"
+                        />
                       </div>
 
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Users className="h-4 w-4" />
-                          <p className="font-bold text-lg">Awa Diallo</p>
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-2 bg-white/20 rounded-lg px-3 py-1">
+                            <CreditCard className="h-4 w-4" />
+                            <span className="font-semibold text-sm">Pass PME</span>
+                          </div>
+                          <span className="bg-white/20 rounded-full px-3 py-1 text-xs font-semibold">
+                            Basic
+                          </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4 opacity-80" />
-                          <p className="text-sm opacity-90">Boutique Awa</p>
-                        </div>
-                      </div>
 
-                      <div className="flex justify-between items-center text-xs pt-4 border-t border-white/20">
-                        <div>
-                          <p className="opacity-70 mb-1">N° Membre</p>
-                          <p className="font-semibold">CPU-2024-00245</p>
+                        <div className="mb-4">
+                          <p className="text-xs opacity-80 mb-1">CPU-PME.CI</p>
                         </div>
-                        <div className="text-right">
-                          <p className="opacity-70 mb-1">Valide jusqu'au</p>
-                          <p className="font-semibold">31/12/2025</p>
+
+                        <div className="mb-6">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Users className="h-4 w-4" />
+                            <p className="font-bold text-lg">Awa Diallo</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Building className="h-4 w-4 opacity-80" />
+                            <p className="text-sm opacity-90">Boutique Awa</p>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center text-xs pt-4 border-t border-white/20">
+                          <div>
+                            <p className="opacity-70 mb-1">N° Membre</p>
+                            <p className="font-semibold">CPU-2024-00245</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="opacity-70 mb-1">Valide jusqu'au</p>
+                            <p className="font-semibold">31/12/2025</p>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Carte Argent - Gris/Bleu */}
-                    <div className="bg-gradient-to-br from-slate-500 to-slate-600 rounded-xl p-6 text-white shadow-lg transform hover:scale-105 transition-transform duration-300">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-2 bg-white/20 rounded-lg px-3 py-1">
-                          <CreditCard className="h-4 w-4" />
-                          <span className="font-semibold text-sm">Pass PME</span>
-                        </div>
-                        <span className="bg-white/20 rounded-full px-3 py-1 text-xs font-semibold">
-                          Argent
-                        </span>
-                      </div>
-                      
-                      <div className="mb-4">
-                        <p className="text-xs opacity-80 mb-1">CPU-PME.CI</p>
+                    <div className="bg-gradient-to-br from-slate-500 to-slate-600 rounded-xl p-6 text-white shadow-lg transform hover:scale-105 transition-transform duration-300 relative overflow-hidden">
+                      {/* Logo en arrière-plan */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
+                        <img
+                          src="/logo.png"
+                          alt="CPU-PME Logo"
+                          className="w-full h-full object-cover"
+                        />
                       </div>
 
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Users className="h-4 w-4" />
-                          <p className="font-bold text-lg">Konan Yao</p>
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-2 bg-white/20 rounded-lg px-3 py-1">
+                            <CreditCard className="h-4 w-4" />
+                            <span className="font-semibold text-sm">Pass PME</span>
+                          </div>
+                          <span className="bg-white/20 rounded-full px-3 py-1 text-xs font-semibold">
+                            Argent
+                          </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4 opacity-80" />
-                          <p className="text-sm opacity-90">SARL AgriPlus</p>
-                        </div>
-                      </div>
 
-                      <div className="flex justify-between items-center text-xs pt-4 border-t border-white/20">
-                        <div>
-                          <p className="opacity-70 mb-1">N° Membre</p>
-                          <p className="font-semibold">CPU-2024-00189</p>
+                        <div className="mb-4">
+                          <p className="text-xs opacity-80 mb-1">CPU-PME.CI</p>
                         </div>
-                        <div className="text-right">
-                          <p className="opacity-70 mb-1">Valide jusqu'au</p>
-                          <p className="font-semibold">31/12/2025</p>
+
+                        <div className="mb-6">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Users className="h-4 w-4" />
+                            <p className="font-bold text-lg">Konan Yao</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Building className="h-4 w-4 opacity-80" />
+                            <p className="text-sm opacity-90">SARL AgriPlus</p>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center text-xs pt-4 border-t border-white/20">
+                          <div>
+                            <p className="opacity-70 mb-1">N° Membre</p>
+                            <p className="font-semibold">CPU-2024-00189</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="opacity-70 mb-1">Valide jusqu'au</p>
+                            <p className="font-semibold">31/12/2025</p>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Carte Or - Gold */}
-                    <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-6 text-white shadow-lg transform hover:scale-105 transition-transform duration-300">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-2 bg-white/20 rounded-lg px-3 py-1">
-                          <CreditCard className="h-4 w-4" />
-                          <span className="font-semibold text-sm">Pass PME</span>
-                        </div>
-                        <span className="bg-white/20 rounded-full px-3 py-1 text-xs font-semibold">
-                          Or
-                        </span>
-                      </div>
-                      
-                      <div className="mb-4">
-                        <p className="text-xs opacity-80 mb-1">CPU-PME.CI</p>
+                    <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-6 text-white shadow-lg transform hover:scale-105 transition-transform duration-300 relative overflow-hidden">
+                      {/* Logo en arrière-plan */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
+                        <img
+                          src="/logo.png"
+                          alt="CPU-PME Logo"
+                          className="w-full h-full object-cover"
+                        />
                       </div>
 
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Users className="h-4 w-4" />
-                          <p className="font-bold text-lg">Jean Kouassi</p>
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-2 bg-white/20 rounded-lg px-3 py-1">
+                            <CreditCard className="h-4 w-4" />
+                            <span className="font-semibold text-sm">Pass PME</span>
+                          </div>
+                          <span className="bg-white/20 rounded-full px-3 py-1 text-xs font-semibold">
+                            Or
+                          </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4 opacity-80" />
-                          <p className="text-sm opacity-90">SARL TechIvoire</p>
-                        </div>
-                      </div>
 
-                      <div className="flex justify-between items-center text-xs pt-4 border-t border-white/20">
-                        <div>
-                          <p className="opacity-70 mb-1">N° Membre</p>
-                          <p className="font-semibold">CPU-2024-00158</p>
+                        <div className="mb-4">
+                          <p className="text-xs opacity-80 mb-1">CPU-PME.CI</p>
                         </div>
-                        <div className="text-right">
-                          <p className="opacity-70 mb-1">Valide jusqu'au</p>
-                          <p className="font-semibold">31/12/2025</p>
+
+                        <div className="mb-6">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Users className="h-4 w-4" />
+                            <p className="font-bold text-lg">Jean Kouassi</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Building className="h-4 w-4 opacity-80" />
+                            <p className="text-sm opacity-90">SARL TechIvoire</p>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center text-xs pt-4 border-t border-white/20">
+                          <div>
+                            <p className="opacity-70 mb-1">N° Membre</p>
+                            <p className="font-semibold">CPU-2024-00158</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="opacity-70 mb-1">Valide jusqu'au</p>
+                            <p className="font-semibold">31/12/2025</p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -3412,73 +3489,104 @@ const MembersContent = () => {
                 </div>
 
                 {/* Grille des offres partenaires */}
-                {(() => {
-                  const activeFilter =
-                    passPmeFilter ||
-                    searchParams.get("passPmeFilter") ||
-                    "all";
-                  const filteredPartners =
-                    activeFilter === "all" || activeFilter === ""
-                      ? passPmePartners
-                      : passPmePartners.filter(
-                          (p) => p.category === activeFilter
-                        );
+                {isLoadingPartenairesPME ? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                  </div>
+                ) : partenairesPassPME.length > 0 ? (
+                  (() => {
+                    const activeFilter =
+                      passPmeFilter ||
+                      searchParams.get("passPmeFilter") ||
+                      "all";
+                    const filteredPartners =
+                      activeFilter === "all" || activeFilter === ""
+                        ? partenairesPassPME
+                        : partenairesPassPME.filter(
+                            (p) => p.categorie?.toLowerCase() === activeFilter.toLowerCase()
+                          );
 
-                  const categoryLabels: { [key: string]: string } = {
-                    technologie: "Technologie",
-                    finance: "Finances et assurances",
-                    voyage: "Voyage",
-                    operations: "Soutien aux opérations",
-                    rh: "Ressources humaines",
-                    loisirs: "Loisirs et divertissement",
-                  };
+                    const categoryLabels: { [key: string]: string } = {
+                      technologie: "Technologie",
+                      finance: "Finances et assurances",
+                      voyage: "Voyage",
+                      operations: "Soutien aux opérations",
+                      rh: "Ressources humaines",
+                      loisirs: "Loisirs et divertissement",
+                    };
 
-                  return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                      {filteredPartners.map((partner) => (
-                        <div
-                          key={partner.id}
-                          className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-                        >
-                          <div
-                            className={`h-24 ${partner.logoBg} flex items-center justify-center`}
-                          >
-                            <span
-                              className={`${partner.logoText} ${
-                                partner.logo === "orange"
-                                  ? "text-2xl"
-                                  : "text-lg"
-                              } font-bold`}
-                            >
-                              {partner.logo}
-                            </span>
-                          </div>
-                          <div className="p-5 relative">
-                            <div className="absolute top-4 right-4">
-                              <Badge className="bg-cpu-orange text-white px-3 py-1 text-sm font-semibold">
-                                {partner.offer}
-                              </Badge>
-                            </div>
-                            <h3 className="text-lg font-bold text-[#221F1F] mb-2 mt-2">
-                              {partner.name}
-                            </h3>
-                            <p className="text-sm text-gray-600 mb-2">
-                              {partner.description}
-                            </p>
-                            <p className="text-xs text-gray-500 italic mb-3">
-                              {partner.conditions}
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                {categoryLabels[partner.category]}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                        {filteredPartners.map((partner) => {
+                          const CardWrapper = partner.lien
+                            ? ({ children }: { children: React.ReactNode }) => (
+                                <a
+                                  href={partner.lien!}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block"
+                                >
+                                  {children}
+                                </a>
+                              )
+                            : ({ children }: { children: React.ReactNode }) => <>{children}</>;
+
+                          return (
+                            <CardWrapper key={partner.id}>
+                              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                <div className="h-32 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+                                  <img
+                                    src={partner.logo}
+                                    alt={partner.nom}
+                                    className="max-h-full max-w-full object-contain"
+                                    onError={(e) => {
+                                      e.currentTarget.src = "/logo.png";
+                                    }}
+                                  />
+                                </div>
+                                <div className="p-5 relative">
+                                  {partner.reduction && (
+                                    <div className="absolute top-4 right-4">
+                                      <Badge className="bg-cpu-orange text-white px-3 py-1 text-sm font-semibold">
+                                        {partner.reduction}
+                                      </Badge>
+                                    </div>
+                                  )}
+                                  <h3 className="text-lg font-bold text-[#221F1F] mb-2 mt-2">
+                                    {partner.nom}
+                                  </h3>
+                                  {partner.offre && (
+                                    <p className="text-sm text-gray-600 mb-2">
+                                      {partner.offre}
+                                    </p>
+                                  )}
+                                  {partner.note && (
+                                    <p className="text-xs text-gray-500 italic mb-3">
+                                      {partner.note}
+                                    </p>
+                                  )}
+                                  <div className="flex flex-wrap gap-2">
+                                    {partner.categorie && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {categoryLabels[partner.categorie.toLowerCase()] || partner.categorie}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </CardWrapper>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-gray-600">
+                      Aucun partenaire Pass PME disponible pour le moment.
+                    </p>
+                  </div>
+                )}
 
                 {/* Section CTA Partenaires */}
                 <div className="bg-gray-100 rounded-xl p-8 md:p-12 text-center mb-8">
