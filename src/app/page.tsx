@@ -25,6 +25,7 @@ import { useEffect, useRef, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import Link from "next/link";
 import { bannersService, Banner } from "@/lib/api/services/banners.service";
+import { partenairesService, Partenaire } from "@/lib/api/services/partenaires.service";
 
 // Composant de décompte animé
 function CountUp({
@@ -98,6 +99,8 @@ function CountUp({
 export default function Home() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [isLoadingBanners, setIsLoadingBanners] = useState(true);
+  const [partenaires, setPartenaires] = useState<Partenaire[]>([]);
+  const [isLoadingPartenaires, setIsLoadingPartenaires] = useState(true);
 
   // Charger les banners au montage du composant
   useEffect(() => {
@@ -118,6 +121,25 @@ export default function Home() {
     };
 
     loadBanners();
+  }, []);
+
+  // Charger les partenaires stratégiques au montage du composant
+  useEffect(() => {
+    const loadPartenaires = async () => {
+      try {
+        setIsLoadingPartenaires(true);
+        const data = await partenairesService.getPartenairesForSiteWeb({
+          type: "strategique",
+        });
+        setPartenaires(data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des partenaires:", error);
+      } finally {
+        setIsLoadingPartenaires(false);
+      }
+    };
+
+    loadPartenaires();
   }, []);
 
   return (
@@ -666,122 +688,66 @@ export default function Home() {
             </div>
           </div>
 
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            plugins={[
-              Autoplay({
-                delay: 1000,
-              }),
-            ]}
-            className="w-full"
-          >
-            <CarouselContent className="-ml-2 md:-ml-4">
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-3 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/bad.png").default.src}
-                    alt="Banque Africaine de Développement"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/ecobank.png").default.src}
-                    alt="Ecobank"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/mtn.png").default.src}
-                    alt="MTN"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/fun.png").default.src}
-                    alt="Union Européenne"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/afd.png").default.src}
-                    alt="Agence Française de Développement"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/cepici.png").default.src}
-                    alt="CEPICI - Centre de Promotion des Investissements en Côte d'Ivoire"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/coperation.png").default.src}
-                    alt="Coopération Allemande"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/agriculture.png").default.src}
-                    alt="Ministère d'État, Ministre de l'Agriculture, du Développement Rural et des Productions Vivières"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/tourisme.png").default.src}
-                    alt="Ministère du Tourisme et des Loisirs"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/commerce.png").default.src}
-                    alt="Ministère du Commerce et de l'Industrie"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-            </CarouselContent>
-            <CarouselPrevious className="hidden md:flex" />
-            <CarouselNext className="hidden md:flex" />
-          </Carousel>
+          {isLoadingPartenaires ? (
+            <div className="text-center py-8">
+              <p className="text-[var(--color-text-secondary)]">
+                Chargement des partenaires...
+              </p>
+            </div>
+          ) : partenaires.length > 0 ? (
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              plugins={[
+                Autoplay({
+                  delay: 1000,
+                }),
+              ]}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {partenaires.map((partenaire) => (
+                  <CarouselItem
+                    key={partenaire.id}
+                    className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6"
+                  >
+                    <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
+                      {partenaire.lien ? (
+                        <a
+                          href={partenaire.lien}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full h-full flex items-center justify-center"
+                        >
+                          <img
+                            src={partenaire.logo}
+                            alt={partenaire.nom}
+                            className="max-h-full max-w-full object-contain"
+                          />
+                        </a>
+                      ) : (
+                        <img
+                          src={partenaire.logo}
+                          alt={partenaire.nom}
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      )}
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex" />
+              <CarouselNext className="hidden md:flex" />
+            </Carousel>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-[var(--color-text-secondary)]">
+                Aucun partenaire disponible pour le moment.
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </>

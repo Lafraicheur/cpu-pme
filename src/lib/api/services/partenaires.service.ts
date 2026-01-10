@@ -3,7 +3,29 @@
  */
 
 import { proxyApiClient } from '../proxy-client';
-import { API_ENDPOINTS } from '../config';
+import { API_ENDPOINTS, API_BASE_URL } from '../config';
+
+/**
+ * Fonction utilitaire pour corriger les URLs d'images localhost
+ * Remplace localhost:1996 par l'URL publique de l'API
+ */
+function fixImageUrl(url: string | null): string | null {
+  if (!url) return null;
+
+  // Remplacer localhost:1996 par l'URL de l'API publique
+  if (url.includes('localhost:1996') || url.includes('http://localhost:1996')) {
+    // Extraire le chemin après /uploads/
+    const uploadsMatch = url.match(/\/uploads\/.+$/);
+    if (uploadsMatch) {
+      // Construire la nouvelle URL avec l'API publique
+      // Retirer seulement le /api à la fin de l'URL, pas dans api.cpupme.com
+      const apiBaseWithoutApi = API_BASE_URL.replace(/\/api$/, '');
+      return `${apiBaseWithoutApi}${uploadsMatch[0]}`;
+    }
+  }
+
+  return url;
+}
 
 export interface Partenaire {
   id: string;
@@ -69,7 +91,13 @@ export const partenairesService = {
         return [];
       }
 
-      return data;
+      // Corriger les URLs des logos localhost
+      const fixedData = data.map(partenaire => ({
+        ...partenaire,
+        logo: fixImageUrl(partenaire.logo) || partenaire.logo,
+      }));
+
+      return fixedData;
     } catch (error) {
       console.error('❌ Erreur lors de l\'extraction des partenaires:', error);
       if (error instanceof Error) {
