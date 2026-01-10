@@ -10,7 +10,7 @@ const categoriesActualites = [
   { id: "institutionnel", name: "CPU-PME institutionnel" },
   { id: "filiere", name: "Filières" },
   { id: "regions", name: "Régions" },
-  { id: "opprotunites", name: "Opportunités PME" },
+  { id: "opportunites", name: "Opportunités PME" },
   { id: "reglementations", name: "Réglementation & alertes" },
   { id: "evenements", name: "Événements (annonces)" },
 ];
