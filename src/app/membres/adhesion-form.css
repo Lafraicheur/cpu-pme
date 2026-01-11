@@ -1,0 +1,399 @@
+/* 
+ * Design professionnel et épuré pour le formulaire d'adhésion CPU-PME
+ * Inspiré des meilleures pratiques UX/UI modernes
+ */
+
+/* ===== EN-TÊTE DE FORMULAIRE ===== */
+.form-hero {
+  background: linear-gradient(135deg, #10803B 0%, #0D6A30 50%, #199d4e 100%);
+  border-radius: 1.5rem;
+  padding: 3rem 2rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 10px 40px rgba(16, 128, 59, 0.15);
+}
+
+.form-hero-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.75rem;
+  line-height: 1.2;
+}
+
+.form-hero-subtitle {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.6;
+}
+
+/* ===== SECTIONS DE FORMULAIRE ===== */
+.form-section-card {
+  background: white;
+  border-radius: 1.25rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-section-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: #d1d5db;
+}
+
+/* En-tête de section avec icône */
+.form-section-header {
+  background: linear-gradient(to right, #F9FAFB, white);
+  border-bottom: 1px solid #F3F4F6;
+  padding: 1.75rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.form-section-icon-wrapper {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.875rem;
+  background: linear-gradient(135deg, rgba(16, 128, 59, 0.1), rgba(16, 128, 59, 0.05));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.form-section-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #10803B;
+}
+
+.form-section-title {
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.form-section-subtitle {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin-top: 0.375rem;
+  margin-left: 3.5rem;
+  line-height: 1.5;
+}
+
+.form-section-content {
+  padding: 2rem;
+}
+
+/* ===== CHAMPS DE FORMULAIRE ===== */
+.form-field {
+  margin-bottom: 1.75rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.625rem;
+  transition: color 0.2s;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #111827;
+  background-color: #ffffff;
+  border: 1.5px solid #D1D5DB;
+  border-radius: 0.75rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: #9CA3AF;
+}
+
+.form-input:hover,
+.form-select:hover,
+.form-textarea:hover {
+  border-color: #9CA3AF;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: #10803B;
+  box-shadow: 0 0 0 3px rgba(16, 128, 59, 0.1);
+}
+
+.form-input:disabled,
+.form-select:disabled,
+.form-textarea:disabled {
+  background-color: #F9FAFB;
+  color: #9CA3AF;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25rem 1.25rem;
+  padding-right: 2.75rem;
+}
+
+.form-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Helper text */
+.form-help-text {
+  font-size: 0.8125rem;
+  color: #6B7280;
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+/* ===== CHECKBOXES & RADIOS ===== */
+.form-checkbox-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.625rem;
+  border-radius: 0.625rem;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.form-checkbox-wrapper:hover {
+  background-color: #F9FAFB;
+}
+
+.form-checkbox,
+.form-radio {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #D1D5DB;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.form-radio {
+  border-radius: 50%;
+}
+
+.form-checkbox:checked,
+.form-radio:checked {
+  background-color: #10803B;
+  border-color: #10803B;
+}
+
+.form-checkbox:focus,
+.form-radio:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(16, 128, 59, 0.1);
+}
+
+.form-checkbox-label {
+  font-size: 0.9375rem;
+  color: #374151;
+  line-height: 1.6;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ===== GRILLE DE CHECKBOXES ===== */
+.form-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 0.75rem;
+  padding: 1.5rem;
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.form-checkbox-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.form-checkbox-grid::-webkit-scrollbar-track {
+  background: #F3F4F6;
+  border-radius: 4px;
+}
+
+.form-checkbox-grid::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 4px;
+}
+
+.form-checkbox-grid::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+/* ===== BOUTONS ===== */
+.form-button-primary {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #10803B, #199d4e);
+  border: none;
+  border-radius: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(16, 128, 59, 0.2);
+}
+
+.form-button-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 128, 59, 0.3);
+}
+
+.form-button-primary:active {
+  transform: translateY(0);
+}
+
+.form-button-secondary {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #10803B;
+  background: white;
+  border: 1.5px solid #10803B;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.form-button-secondary:hover {
+  background: rgba(16, 128, 59, 0.05);
+}
+
+/* ===== SÉPARATEURS ===== */
+.form-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #E5E7EB, transparent);
+  margin: 2.5rem 0;
+}
+
+/* ===== BADGES & TAGS ===== */
+.form-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  transition: all 0.2s;
+}
+
+.form-badge-success {
+  background-color: rgba(16, 128, 59, 0.1);
+  color: #10803B;
+  border: 1px solid rgba(16, 128, 59, 0.2);
+}
+
+.form-badge-info {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #2563EB;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.form-badge-warning {
+  background-color: rgba(242, 122, 32, 0.1);
+  color: #F27A20;
+  border: 1px solid rgba(242, 122, 32, 0.2);
+}
+
+/* ===== LOADING STATES ===== */
+.form-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  color: #6B7280;
+  font-size: 0.9375rem;
+}
+
+.form-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #E5E7EB;
+  border-top-color: #10803B;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== MESSAGES D'ERREUR ===== */
+.form-error-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background-color: #FEF2F2;
+  border: 1px solid #FEE2E2;
+  border-radius: 0.875rem;
+  color: #DC2626;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .form-hero {
+    padding: 2rem 1.5rem;
+  }
+  
+  .form-hero-title {
+    font-size: 1.75rem;
+  }
+  
+  .form-section-content {
+    padding: 1.5rem;
+  }
+  
+  .form-checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== ANIMATIONS ===== */
+.fade-in-up {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

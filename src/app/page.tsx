@@ -1,342 +1,734 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useState } from "react";
-import emailjs from "@emailjs/browser";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel";
+import {
+  Award,
+  Banknote,
+  ChevronRight,
+  FileSearch,
+  GraduationCap,
+  Handshake,
+  Store,
+  UserPlus,
+  Target,
+  Check,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import Autoplay from "embla-carousel-autoplay";
+import Link from "next/link";
+import { bannersService, Banner } from "@/lib/api/services/banners.service";
+import { partenairesService, Partenaire } from "@/lib/api/services/partenaires.service";
+import { actualitiesService, Actuality } from "@/lib/api/services/actualities.service";
 
-// Configuration EmailJS
-const EMAILJS_SERVICE_ID = "service_hlp7bbq";
-const EMAILJS_TEMPLATE_ADMIN = "template_z6oykwg"; // Template pour l'admin
-const EMAILJS_TEMPLATE_USER = "template_n85pxw4"; // Template pour l'utilisateur
-const EMAILJS_PUBLIC_KEY = "oQdvQQh_YZVaReqrU";
+// Composant de décompte animé
+function CountUp({
+  end,
+  duration = 2000,
+  suffix = "",
+}: {
+  end: number;
+  duration?: number;
+  suffix?: string;
+}) {
+  const [count, setCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const countRef = useRef<HTMLSpanElement>(null);
 
-export default function Home() {
-  // État pour le compte à rebours
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
-
-  const [targetDate, setTargetDate] = useState<Date | null>(null);
-
-  // États pour le formulaire newsletter
-  const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
-
-  // Fonction pour créer une nouvelle date cible (15 jours dans le futur)
-  const createNewTargetDate = () => {
-    const newTargetDate = new Date();
-    newTargetDate.setDate(newTargetDate.getDate() + 15);
-    localStorage.setItem("countdownTargetDate", newTargetDate.toISOString());
-    localStorage.setItem("countdownVersion", "v2"); // Marquer la nouvelle version
-    return newTargetDate;
-  };
-
-  // Initialiser ou récupérer la date cible
   useEffect(() => {
-    const storedDate = localStorage.getItem("countdownTargetDate");
-    const version = localStorage.getItem("countdownVersion");
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isVisible) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.3 }
+    );
 
-    // Si c'est l'ancienne version (30 jours), forcer la migration vers 15 jours
-    if (storedDate && version !== "v2") {
-      setTargetDate(createNewTargetDate());
-      return;
+    if (countRef.current) {
+      observer.observe(countRef.current);
     }
 
-    if (storedDate) {
-      const stored = new Date(storedDate);
-      const now = new Date();
-
-      // Vérifier si la date stockée est déjà passée
-      if (stored.getTime() <= now.getTime()) {
-        // Créer une nouvelle date de 15 jours
-        setTargetDate(createNewTargetDate());
-      } else {
-        // Utiliser la date sauvegardée
-        setTargetDate(stored);
+    return () => {
+      if (countRef.current) {
+        observer.unobserve(countRef.current);
       }
-    } else {
-      // Créer une nouvelle date (15 jours dans le futur)
-      setTargetDate(createNewTargetDate());
-    }
-  }, []);
+    };
+  }, [isVisible]);
 
-  // Mettre à jour le compte à rebours chaque seconde
   useEffect(() => {
-    if (!targetDate) return;
+    if (!isVisible) return;
 
-    const timer = setInterval(() => {
-      const now = new Date().getTime();
-      const distance = targetDate.getTime() - now;
+    let startTime: number;
+    let animationFrame: number;
 
-      if (distance < 0) {
-        // Le compte à rebours est terminé, redémarrer avec 15 jours
-        const newTarget = createNewTargetDate();
-        setTargetDate(newTarget);
-        return;
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+
+      setCount(Math.floor(progress * end));
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
       }
+    };
 
-      setTimeLeft({
-        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-        hours: Math.floor(
-          (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-        ),
-        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((distance % (1000 * 60)) / 1000),
-      });
-    }, 1000);
+    animationFrame = requestAnimationFrame(animate);
 
-    return () => clearInterval(timer);
-  }, [targetDate]);
-
-  // Gestion de la soumission du formulaire avec EmailJS
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setMessage(null);
-
-    try {
-      // Email 1 : Notification à l'admin
-      await emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ADMIN,
-        {
-          user_email: email,
-          to_email: "admin@cpupme.com",
-        },
-        EMAILJS_PUBLIC_KEY
-      );
-
-      // Email 2 : Confirmation à l'utilisateur
-      await emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_USER,
-        {
-          user_email: email,
-          to_email: email,
-        },
-        EMAILJS_PUBLIC_KEY
-      );
-
-      setMessage({
-        type: "success",
-        text: "Merci ! Vous recevrez un email de confirmation.",
-      });
-      setEmail("");
-    } catch (error) {
-      console.error("Erreur lors de l'envoi:", error);
-      setMessage({
-        type: "error",
-        text: "Une erreur est survenue. Veuillez réessayer.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [isVisible, end, duration]);
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
-      {/* Background mosaïque */}
-      <div
-        className="absolute inset-0 opacity-30"
-        style={{
-          backgroundImage: "url(/couverture_cpu_coming_soon.png)",
-          backgroundSize: "150px 150px",
-          backgroundRepeat: "repeat",
-          backgroundPosition: "center",
-        }}
-      ></div>
+    <span ref={countRef}>
+      {count}
+      {suffix}
+    </span>
+  );
+}
 
-      {/* Overlay gradient pour adoucir le background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-orange-50/60 to-blue-50/65"></div>
+export default function Home() {
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [isLoadingBanners, setIsLoadingBanners] = useState(true);
+  const [partenaires, setPartenaires] = useState<Partenaire[]>([]);
+  const [isLoadingPartenaires, setIsLoadingPartenaires] = useState(true);
+  const [actualities, setActualities] = useState<Actuality[]>([]);
+  const [isLoadingActualities, setIsLoadingActualities] = useState(true);
 
-      {/* Decorative elements - Plus modernes et dynamiques */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-[#F08223]/10 to-transparent rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-200/15 to-transparent rounded-full blur-3xl"></div>
+  // Charger les banners au montage du composant
+  useEffect(() => {
+    const loadBanners = async () => {
+      try {
+        setIsLoadingBanners(true);
+        const data = await bannersService.getBanners({
+          position: "homepage",
+          type: "custom",
+          activeOnly: true,
+        });
+        setBanners(data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des banners:", error);
+      } finally {
+        setIsLoadingBanners(false);
+      }
+    };
 
-      {/* Main Content - Centré */}
-      <main className="relative z-10 w-full px-4 sm:px-6 py-12">
-        <div className="max-w-6xl mx-auto">
-          {/* Logo en haut centré */}
-          <div className="flex justify-center mb-12 sm:mb-16">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl px-8 py-4">
-              <Image
+    loadBanners();
+  }, []);
+
+  // Charger les partenaires stratégiques au montage du composant
+  useEffect(() => {
+    const loadPartenaires = async () => {
+      try {
+        setIsLoadingPartenaires(true);
+        const data = await partenairesService.getPartenairesForSiteWeb({
+          type: "strategique",
+        });
+        setPartenaires(data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des partenaires:", error);
+      } finally {
+        setIsLoadingPartenaires(false);
+      }
+    };
+
+    loadPartenaires();
+  }, []);
+
+  // Charger les 3 dernières actualités au montage du composant
+  useEffect(() => {
+    const loadActualities = async () => {
+      try {
+        setIsLoadingActualities(true);
+        const data = await actualitiesService.getActualities();
+        // Limiter aux 3 dernières actualités
+        setActualities(data.slice(0, 3));
+      } catch (error) {
+        console.error("Erreur lors du chargement des actualités:", error);
+      } finally {
+        setIsLoadingActualities(false);
+      }
+    };
+
+    loadActualities();
+  }, []);
+
+  return (
+    <>
+      {/* Hero Section */}
+      <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
+        {/* BACKGROUND IMAGE / CAROUSEL */}
+        <div className="absolute inset-0">
+          {isLoadingBanners ? (
+            // Image par défaut pendant le chargement
+            <>
+              <img
                 src="/logo.png"
-                alt="CPU-PME Logo"
-                width={200}
-                height={60}
-                priority
-                className="h-12 sm:h-16 w-auto object-contain"
+                alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
+                className="w-full h-full object-cover"
               />
-            </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+            </>
+          ) : banners.length > 0 ? (
+            // Carousel des banners si disponibles
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              plugins={[
+                Autoplay({
+                  delay: 5000,
+                }),
+              ]}
+              className="w-full h-full"
+            >
+              <CarouselContent className="h-full">
+                {banners.map((banner) => (
+                  <CarouselItem key={banner.id} className="h-full">
+                    <div className="relative h-full w-full">
+                      <img
+                        src={banner.image_url || "/logo.png"}
+                        alt={banner.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {banners.length > 1 && (
+                <>
+                  <CarouselPrevious className="left-4 bg-[#F17C21] border-amber-50 text-white" />
+                  <CarouselNext className="right-4 bg-[#F17C21] border-amber-50 text-white" />
+                </>
+              )}
+            </Carousel>
+          ) : (
+            // Image par défaut si aucun banner
+            <>
+              <img
+                src="/logo.png"
+                alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+            </>
+          )}
+        </div>
+
+        {/* CONTENU */}
+        <div className="relative z-10 container mx-auto px-4 text-center text-white">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in">
+            Confédération Patronale Unique des PME de Côte d'Ivoire
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in">
+            Votre partenaire pour le développement et la croissance des
+            entreprises ivoiriennes
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in">
+            <a
+              href="#services"
+              className="bg-white text-black hover:bg-white/90 px-6 py-3 rounded-lg font-semibold cursor-pointer"
+            >
+              Découvrir nos services
+            </a>
+            <Link
+              href="/membres?tab=adhesion"
+              className="border border-white text-white hover:bg-white/10 px-6 py-3 rounded-lg font-semibold cursor-pointer"
+            >
+              Devenir membre
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Section Statistiques */}
+      <section className="py-16 bg-[var(--color-bg)]">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-[var(--color-neutral-dark)] mb-4">
+              Les PME en Côte d'Ivoire
+            </h2>
+            <p className="text-[var(--color-text-secondary)] max-w-2xl mx-auto">
+              Les PME constituent le moteur économique du pays, représentant
+              plus de 90% du tissu économique national.
+            </p>
           </div>
 
-          {/* Contenu principal centré */}
-          <div className="text-center space-y-8 sm:space-y-12">
-            {/* Title avec animation subtile */}
-            <div className="space-y-4 sm:space-y-6">
-              <h1 className="font-montserrat text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-[#221F1F] mb-4 sm:mb-6 tracking-tight">
-                Bientôt disponible
-              </h1>
-              <p className="font-inter text-base sm:text-lg lg:text-xl text-[#6F6F6F] leading-relaxed max-w-2xl mx-auto px-4">
-                Notre nouvelle plateforme est en cours de finalisation.
-                <br className="hidden sm:block" />
-                Une expérience innovante arrive très bientôt.
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <Card className="shadow-sm transition-shadow border-0 bg-white">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-[var(--color-primary)] mb-2">
+                    <CountUp end={90} suffix="%" />
+                  </p>
+                  <p className="text-[var(--color-neutral-dark)]">
+                    du tissu économique
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm transition-shadow border-0 bg-white">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-[var(--color-success)] mb-2">
+                    <CountUp end={80} suffix="%" />
+                  </p>
+                  <p className="text-[var(--color-neutral-dark)]">
+                    des emplois
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm transition-shadow border-0 bg-white">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-[var(--color-primary)] mb-2">
+                    <CountUp end={30} suffix="%" />
+                  </p>
+                  <p className="text-[var(--color-neutral-dark)]">
+                    du PIB national
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm transition-shadow border-0 bg-white">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-[var(--color-success)] mb-2">
+                    +<CountUp end={1000} />
+                  </p>
+                  <p className="text-[var(--color-neutral-dark)]">
+                    membres CPU-PME
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      <section id="services" className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-[var(--color-neutral-dark)] mb-4">
+              Nos Services
+            </h2>
+            <p className="text-[var(--color-text-secondary)] max-w-2xl mx-auto">
+              CPU-PME.CI offre une gamme de services pour soutenir les PME
+              ivoiriennes dans leur développement et leur croissance.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="shadow-sm transition-shadow border-gray-200">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div
+                    className="p-3 rounded-full mb-4"
+                    style={{ backgroundColor: "rgba(240, 130, 35, 0.1)" }}
+                  >
+                    <Award className="h-8 w-8 text-[var(--color-primary)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    Incubateur champion 225
+                  </h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Accompagnement personnalisé pour les startups et PME à fort
+                    potentiel de croissance.
+                  </p>
+                  <a
+                    href="#"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm transition-shadow border-gray-200">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div
+                    className="p-3 rounded-full mb-4"
+                    style={{ backgroundColor: "rgba(25, 157, 78, 0.1)" }}
+                  >
+                    <FileSearch className="h-8 w-8 text-[var(--color-success)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    Appels d'offres & Opportunités
+                  </h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Accédez à des appels d'offres publics et privés exclusifs et
+                    des opportunités commerciales pour développer votre
+                    activité.
+                  </p>
+                  <a
+                    href="#"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-[var(--color-success)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm transition-shadow border-gray-200">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div
+                    className="p-3 rounded-full mb-4"
+                    style={{ backgroundColor: "rgba(240, 130, 35, 0.1)" }}
+                  >
+                    <GraduationCap className="h-8 w-8 text-[var(--color-primary)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Formation</h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Développez vos compétences grâce à nos programmes de
+                    formation adaptés aux besoins des PME.
+                  </p>
+                  <a
+                    href="#"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm transition-shadow border-gray-200">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div
+                    className="p-3 rounded-full mb-4"
+                    style={{ backgroundColor: "rgba(25, 157, 78, 0.1)" }}
+                  >
+                    <Store className="h-8 w-8 text-[var(--color-success)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    Marketplace de produits locaux
+                  </h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Vendez et achetez des produits locaux sur notre plateforme
+                    de commerce dédiée aux entreprises ivoiriennes.
+                  </p>
+                  <a
+                    href="#"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-[var(--color-success)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm transition-shadow border-gray-200">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div
+                    className="p-3 rounded-full mb-4"
+                    style={{ backgroundColor: "rgba(240, 130, 35, 0.1)" }}
+                  >
+                    <Banknote className="h-8 w-8 text-[var(--color-primary)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Financement</h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Accédez à des solutions de financement adaptées pour
+                    développer votre entreprise et réaliser vos projets.
+                  </p>
+                  <a
+                    href="#"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm transition-shadow border-gray-200">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div
+                    className="p-3 rounded-full mb-4"
+                    style={{ backgroundColor: "rgba(25, 157, 78, 0.1)" }}
+                  >
+                    <UserPlus className="h-8 w-8 text-[var(--color-success)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Réseautage</h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Rejoignez un réseau de plus de 1000 entrepreneurs et
+                    établissez des partenariats stratégiques.
+                  </p>
+                  <a
+                    href="#"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-[var(--color-success)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Section Adhésion */}
+      <section
+        className="py-16"
+        style={{ backgroundColor: "var(--color-neutral-dark)" }}
+      >
+        <div className="container mx-auto px-4 text-white">
+          <div className="gap-8 items-center">
+            <div>
+              <h2 className="text-3xl text-center font-bold mb-4">
+                Rejoignez CPU-PME.CI aujourd'hui
+              </h2>
+              <p className="mb-6 text-center text-gray-300">
+                Bénéficiez de services exclusifs et d'un réseau d'entrepreneurs
+                pour développer votre entreprise.
               </p>
-            </div>
+              <div className="flex gap-8 align-center justify-center flex-wrap">
+                <div className="flex flex-col items-center text-center max-w-xs">
+                  <div
+                    className="rounded-full p-2 mb-3"
+                    style={{ backgroundColor: "var(--color-primary)" }}
+                  >
+                    <Target className="h-8 w-8 text-white" />
+                  </div>
+                  <p className="font-semibold">Opportunités d'affaires</p>
+                  <p className="text-gray-300 text-sm">
+                    Appels d'offres et partenariats
+                  </p>
+                </div>
 
-            {/* Countdown Timer - Design moderne avec cartes */}
-            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 px-4">
-              {/* Days */}
-              <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl px-6 py-6 sm:px-8 sm:py-8 min-w-[100px] sm:min-w-[120px] hover:scale-105 transition-transform duration-300">
-                <div className="font-montserrat text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-br from-[#F08223] to-[#D97420] bg-clip-text text-transparent">
-                  {String(timeLeft.days).padStart(2, "0")}
+                <div className="flex flex-col items-center text-center max-w-xs">
+                  <div
+                    className="rounded-full p-2 mb-3"
+                    style={{ backgroundColor: "var(--color-success)" }}
+                  >
+                    <Target className="h-8 w-8 text-white" />
+                  </div>
+                  <p className="font-semibold">Support personnalisé</p>
+                  <p className="text-gray-300 text-sm">
+                    Conseils et assistance juridique
+                  </p>
                 </div>
-                <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-2 sm:mt-3 uppercase tracking-wider font-semibold">
-                  Jours
-                </div>
-              </div>
 
-              {/* Hours */}
-              <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl px-6 py-6 sm:px-8 sm:py-8 min-w-[100px] sm:min-w-[120px] hover:scale-105 transition-transform duration-300">
-                <div className="font-montserrat text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-br from-[#F08223] to-[#D97420] bg-clip-text text-transparent">
-                  {String(timeLeft.hours).padStart(2, "0")}
-                </div>
-                <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-2 sm:mt-3 uppercase tracking-wider font-semibold">
-                  Heures
-                </div>
-              </div>
-
-              {/* Minutes */}
-              <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl px-6 py-6 sm:px-8 sm:py-8 min-w-[100px] sm:min-w-[120px] hover:scale-105 transition-transform duration-300">
-                <div className="font-montserrat text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-br from-[#F08223] to-[#D97420] bg-clip-text text-transparent">
-                  {String(timeLeft.minutes).padStart(2, "0")}
-                </div>
-                <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-2 sm:mt-3 uppercase tracking-wider font-semibold">
-                  Minutes
-                </div>
-              </div>
-
-              {/* Seconds */}
-              <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl px-6 py-6 sm:px-8 sm:py-8 min-w-[100px] sm:min-w-[120px] hover:scale-105 transition-transform duration-300">
-                <div className="font-montserrat text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-br from-[#F08223] to-[#D97420] bg-clip-text text-transparent">
-                  {String(timeLeft.seconds).padStart(2, "0")}
-                </div>
-                <div className="font-inter text-xs sm:text-sm text-[#6F6F6F] mt-2 sm:mt-3 uppercase tracking-wider font-semibold">
-                  Secondes
+                <div className="flex flex-col items-center text-center max-w-xs">
+                  <div
+                    className="rounded-full p-2 mb-3"
+                    style={{ backgroundColor: "var(--color-primary)" }}
+                  >
+                    <Target className="h-8 w-8 text-white" />
+                  </div>
+                  <p className="font-semibold">Visibilité nationale</p>
+                  <p className="text-gray-300 text-sm">
+                    Promotion de votre entreprise
+                  </p>
                 </div>
               </div>
-            </div>
-
-            {/* Newsletter Form - Design moderne */}
-            <div className="max-w-2xl mx-auto space-y-4 sm:space-y-5 px-4">
-              <p className="font-inter text-base sm:text-lg text-[#221F1F] font-medium">
-                Soyez informé du lancement
-              </p>
-              <form
-                onSubmit={handleSubmit}
-                className="flex flex-col sm:flex-row gap-3 sm:gap-4"
-              >
-                <input
-                  type="email"
-                  name="user_email"
-                  placeholder="Votre adresse email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 px-5 sm:px-7 py-4 sm:py-5 bg-white/80 backdrop-blur-md border-2 border-[#F08223]/20 rounded-xl font-inter text-sm sm:text-base text-[#221F1F] placeholder:text-[#AAAAAA] focus:outline-none focus:ring-2 focus:ring-[#F08223] focus:border-transparent shadow-lg transition-all"
-                  required
-                  disabled={isLoading}
-                />
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="bg-gradient-to-r from-[#199D4E] to-[#157A3D] hover:from-[#157A3D] hover:to-[#199D4E] text-white font-inter font-bold px-8 sm:px-10 py-4 sm:py-5 rounded-xl transition-all whitespace-nowrap text-sm sm:text-base shadow-xl hover:shadow-2xl hover:scale-105 transform duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                >
-                  {isLoading ? "Envoi..." : "M'informer"}
-                </button>
-              </form>
-
-              {/* Message de succès ou d'erreur */}
-              {message && (
-                <div
-                  className={`mt-4 p-4 rounded-xl font-inter text-sm sm:text-base ${
-                    message.type === "success"
-                      ? "bg-green-100/80 text-green-800 border-2 border-green-200"
-                      : "bg-red-100/80 text-red-800 border-2 border-red-200"
-                  } backdrop-blur-md shadow-lg`}
-                >
-                  {message.text}
-                </div>
-              )}
-            </div>
-
-            {/* Social Icons - Design moderne avec effet de hover */}
-            <div className="flex gap-4 sm:gap-5 flex-wrap justify-center pt-4">
-              <a
-                href="#"
-                className="w-12 h-12 sm:w-14 sm:h-14 bg-white/80 backdrop-blur-md hover:bg-[#3B5998] rounded-xl flex items-center justify-center text-[#3B5998] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 transform group"
-                aria-label="Facebook"
-              >
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-              </a>
-
-              <a
-                href="#"
-                className="w-12 h-12 sm:w-14 sm:h-14 bg-white/80 backdrop-blur-md hover:bg-[#1DA1F2] rounded-xl flex items-center justify-center text-[#1DA1F2] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 transform group"
-                aria-label="Twitter"
-              >
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
-                </svg>
-              </a>
-
-              <a
-                href="#"
-                className="w-12 h-12 sm:w-14 sm:h-14 bg-white/80 backdrop-blur-md hover:bg-[#0077B5] rounded-xl flex items-center justify-center text-[#0077B5] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 transform group"
-                aria-label="LinkedIn"
-              >
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                </svg>
-              </a>
-
-              <a
-                href="#"
-                className="w-12 h-12 sm:w-14 sm:h-14 bg-white/80 backdrop-blur-md hover:bg-[#FF0000] rounded-xl flex items-center justify-center text-[#FF0000] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 transform group"
-                aria-label="YouTube"
-              >
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                </svg>
-              </a>
             </div>
           </div>
         </div>
-      </main>
-    </div>
+        <div className="mt-10 flex justify-center">
+          <Link
+            href="/membres?tab=adhesion"
+            className="inline-flex items-center justify-center px-8 py-3 rounded-[6px] font-semibold text-white transition duration-300 hover:opacity-90 cursor-pointer"
+            style={{ backgroundColor: "var(--color-primary)" }}
+          >
+            Adhérer maintenant
+          </Link>
+        </div>
+      </section>
+
+      {/* Section Actualités */}
+      <section className="py-16 bg-[var(--color-bg)]">
+        <div className="container mx-auto px-1">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold text-[var(--color-neutral-dark)]">
+              Dernières actualités
+            </h2>
+            <a
+              href="/actualites"
+              className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
+            >
+              Voir toutes les actualités{" "}
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </a>
+          </div>
+
+          {isLoadingActualities ? (
+            <div className="text-center py-8">
+              <p className="text-[var(--color-text-secondary)]">
+                Chargement des actualités...
+              </p>
+            </div>
+          ) : actualities.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {actualities.map((actuality, index) => (
+                <Card key={actuality.id} className="overflow-hidden shadow-sm transition-shadow border-gray-200">
+                  <div
+                    className="h-48 bg-gradient-to-br from-orange-100 to-orange-200"
+                    style={{
+                      backgroundImage: actuality.imageUrl
+                        ? `url(${actuality.imageUrl})`
+                        : undefined,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  />
+                  <CardContent className="pt-6">
+                    <p
+                      className="text-sm font-medium mb-2"
+                      style={{ color: index % 2 === 0 ? "var(--color-primary)" : "var(--color-success)" }}
+                    >
+                      {actuality.publicationDate
+                        ? new Date(actuality.publicationDate).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : new Date(actuality.createdAt).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                    </p>
+                    <h3 className="text-xl font-semibold mb-2 text-[var(--color-neutral-dark)]">
+                      {actuality.title}
+                    </h3>
+                    <p
+                      className="mb-4 line-clamp-3"
+                      style={{ color: "var(--color-text-secondary)" }}
+                    >
+                      {actuality.content
+                        ? actuality.content.replace(/<[^>]*>/g, "").substring(0, 150) + "..."
+                        : "Aucune description disponible"}
+                    </p>
+                    <a
+                      href={`/actualites/${actuality.id}`}
+                      className="flex items-center hover:underline font-medium"
+                      style={{ color: index % 2 === 0 ? "var(--color-primary)" : "var(--color-success)" }}
+                    >
+                      Lire la suite <ChevronRight className="h-4 w-4 ml-1" />
+                    </a>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-[var(--color-text-secondary)]">
+                Aucune actualité disponible pour le moment.
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Section Partenaires */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center mb-4">
+              <h2 className="text-3xl font-bold text-[var(--color-neutral-dark)]">
+                Nos Partenaires
+              </h2>
+            </div>
+          </div>
+
+          {isLoadingPartenaires ? (
+            <div className="text-center py-8">
+              <p className="text-[var(--color-text-secondary)]">
+                Chargement des partenaires...
+              </p>
+            </div>
+          ) : partenaires.length > 0 ? (
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              plugins={[
+                Autoplay({
+                  delay: 1000,
+                }),
+              ]}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {partenaires.map((partenaire) => (
+                  <CarouselItem
+                    key={partenaire.id}
+                    className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6"
+                  >
+                    <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
+                      {partenaire.lien ? (
+                        <a
+                          href={partenaire.lien}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full h-full flex items-center justify-center"
+                        >
+                          <img
+                            src={partenaire.logo}
+                            alt={partenaire.nom}
+                            className="max-h-full max-w-full object-contain"
+                          />
+                        </a>
+                      ) : (
+                        <img
+                          src={partenaire.logo}
+                          alt={partenaire.nom}
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      )}
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex" />
+              <CarouselNext className="hidden md:flex" />
+            </Carousel>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-[var(--color-text-secondary)]">
+                Aucun partenaire disponible pour le moment.
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+    </>
   );
 }
