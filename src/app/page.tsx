@@ -26,6 +26,7 @@ import Autoplay from "embla-carousel-autoplay";
 import Link from "next/link";
 import { bannersService, Banner } from "@/lib/api/services/banners.service";
 import { partenairesService, Partenaire } from "@/lib/api/services/partenaires.service";
+import { actualitiesService, Actuality } from "@/lib/api/services/actualities.service";
 
 // Composant de décompte animé
 function CountUp({
@@ -101,6 +102,8 @@ export default function Home() {
   const [isLoadingBanners, setIsLoadingBanners] = useState(true);
   const [partenaires, setPartenaires] = useState<Partenaire[]>([]);
   const [isLoadingPartenaires, setIsLoadingPartenaires] = useState(true);
+  const [actualities, setActualities] = useState<Actuality[]>([]);
+  const [isLoadingActualities, setIsLoadingActualities] = useState(true);
 
   // Charger les banners au montage du composant
   useEffect(() => {
@@ -140,6 +143,24 @@ export default function Home() {
     };
 
     loadPartenaires();
+  }, []);
+
+  // Charger les 3 dernières actualités au montage du composant
+  useEffect(() => {
+    const loadActualities = async () => {
+      try {
+        setIsLoadingActualities(true);
+        const data = await actualitiesService.getActualities();
+        // Limiter aux 3 dernières actualités
+        setActualities(data.slice(0, 3));
+      } catch (error) {
+        console.error("Erreur lors du chargement des actualités:", error);
+      } finally {
+        setIsLoadingActualities(false);
+      }
+    };
+
+    loadActualities();
   }, []);
 
   return (
@@ -566,114 +587,72 @@ export default function Home() {
             </a>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Article 1 */}
-            <Card className="overflow-hidden shadow-sm transition-shadow border-gray-200">
-              <div
-                className="h-48 bg-gradient-to-br from-orange-100 to-orange-200"
-                style={{
-                  backgroundImage: "Aucun image",
-                }}
-              />
-              <CardContent className="pt-6">
-                <p
-                  className="text-sm font-medium mb-2"
-                  style={{ color: "var(--color-primary)" }}
-                >
-                  15 Mars 2025
-                </p>
-                <h3 className="text-xl font-semibold mb-2 text-[var(--color-neutral-dark)]">
-                  Lancement du nouveau programme de financement pour les PME
-                </h3>
-                <p
-                  className="mb-4 line-clamp-3"
-                  style={{ color: "var(--color-text-secondary)" }}
-                >
-                  Le ministère de l'Économie et des Finances a lancé un nouveau
-                  programme de financement destiné aux PME ivoiriennes. Ce
-                  programme...
-                </p>
-                <a
-                  href="/actualites/1"
-                  className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
-                >
-                  Lire la suite <ChevronRight className="h-4 w-4 ml-1" />
-                </a>
-              </CardContent>
-            </Card>
-
-            {/* Article 2 */}
-            <Card className="overflow-hidden shadow-sm transition-shadow border-gray-200">
-              <div
-                className="h-48 bg-gradient-to-br from-green-100 to-green-200"
-                style={{
-                  backgroundImage: "Aucun image",
-                }}
-              />
-              <CardContent className="pt-6">
-                <p
-                  className="text-sm font-medium mb-2"
-                  style={{ color: "var(--color-success)" }}
-                >
-                  10 Mars 2025
-                </p>
-                <h3 className="text-xl font-semibold mb-2 text-[var(--color-neutral-dark)]">
-                  Forum national des entrepreneurs : les inscriptions sont
-                  ouvertes
-                </h3>
-                <p
-                  className="mb-4 line-clamp-3"
-                  style={{ color: "var(--color-text-secondary)" }}
-                >
-                  Le Forum national des entrepreneurs se tiendra du 5 au 7 avril
-                  2025 à Abidjan. Les inscriptions sont désormais ouvertes pour
-                  tous les...
-                </p>
-                <a
-                  href="/actualites/2"
-                  className="flex items-center text-[var(--color-success)] hover:underline font-medium"
-                >
-                  Lire la suite <ChevronRight className="h-4 w-4 ml-1" />
-                </a>
-              </CardContent>
-            </Card>
-
-            {/* Article 3 */}
-            <Card className="overflow-hidden shadow-sm transition-shadow border-gray-200">
-              <div
-                className="h-48 bg-gradient-to-br from-orange-100 to-orange-200"
-                style={{
-                  backgroundImage: "Aucun image",
-                }}
-              />
-              <CardContent className="pt-6">
-                <p
-                  className="text-sm font-medium mb-2"
-                  style={{ color: "var(--color-primary)" }}
-                >
-                  5 Mars 2025
-                </p>
-                <h3 className="text-xl font-semibold mb-2 text-[var(--color-neutral-dark)]">
-                  Nouvelle réglementation pour les entreprises du secteur
-                  agricole
-                </h3>
-                <p
-                  className="mb-4 line-clamp-3"
-                  style={{ color: "var(--color-text-secondary)" }}
-                >
-                  Le gouvernement a adopté une nouvelle réglementation pour les
-                  entreprises du secteur agricole. Cette réglementation vise
-                  à...
-                </p>
-                <a
-                  href="/actualites/3"
-                  className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
-                >
-                  Lire la suite <ChevronRight className="h-4 w-4 ml-1" />
-                </a>
-              </CardContent>
-            </Card>
-          </div>
+          {isLoadingActualities ? (
+            <div className="text-center py-8">
+              <p className="text-[var(--color-text-secondary)]">
+                Chargement des actualités...
+              </p>
+            </div>
+          ) : actualities.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {actualities.map((actuality, index) => (
+                <Card key={actuality.id} className="overflow-hidden shadow-sm transition-shadow border-gray-200">
+                  <div
+                    className="h-48 bg-gradient-to-br from-orange-100 to-orange-200"
+                    style={{
+                      backgroundImage: actuality.imageUrl
+                        ? `url(${actuality.imageUrl})`
+                        : undefined,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  />
+                  <CardContent className="pt-6">
+                    <p
+                      className="text-sm font-medium mb-2"
+                      style={{ color: index % 2 === 0 ? "var(--color-primary)" : "var(--color-success)" }}
+                    >
+                      {actuality.publicationDate
+                        ? new Date(actuality.publicationDate).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : new Date(actuality.createdAt).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                    </p>
+                    <h3 className="text-xl font-semibold mb-2 text-[var(--color-neutral-dark)]">
+                      {actuality.title}
+                    </h3>
+                    <p
+                      className="mb-4 line-clamp-3"
+                      style={{ color: "var(--color-text-secondary)" }}
+                    >
+                      {actuality.content
+                        ? actuality.content.replace(/<[^>]*>/g, "").substring(0, 150) + "..."
+                        : "Aucune description disponible"}
+                    </p>
+                    <a
+                      href={`/actualites/${actuality.id}`}
+                      className="flex items-center hover:underline font-medium"
+                      style={{ color: index % 2 === 0 ? "var(--color-primary)" : "var(--color-success)" }}
+                    >
+                      Lire la suite <ChevronRight className="h-4 w-4 ml-1" />
+                    </a>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-[var(--color-text-secondary)]">
+                Aucune actualité disponible pour le moment.
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
