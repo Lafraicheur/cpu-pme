@@ -297,7 +297,7 @@ const NewsContent = () => {
     { id: "institutionnel", name: "CPU-PME institutionnel" },
     { id: "filiere", name: "Filières" },
     { id: "regions", name: "Régions" },
-    { id: "opprotunites", name: "Opportunités PME" },
+    { id: "opportunites", name: "Opportunités PME" },
     { id: "reglementations", name: "Réglementation & alertes" },
     { id: "evenements", name: "Événements (annonces)" },
   ];
@@ -788,11 +788,11 @@ const NewsContent = () => {
                                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
                                   {/* Badge catégorie */}
-                                  {/* <div className="absolute top-3 right-3">
+                                   <div className="absolute top-3 right-3">
                                     <Badge className="bg-white/95 text-slate-900 shadow-md backdrop-blur-sm border-0 font-medium">
                                       {getCategoryName(news.categorie)}
                                     </Badge>
-                                  </div> */}
+                                  </div> 
                                 </div>
 
                                 <CardContent className="p-6 flex flex-col flex-grow">

@@ -40,6 +40,12 @@ export const API_ENDPOINTS = {
     FOR_SITE_WEB: isClient ? '/secteurs/for-site-web' : '/secteurs/for-site-web',
     GET: (id: string) => isClient ? `/secteurs/${id}` : `/secteurs/${id}`,
   },
+  // Abonnements
+  ABONNEMENTS: {
+    LIST: isClient ? '/abonnements' : '/abonnements',
+    FOR_SITE_WEB: isClient ? '/abonnements/for-site-web' : '/abonnements/for-site-web',
+    GET: (id: string) => isClient ? `/abonnements/${id}` : `/abonnements/${id}`,
+  },
   // Actualités
   ACTUALITIES: {
     LIST: isClient ? '/actualities' : '/actualities/for-site-web',
@@ -53,6 +59,14 @@ export const API_ENDPOINTS = {
   // Banners
   BANNERS: {
     FOR_SITE_WEB: isClient ? '/banners' : '/banners/for-site-web',
+  },
+  // Partenaires
+  PARTENAIRES: {
+    FOR_SITE_WEB: isClient ? '/partenaire/for-site-web' : '/partenaire/for-site-web',
+  },
+  // Équipe
+  EQUIPE: {
+    FOR_SITE_WEB: isClient ? '/siteequipe/for-site-web' : '/siteequipe/for-site-web',
   },
 };
 

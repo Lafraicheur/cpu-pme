@@ -25,6 +25,8 @@ import { useEffect, useRef, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import Link from "next/link";
 import { bannersService, Banner } from "@/lib/api/services/banners.service";
+import { partenairesService, Partenaire } from "@/lib/api/services/partenaires.service";
+import { actualitiesService, Actuality } from "@/lib/api/services/actualities.service";
 
 // Composant de décompte animé
 function CountUp({
@@ -98,6 +100,10 @@ function CountUp({
 export default function Home() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [isLoadingBanners, setIsLoadingBanners] = useState(true);
+  const [partenaires, setPartenaires] = useState<Partenaire[]>([]);
+  const [isLoadingPartenaires, setIsLoadingPartenaires] = useState(true);
+  const [actualities, setActualities] = useState<Actuality[]>([]);
+  const [isLoadingActualities, setIsLoadingActualities] = useState(true);
 
   // Charger les banners au montage du composant
   useEffect(() => {
@@ -118,6 +124,43 @@ export default function Home() {
     };
 
     loadBanners();
+  }, []);
+
+  // Charger les partenaires stratégiques au montage du composant
+  useEffect(() => {
+    const loadPartenaires = async () => {
+      try {
+        setIsLoadingPartenaires(true);
+        const data = await partenairesService.getPartenairesForSiteWeb({
+          type: "strategique",
+        });
+        setPartenaires(data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des partenaires:", error);
+      } finally {
+        setIsLoadingPartenaires(false);
+      }
+    };
+
+    loadPartenaires();
+  }, []);
+
+  // Charger les 3 dernières actualités au montage du composant
+  useEffect(() => {
+    const loadActualities = async () => {
+      try {
+        setIsLoadingActualities(true);
+        const data = await actualitiesService.getActualities();
+        // Limiter aux 3 dernières actualités
+        setActualities(data.slice(0, 3));
+      } catch (error) {
+        console.error("Erreur lors du chargement des actualités:", error);
+      } finally {
+        setIsLoadingActualities(false);
+      }
+    };
+
+    loadActualities();
   }, []);
 
   return (
@@ -544,114 +587,72 @@ export default function Home() {
             </a>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Article 1 */}
-            <Card className="overflow-hidden shadow-sm transition-shadow border-gray-200">
-              <div
-                className="h-48 bg-gradient-to-br from-orange-100 to-orange-200"
-                style={{
-                  backgroundImage: "Aucun image",
-                }}
-              />
-              <CardContent className="pt-6">
-                <p
-                  className="text-sm font-medium mb-2"
-                  style={{ color: "var(--color-primary)" }}
-                >
-                  15 Mars 2025
-                </p>
-                <h3 className="text-xl font-semibold mb-2 text-[var(--color-neutral-dark)]">
-                  Lancement du nouveau programme de financement pour les PME
-                </h3>
-                <p
-                  className="mb-4 line-clamp-3"
-                  style={{ color: "var(--color-text-secondary)" }}
-                >
-                  Le ministère de l'Économie et des Finances a lancé un nouveau
-                  programme de financement destiné aux PME ivoiriennes. Ce
-                  programme...
-                </p>
-                <a
-                  href="/actualites/1"
-                  className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
-                >
-                  Lire la suite <ChevronRight className="h-4 w-4 ml-1" />
-                </a>
-              </CardContent>
-            </Card>
-
-            {/* Article 2 */}
-            <Card className="overflow-hidden shadow-sm transition-shadow border-gray-200">
-              <div
-                className="h-48 bg-gradient-to-br from-green-100 to-green-200"
-                style={{
-                  backgroundImage: "Aucun image",
-                }}
-              />
-              <CardContent className="pt-6">
-                <p
-                  className="text-sm font-medium mb-2"
-                  style={{ color: "var(--color-success)" }}
-                >
-                  10 Mars 2025
-                </p>
-                <h3 className="text-xl font-semibold mb-2 text-[var(--color-neutral-dark)]">
-                  Forum national des entrepreneurs : les inscriptions sont
-                  ouvertes
-                </h3>
-                <p
-                  className="mb-4 line-clamp-3"
-                  style={{ color: "var(--color-text-secondary)" }}
-                >
-                  Le Forum national des entrepreneurs se tiendra du 5 au 7 avril
-                  2025 à Abidjan. Les inscriptions sont désormais ouvertes pour
-                  tous les...
-                </p>
-                <a
-                  href="/actualites/2"
-                  className="flex items-center text-[var(--color-success)] hover:underline font-medium"
-                >
-                  Lire la suite <ChevronRight className="h-4 w-4 ml-1" />
-                </a>
-              </CardContent>
-            </Card>
-
-            {/* Article 3 */}
-            <Card className="overflow-hidden shadow-sm transition-shadow border-gray-200">
-              <div
-                className="h-48 bg-gradient-to-br from-orange-100 to-orange-200"
-                style={{
-                  backgroundImage: "Aucun image",
-                }}
-              />
-              <CardContent className="pt-6">
-                <p
-                  className="text-sm font-medium mb-2"
-                  style={{ color: "var(--color-primary)" }}
-                >
-                  5 Mars 2025
-                </p>
-                <h3 className="text-xl font-semibold mb-2 text-[var(--color-neutral-dark)]">
-                  Nouvelle réglementation pour les entreprises du secteur
-                  agricole
-                </h3>
-                <p
-                  className="mb-4 line-clamp-3"
-                  style={{ color: "var(--color-text-secondary)" }}
-                >
-                  Le gouvernement a adopté une nouvelle réglementation pour les
-                  entreprises du secteur agricole. Cette réglementation vise
-                  à...
-                </p>
-                <a
-                  href="/actualites/3"
-                  className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
-                >
-                  Lire la suite <ChevronRight className="h-4 w-4 ml-1" />
-                </a>
-              </CardContent>
-            </Card>
-          </div>
+          {isLoadingActualities ? (
+            <div className="text-center py-8">
+              <p className="text-[var(--color-text-secondary)]">
+                Chargement des actualités...
+              </p>
+            </div>
+          ) : actualities.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {actualities.map((actuality, index) => (
+                <Card key={actuality.id} className="overflow-hidden shadow-sm transition-shadow border-gray-200">
+                  <div
+                    className="h-48 bg-gradient-to-br from-orange-100 to-orange-200"
+                    style={{
+                      backgroundImage: actuality.imageUrl
+                        ? `url(${actuality.imageUrl})`
+                        : undefined,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  />
+                  <CardContent className="pt-6">
+                    <p
+                      className="text-sm font-medium mb-2"
+                      style={{ color: index % 2 === 0 ? "var(--color-primary)" : "var(--color-success)" }}
+                    >
+                      {actuality.publicationDate
+                        ? new Date(actuality.publicationDate).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : new Date(actuality.createdAt).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                    </p>
+                    <h3 className="text-xl font-semibold mb-2 text-[var(--color-neutral-dark)]">
+                      {actuality.title}
+                    </h3>
+                    <p
+                      className="mb-4 line-clamp-3"
+                      style={{ color: "var(--color-text-secondary)" }}
+                    >
+                      {actuality.content
+                        ? actuality.content.replace(/<[^>]*>/g, "").substring(0, 150) + "..."
+                        : "Aucune description disponible"}
+                    </p>
+                    <a
+                      href={`/actualites/${actuality.id}`}
+                      className="flex items-center hover:underline font-medium"
+                      style={{ color: index % 2 === 0 ? "var(--color-primary)" : "var(--color-success)" }}
+                    >
+                      Lire la suite <ChevronRight className="h-4 w-4 ml-1" />
+                    </a>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-[var(--color-text-secondary)]">
+                Aucune actualité disponible pour le moment.
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -666,122 +667,66 @@ export default function Home() {
             </div>
           </div>
 
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            plugins={[
-              Autoplay({
-                delay: 1000,
-              }),
-            ]}
-            className="w-full"
-          >
-            <CarouselContent className="-ml-2 md:-ml-4">
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-3 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/bad.png").default.src}
-                    alt="Banque Africaine de Développement"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/ecobank.png").default.src}
-                    alt="Ecobank"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/mtn.png").default.src}
-                    alt="MTN"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/fun.png").default.src}
-                    alt="Union Européenne"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/afd.png").default.src}
-                    alt="Agence Française de Développement"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/cepici.png").default.src}
-                    alt="CEPICI - Centre de Promotion des Investissements en Côte d'Ivoire"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/coperation.png").default.src}
-                    alt="Coopération Allemande"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/agriculture.png").default.src}
-                    alt="Ministère d'État, Ministre de l'Agriculture, du Développement Rural et des Productions Vivières"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/tourisme.png").default.src}
-                    alt="Ministère du Tourisme et des Loisirs"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-
-              <CarouselItem className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6">
-                <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
-                  <img
-                    src={require("@/assets/commerce.png").default.src}
-                    alt="Ministère du Commerce et de l'Industrie"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </Card>
-              </CarouselItem>
-            </CarouselContent>
-            <CarouselPrevious className="hidden md:flex" />
-            <CarouselNext className="hidden md:flex" />
-          </Carousel>
+          {isLoadingPartenaires ? (
+            <div className="text-center py-8">
+              <p className="text-[var(--color-text-secondary)]">
+                Chargement des partenaires...
+              </p>
+            </div>
+          ) : partenaires.length > 0 ? (
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              plugins={[
+                Autoplay({
+                  delay: 1000,
+                }),
+              ]}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {partenaires.map((partenaire) => (
+                  <CarouselItem
+                    key={partenaire.id}
+                    className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/6"
+                  >
+                    <Card className="flex items-center justify-center p-4 h-30 border-0 bg-white">
+                      {partenaire.lien ? (
+                        <a
+                          href={partenaire.lien}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full h-full flex items-center justify-center"
+                        >
+                          <img
+                            src={partenaire.logo}
+                            alt={partenaire.nom}
+                            className="max-h-full max-w-full object-contain"
+                          />
+                        </a>
+                      ) : (
+                        <img
+                          src={partenaire.logo}
+                          alt={partenaire.nom}
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      )}
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex" />
+              <CarouselNext className="hidden md:flex" />
+            </Carousel>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-[var(--color-text-secondary)]">
+                Aucun partenaire disponible pour le moment.
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </>

@@ -8,7 +8,9 @@ import { regionsService, Region } from '@/lib/api/services/regions.service';
 import { secteursService, Secteur, Filiere, SousFiliere, Activite } from '@/lib/api/services/secteurs.service';
 import { actualitiesService, Actuality, GetActualitiesParams } from '@/lib/api/services/actualities.service';
 import { publicationsService, Publication, GetPublicationsParams } from '@/lib/api/services/publications.service';
-import { abonnementsService, Abonnement } from '@/lib/api/services/abonnements.service';
+import { abonnementsService, Abonnement, Avantage, Limites } from '@/lib/api/services/abonnements.service';
+import { partenairesService, Partenaire, GetPartenairesParams } from '@/lib/api/services/partenaires.service';
+import { equipeService, EquipeMembre } from '@/lib/api/services/equipe.service';
 
 /**
  * Hook pour récupérer tous les types de membres pour le site web
@@ -150,6 +152,31 @@ export function useAbonnements() {
   });
 }
 
+/**
+ * Hook pour récupérer les partenaires pour le site web
+ * @param params - Paramètres de filtrage optionnels (type)
+ */
+export function usePartenairesForSiteWeb(params?: GetPartenairesParams) {
+  return useQuery<Partenaire[], Error>({
+    queryKey: ['partenaires', 'for-site-web', params],
+    queryFn: () => partenairesService.getPartenairesForSiteWeb(params),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
+}
+
+/**
+ * Hook pour récupérer l'équipe pour le site web
+ */
+export function useEquipeForSiteWeb() {
+  return useQuery<EquipeMembre[], Error>({
+    queryKey: ['equipe', 'for-site-web'],
+    queryFn: () => equipeService.getEquipeForSiteWeb(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
+}
+
 // Export des types pour utilisation dans les composants
-export type { TypeMembre, Profil, Region, Secteur, Filiere, SousFiliere, Activite, Actuality, Publication, Abonnement };
+export type { TypeMembre, Profil, Region, Secteur, Filiere, SousFiliere, Activite, Actuality, Publication, Abonnement, Avantage, Limites, Partenaire, EquipeMembre };
 

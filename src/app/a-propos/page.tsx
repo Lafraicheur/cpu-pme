@@ -13,11 +13,16 @@ import {
   History,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { usePartenairesForSiteWeb, useEquipeForSiteWeb } from "@/hooks/use-api";
 
 function AProposContent() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") || "mission";
   const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Utiliser les hooks pour récupérer les données
+  const { data: partenaires = [], isLoading: isLoadingPartenaires } = usePartenairesForSiteWeb({ type: 'strategique' });
+  const { data: equipe = [], isLoading: isLoadingEquipe } = useEquipeForSiteWeb();
 
   return (
     <>
@@ -53,17 +58,8 @@ function AProposContent() {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <div className="flex justify-center mb-8">
-              <TabsList
-                className="
-      grid grid-cols-2 md:grid-cols-4
-      w-full max-w-5xl
-      gap-4
-      p-3
-      bg-gray-50/50
-      rounded-sm
-    "
-              >
+            <div className="flex justify-center mb-12 sm:mb-16 px-4 sm:px-6">
+              <TabsList className="!grid grid-cols-2 md:!grid-cols-4 w-full max-w-5xl gap-2 sm:gap-3 md:gap-4 p-2 sm:p-3 rounded-xl !flex-none">
                 {[
                   { value: "mission", label: "Mission & Vision" },
                   { value: "histoire", label: "Histoire" },
@@ -73,21 +69,7 @@ function AProposContent() {
                   <TabsTrigger
                     key={tab.value}
                     value={tab.value}
-                    className="
-          w-full
-          flex items-center justify-center
-          px-6 py-4
-          rounded-lg
-          font-semibold
-          text-sm sm:text-base
-          transition-all duration-300
-          data-[state=active]:bg-white
-          data-[state=active]:text-[#221F1F]
-          data-[state=active]:shadow-md
-          data-[state=inactive]:bg-slate-100
-          data-[state=inactive]:text-gray-600
-          hover:bg-slate-200
-        "
+                    className="w-full flex items-center justify-center px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 rounded-lg font-semibold text-xs sm:text-sm md:text-base transition-all duration-300 data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-slate-100 data-[state=inactive]:text-gray-600 hover:bg-slate-200 whitespace-nowrap"
                   >
                     {tab.label}
                   </TabsTrigger>
@@ -96,7 +78,7 @@ function AProposContent() {
             </div>
 
             {/* Mission & Vision Content */}
-            <TabsContent value="mission" className="mt-4">
+            <TabsContent value="mission" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div>
                   <div className="flex items-center mb-4">
@@ -377,7 +359,7 @@ function AProposContent() {
             </TabsContent>
 
             {/* Histoire Content */}
-            <TabsContent value="histoire" className="mt-4">
+            <TabsContent value="histoire" className="mt-0">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-1">
                   <div className="sticky top-24">
@@ -647,7 +629,7 @@ function AProposContent() {
             </TabsContent>
 
             {/* Équipe Content */}
-            <TabsContent value="equipe" className="mt-4">
+            <TabsContent value="equipe" className="mt-0">
               {/* Direction */}
               <div>
                 <div className="flex items-center mb-6">
@@ -665,130 +647,101 @@ function AProposContent() {
                   </h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {/* Président */}
-                  <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
-                    <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
-                      <img
-                        src={require("@/assets/diomande.png").default.src}
-                        alt="Dr DIOMANDE Moussa Elias Farakhan"
-                        className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <CardContent className="pt-6 pb-6">
-                      <h3 className="text-lg font-bold mb-2 text-gray-900">
-                        Dr DIOMANDE Moussa Elias Farakhan
-                      </h3>
-                      <p
-                        className="font-semibold mb-3 text-sm"
-                        style={{ color: "var(--color-primary)" }}
+                {isLoadingEquipe ? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                  </div>
+                ) : equipe.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {equipe.map((membre) => (
+                      <Card
+                        key={membre.id}
+                        className="overflow-hidden border-0 transition-all duration-300 bg-white hover:shadow-lg"
                       >
-                        Président de la CPU-PME.CI
-                      </p>
-                      <p
-                        className="text-sm leading-relaxed"
-                        style={{ color: "var(--color-text-secondary)" }}
-                      >
-                        Dr DIOMANDE dirige avec vision et détermination la
-                        Confédération Patronale Unique des PME de Côte d'Ivoire,
-                        œuvrant pour le développement économique du pays à
-                        travers le soutien aux petites et moyennes entreprises.
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  {/* Président de Filière */}
-                  <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
-                    <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
-                      <img
-                        src={require("@/assets/herman.png").default.src}
-                        alt="Hermann ADJABONI GUEZO"
-                        className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <CardContent className="pt-6 pb-6">
-                      <h3 className="text-lg font-bold mb-2 text-gray-900">
-                        Hermann ADJABONI GUEZO
-                      </h3>
-                      <p
-                        className="font-semibold mb-3 text-sm"
-                        style={{ color: "var(--color-primary)" }}
-                      >
-                        Président de Filière
-                      </p>
-                      <p
-                        className="text-sm leading-relaxed"
-                        style={{ color: "var(--color-text-secondary)" }}
-                      >
-                        Hermann ADJABONI GUEZO apporte son expertise et son
-                        leadership en tant que Président de Filière, contribuant
-                        au développement sectoriel et à la valorisation des PME
-                        ivoiriennes dans son domaine d'activité.
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  {/* Secretaire Executif */}
-                  <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
-                    <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
-                      <img
-                        src={require("@/assets/kongo.png").default.src}
-                        alt="Silvère Kongo"
-                        className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <CardContent className="pt-6 pb-6">
-                      <h3 className="text-lg font-bold mb-2 text-gray-900">
-                        Silvère Kongo
-                      </h3>
-                      <p
-                        className="font-semibold mb-3 text-sm"
-                        style={{ color: "var(--color-primary)" }}
-                      >
-                        Secretaire Executif
-                      </p>
-                      <p
-                        className="text-sm leading-relaxed"
-                        style={{ color: "var(--color-text-secondary)" }}
-                      >
-                        Silvère Kongo assure le rôle clé de Secretaire Executif
-                        au sein de la CPU-PME.CI, coordonnant les activités
-                        opérationnelles et assurant la mise en œuvre des
-                        décisions stratégiques de l'organisation.
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  {/* Autres membres - placeholder */}
-                  <Card className="overflow-hidden border-0 transition-all duration-300 bg-white">
-                    <div className="h-64 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                      <Users className="h-20 w-20 text-gray-400" />
-                    </div>
-                    <CardContent className="pt-6 pb-6">
-                      <h3 className="text-lg font-bold mb-2 text-gray-900">
-                        Nom du Dirigeant
-                      </h3>
-                      <p
-                        className="font-semibold mb-3 text-sm"
-                        style={{ color: "var(--color-primary)" }}
-                      >
-                        Poste / Fonction
-                      </p>
-                      <p
-                        className="text-sm leading-relaxed"
-                        style={{ color: "var(--color-text-secondary)" }}
-                      >
-                        Courte biographie professionnelle du dirigeant, avec son
-                        parcours et son expertise...
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
+                        <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
+                          <img
+                            src={membre.photo}
+                            alt={membre.nom}
+                            className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              e.currentTarget.src = "/logo.png";
+                            }}
+                          />
+                        </div>
+                        <CardContent className="pt-6 pb-6">
+                          <h3 className="text-lg font-bold mb-2 text-gray-900">
+                            {membre.nom}
+                          </h3>
+                          <p
+                            className="font-semibold mb-3 text-sm"
+                            style={{ color: "var(--color-primary)" }}
+                          >
+                            {membre.role}
+                          </p>
+                          <p
+                            className="text-sm leading-relaxed mb-4"
+                            style={{ color: "var(--color-text-secondary)" }}
+                          >
+                            {membre.bio}
+                          </p>
+                          {membre.reseauxSociaux && (
+                            <div className="flex gap-3 mt-4">
+                              {membre.reseauxSociaux.linkedin && (
+                                <a
+                                  href={membre.reseauxSociaux.linkedin}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 transition-colors"
+                                  aria-label="LinkedIn"
+                                >
+                                  <svg
+                                    className="w-5 h-5"
+                                    fill="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                                  </svg>
+                                </a>
+                              )}
+                              {membre.reseauxSociaux.email && (
+                                <a
+                                  href={`mailto:${membre.reseauxSociaux.email}`}
+                                  className="text-gray-600 hover:text-gray-800 transition-colors"
+                                  aria-label="Email"
+                                >
+                                  <svg
+                                    className="w-5 h-5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p style={{ color: "var(--color-text-secondary)" }}>
+                      Aucun membre de l'équipe disponible pour le moment.
+                    </p>
+                  </div>
+                )}
               </div>
             </TabsContent>
 
             {/* Partenaires Content */}
-            <TabsContent value="partenaires" className="mt-4">
+            <TabsContent value="partenaires" className="mt-0">
               <div className="grid grid-cols-1 gap-12">
                 {/* Partenaires */}
                 <div>
@@ -817,87 +770,53 @@ function AProposContent() {
                     intérêts.
                   </p>
 
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
-                      <img
-                        src={require("@/assets/bad.png").default.src}
-                        alt="Banque Africaine de Développement"
-                        className="max-h-full max-w-full object-contain"
-                      />
-                    </Card>
-
-                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
-                      <img
-                        src={require("@/assets/ecobank.png").default.src}
-                        alt="Ecobank"
-                        className="max-h-full max-w-full object-contain"
-                      />
-                    </Card>
-
-                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
-                      <img
-                        src={require("@/assets/mtn.png").default.src}
-                        alt="MTN"
-                        className="max-h-full max-w-full object-contain"
-                      />
-                    </Card>
-
-                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
-                      <img
-                        src={require("@/assets/fun.png").default.src}
-                        alt="Union Européenne"
-                        className="max-h-full max-w-full object-contain"
-                      />
-                    </Card>
-
-                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
-                      <img
-                        src={require("@/assets/afd.png").default.src}
-                        alt="Agence Française de Développement"
-                        className="max-h-full max-w-full object-contain"
-                      />
-                    </Card>
-
-                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
-                      <img
-                        src={require("@/assets/cepici.png").default.src}
-                        alt="CEPICI - Centre de Promotion des Investissements en Côte d'Ivoire"
-                        className="max-h-full max-w-full object-contain"
-                      />
-                    </Card>
-
-                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
-                      <img
-                        src={require("@/assets/coperation.png").default.src}
-                        alt="Coopération Allemande"
-                        className="max-h-full max-w-full object-contain"
-                      />
-                    </Card>
-
-                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
-                      <img
-                        src={require("@/assets/agriculture.png").default.src}
-                        alt="Ministère d'État, Ministre de l'Agriculture, du Développement Rural et des Productions Vivières"
-                        className="max-h-full max-w-full object-contain"
-                      />
-                    </Card>
-
-                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
-                      <img
-                        src={require("@/assets/tourisme.png").default.src}
-                        alt="Ministère du Tourisme et des Loisirs"
-                        className="max-h-full max-w-full object-contain"
-                      />
-                    </Card>
-
-                    <Card className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow">
-                      <img
-                        src={require("@/assets/commerce.png").default.src}
-                        alt="Ministère du Commerce et de l'Industrie"
-                        className="max-h-full max-w-full object-contain"
-                      />
-                    </Card>
-                  </div>
+                  {isLoadingPartenaires ? (
+                    <div className="flex justify-center items-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    </div>
+                  ) : partenaires.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                      {partenaires.map((partenaire) => (
+                        <Card
+                          key={partenaire.id}
+                          className="flex items-center justify-center p-4 h-32 border-0 bg-white transition-shadow hover:shadow-lg"
+                        >
+                          {partenaire.lien ? (
+                            <a
+                              href={partenaire.lien}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full h-full flex items-center justify-center"
+                            >
+                              <img
+                                src={partenaire.logo}
+                                alt={partenaire.nom}
+                                className="max-h-full max-w-full object-contain transition-transform hover:scale-105"
+                                onError={(e) => {
+                                  e.currentTarget.src = "/logo.png";
+                                }}
+                              />
+                            </a>
+                          ) : (
+                            <img
+                              src={partenaire.logo}
+                              alt={partenaire.nom}
+                              className="max-h-full max-w-full object-contain"
+                              onError={(e) => {
+                                e.currentTarget.src = "/logo.png";
+                              }}
+                            />
+                          )}
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p style={{ color: "var(--color-text-secondary)" }}>
+                        Aucun partenaire disponible pour le moment.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </TabsContent>
