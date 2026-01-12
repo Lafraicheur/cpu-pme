@@ -5586,7 +5586,7 @@ const MembersContent = () => {
                         >
                           <span className="flex items-center justify-center gap-2">
                             <Award className="h-6 w-6" />
-                            Soumettre ma demand
+                            Soumettre ma demande
                           </span>
                         </Button>
                         <p className="text-center text-sm text-gray-500 mt-4">
