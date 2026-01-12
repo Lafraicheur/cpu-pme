@@ -3,6 +3,8 @@
  * Utilise les routes API Next.js qui s'exécutent côté serveur
  */
 
+import { normalizeObject, hasEncodingIssues } from '../text-normalization';
+
 export interface ApiError {
   message: string;
   status?: number;
@@ -18,7 +20,7 @@ class ProxyApiClient {
     const url = `/api/proxy${endpoint}`;
     
     const method = (options.method || 'GET').toUpperCase();
-    const baseHeaders: HeadersInit = { ...options.headers };
+    const baseHeaders: Record<string, string> = { ...(options.headers as Record<string, string> || {}) };
     // Éviter d'imposer Content-Type sur GET sans corps (limite certains serveurs / évite preflight inutiles)
     if (method !== 'GET' && method !== 'HEAD') {
       baseHeaders['Content-Type'] = baseHeaders['Content-Type'] || 'application/json';
@@ -57,8 +59,20 @@ class ProxyApiClient {
         throw error;
       }
 
-      const data = await response.json();
-      return { data };
+      const rawData = await response.json();
+      
+      // Normaliser automatiquement les données pour corriger les problèmes d'encodage
+      const normalizedData = normalizeObject(rawData);
+      
+      // Log si des problèmes d'encodage ont été détectés (en développement)
+      if (process.env.NODE_ENV === 'development') {
+        const dataStr = JSON.stringify(rawData);
+        if (hasEncodingIssues(dataStr)) {
+          console.warn('⚠️ [PROXY CLIENT] Problèmes d\'encodage détectés et corrigés pour:', endpoint);
+        }
+      }
+      
+      return { data: normalizedData };
     } catch (error) {
       console.error('❌ [PROXY CLIENT] Fetch failed:', { url, options: { method: config.method } , error });
       if (error && typeof error === 'object' && 'message' in error) {

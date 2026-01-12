@@ -3,6 +3,7 @@
  */
 
 import { API_BASE_URL } from './config';
+import { normalizeObject, hasEncodingIssues } from '../text-normalization';
 
 export interface ApiError {
   message: string;
@@ -57,8 +58,20 @@ class ApiClient {
         throw error;
       }
 
-      const data = await response.json();
-      return { data };
+      const rawData = await response.json();
+      
+      // Normaliser automatiquement les données pour corriger les problèmes d'encodage
+      const normalizedData = normalizeObject(rawData);
+      
+      // Log si des problèmes d'encodage ont été détectés (en développement)
+      if (process.env.NODE_ENV === 'development') {
+        const dataStr = JSON.stringify(rawData);
+        if (hasEncodingIssues(dataStr)) {
+          console.warn('⚠️ [API CLIENT] Problèmes d\'encodage détectés et corrigés pour:', endpoint);
+        }
+      }
+      
+      return { data: normalizedData };
     } catch (error) {
       if (error && typeof error === 'object' && 'message' in error) {
         throw error as ApiError;

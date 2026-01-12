@@ -65,8 +65,8 @@ export const secteursService = {
         }
       }
       
-      // Filtrer uniquement les secteurs actifs avec des filières
-      const activeSecteurs = data.filter(secteur => secteur.isActive && secteur.filieres && secteur.filieres.length > 0);
+      // Filtrer uniquement les secteurs actifs (même sans filières pour afficher tous les secteurs)
+      const activeSecteurs = data.filter(secteur => secteur.isActive);
       
       // S'assurer que c'est un tableau
       if (!Array.isArray(data)) {

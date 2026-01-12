@@ -150,11 +150,23 @@ const SecteursContent = () => {
 
   // Fonction pour trier les secteurs dans l'ordre spécifique
   const getSortedSecteurs = () => {
-    const order = ['primaire', 'secondaire', 'tertiaire', 'quaternaire', 'transversale'];
+    const order = ['primaire', 'secondaire', 'tertiaire', 'quaternaire', 'transversal'];
     return [...secteursAPI].sort((a, b) => {
-      const aIndex = order.findIndex(o => a.name.toLowerCase().includes(o));
-      const bIndex = order.findIndex(o => b.name.toLowerCase().includes(o));
-      return aIndex - bIndex;
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      
+      const aIndex = order.findIndex(o => aName.includes(o));
+      const bIndex = order.findIndex(o => bName.includes(o));
+      
+      // Si les deux secteurs sont dans l'ordre défini, les trier selon cet ordre
+      if (aIndex !== -1 && bIndex !== -1) {
+        return aIndex - bIndex;
+      }
+      // Si un seul secteur est dans l'ordre, le mettre en premier
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      // Si aucun des deux n'est dans l'ordre, garder l'ordre original (alphabétique)
+      return a.name.localeCompare(b.name);
     });
   };
 
@@ -397,7 +409,7 @@ const SecteursContent = () => {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative h-72 sm:h-80 md:h-96 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#1a1a1a]">
+      <section className="relative h-64 sm:h-72 md:h-80 lg:h-96 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#1a1a1a]">
         <div className="absolute inset-0 opacity-10">
           <img
             src="/logo.png"
@@ -407,11 +419,11 @@ const SecteursContent = () => {
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/40" />
 
-        <div className="relative z-10 container mx-auto px-6 text-center text-white">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-tight">
+        <div className="relative z-10 container mx-auto px-4 sm:px-6 text-center text-white">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 tracking-tight">
             Secteurs & Filières
           </h1>
-          <p className="text-base md:text-lg mb-6 max-w-2xl mx-auto text-white/80 font-light">
+          <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 max-w-2xl mx-auto text-white/80 font-light px-4">
             Classification sectorielle des PME en Côte d'Ivoire
           </p>
         </div>
@@ -421,45 +433,55 @@ const SecteursContent = () => {
 
       {/* Bannière du Secteur Actif */}
       {activeSecteur && (
-        <section className="bg-gradient-to-br from-gray-50 to-white py-6 border-b border-gray-200">
-          <div className="max-w-[1400px] mx-auto px-6">
-            <div className="bg-gradient-to-r from-[#F27A20] via-[#E8862D] to-[#009739] py-5 px-6 rounded-2xl shadow-lg">
-              <h2 className="text-2xl md:text-3xl font-bold text-white text-center tracking-wide">
-                {decodeHtmlEntities(activeSecteur.name)}
-              </h2>
+        <section className="bg-gradient-to-br from-gray-50 to-white py-4 sm:py-6 border-b border-gray-200">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+            <div className="bg-gradient-to-r from-[#F27A20] via-[#E8862D] to-[#009739] py-4 sm:py-5 px-4 sm:px-6 rounded-xl sm:rounded-2xl shadow-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2 sm:gap-3">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white text-center sm:text-left tracking-wide">
+                  {decodeHtmlEntities(activeSecteur.name)}
+                </h2>
+                {activeSecteur.description && (
+                  <>
+                    <span className="hidden sm:inline text-white/80 text-2xl font-light">:</span>
+                    <p className="text-sm sm:text-base md:text-lg text-white/90 text-center sm:text-left font-medium">
+                      {decodeHtmlEntities(activeSecteur.description)}
+                    </p>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </section>
       )}
 
       {/* Barre de recherche et contrôles */}
-      <section className="bg-white border-b border-gray-200 py-5 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-[1400px] mx-auto px-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="relative flex-1 max-w-lg">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      <section className="bg-white border-b border-gray-200 py-3 sm:py-5 sticky top-0 z-40 shadow-sm">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+          <div className="flex flex-col md:flex-row gap-3 sm:gap-4 items-stretch md:items-center justify-between">
+            <div className="relative flex-1 w-full md:max-w-lg">
+              <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Rechercher dans les filières, sous-catégories et activités..."
+                placeholder="Rechercher..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-11 h-11 border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cpu-orange/20 transition-all"
+                className="pl-10 sm:pl-11 h-10 sm:h-11 text-sm sm:text-base border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-cpu-orange/20 transition-all w-full"
               />
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsCompactMode(!isCompactMode)}
-                className="border-gray-300 rounded-xl hover:bg-gray-50 transition-all h-11 px-4"
+                className="border-gray-300 rounded-xl hover:bg-gray-50 transition-all h-9 sm:h-11 px-3 sm:px-4 text-xs sm:text-sm flex-shrink-0"
                 title={isCompactMode ? "Mode étendu" : "Mode compact"}
               >
                 {isCompactMode ? (
-                  <ChevronsUp className="h-4 w-4 mr-2" />
+                  <ChevronsUp className="h-3.5 sm:h-4 w-3.5 sm:w-4 sm:mr-2" />
                 ) : (
-                  <ChevronsDown className="h-4 w-4 mr-2" />
+                  <ChevronsDown className="h-3.5 sm:h-4 w-3.5 sm:w-4 sm:mr-2" />
                 )}
-                <span className="hidden sm:inline text-xs font-medium">
+                <span className="hidden md:inline text-xs font-medium">
                   {isCompactMode ? "Étendre" : "Compacter"}
                 </span>
               </Button>
@@ -469,22 +491,22 @@ const SecteursContent = () => {
                   variant="outline"
                   size="sm"
                   onClick={clearAllSelections}
-                  className="border-red-300 text-red-600 hover:bg-red-50 rounded-xl transition-all h-11 px-4"
+                  className="border-red-300 text-red-600 hover:bg-red-50 rounded-xl transition-all h-9 sm:h-11 px-3 sm:px-4 text-xs sm:text-sm flex-shrink-0"
                   title="Tout désélectionner"
                 >
-                  <span className="text-xs font-medium">Tout désélectionner</span>
+                  <span className="text-xs font-medium">Désélectionner</span>
                 </Button>
               )}
 
               {hasSelection && activeSecteurId && (
-                <div className="flex items-center gap-3 bg-orange-50 px-4 py-2 rounded-xl border border-orange-200">
-                  <div className="flex items-center gap-2 min-w-[120px]">
+                <div className="flex items-center gap-2 sm:gap-3 bg-orange-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-orange-200">
+                  <div className="flex items-center gap-2 min-w-[80px] sm:min-w-[120px]">
                     <Progress
                       value={getSelectionPercentageForSecteur(activeSecteurId)}
-                      className="h-2 flex-1"
+                      className="h-1.5 sm:h-2 flex-1"
                     />
                   </div>
-                  <span className="text-sm text-cpu-orange font-bold whitespace-nowrap">
+                  <span className="text-xs sm:text-sm text-cpu-orange font-bold whitespace-nowrap">
                     {getSelectionPercentageForSecteur(activeSecteurId)}%
                   </span>
                 </div>
@@ -531,18 +553,22 @@ const SecteursContent = () => {
             className="w-full"
           >
             {/* Navigation par Onglets */}
-            <div className="flex justify-center mb-10">
-              <TabsList className="inline-flex items-center justify-center gap-3 sm:gap-4 md:gap-5 px-3 sm:px-5 md:px-6 py-2.5 bg-white rounded-2xl border border-gray-200 shadow-lg h-auto w-auto">
-                {sortedSecteurs.map((secteur) => (
-                  <TabsTrigger
-                    key={secteur.id}
-                    value={secteur.id}
-                    className="flex items-center justify-center px-4 sm:px-5 md:px-7 py-2.5 sm:py-3 rounded-xl font-inter text-xs sm:text-sm font-semibold transition-all duration-200 data-[state=active]:bg-gradient-to-br data-[state=active]:from-cpu-orange data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-gray-50 hover:text-gray-800 whitespace-nowrap relative"
-                  >
-                    {decodeHtmlEntities(secteur.name)}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+            <div className="flex justify-center mb-6 sm:mb-8 md:mb-10">
+              <div className="w-full max-w-lg sm:max-w-none sm:w-auto">
+                <TabsList className="!grid grid-cols-2 gap-2 p-2 bg-white rounded-xl border border-gray-200 shadow-lg h-auto w-full sm:!inline-flex sm:items-center sm:justify-center sm:gap-3 md:gap-4 lg:gap-5 sm:px-3 md:px-5 lg:px-6 sm:py-2.5 sm:rounded-2xl sm:w-auto">
+                  {sortedSecteurs.map((secteur, index) => (
+                    <TabsTrigger
+                      key={secteur.id}
+                      value={secteur.id}
+                      className={`flex items-center justify-center px-2 sm:px-4 md:px-5 lg:px-7 py-3 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-inter text-[11px] sm:text-xs md:text-sm font-semibold transition-all duration-200 data-[state=active]:bg-gradient-to-br data-[state=active]:from-cpu-orange data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-gray-50 hover:text-gray-800 whitespace-normal sm:whitespace-nowrap text-center leading-tight ${
+                        sortedSecteurs.length === 5 && index === 4 ? 'col-span-2' : ''
+                      }`}
+                    >
+                      {decodeHtmlEntities(secteur.name)}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
             </div>
 
             {/* Contenu des onglets */}
@@ -550,12 +576,12 @@ const SecteursContent = () => {
               <TabsContent key={secteur.id} value={secteur.id}>
                 {/* Compteur sélections */}
                 {getSelectionCountForSecteur(secteur.id) > 0 && (
-                  <div className="mb-6 py-3 px-5 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border border-orange-200 shadow-sm">
-                    <p className="text-sm font-semibold text-[#221F1F] flex items-center gap-2">
-                      <span className="inline-flex items-center justify-center w-7 h-7 bg-cpu-orange text-white rounded-full text-xs font-bold">
+                  <div className="mb-4 sm:mb-6 py-2.5 sm:py-3 px-4 sm:px-5 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg sm:rounded-xl border border-orange-200 shadow-sm">
+                    <p className="text-xs sm:text-sm font-semibold text-[#221F1F] flex items-center gap-2">
+                      <span className="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 bg-cpu-orange text-white rounded-full text-[10px] sm:text-xs font-bold flex-shrink-0">
                         {getSelectionCountForSecteur(secteur.id)}
                       </span>
-                      <span>
+                      <span className="text-xs sm:text-sm">
                         élément{getSelectionCountForSecteur(secteur.id) > 1 ? "s" : ""} sélectionné
                         {getSelectionCountForSecteur(secteur.id) > 1 ? "s" : ""} dans ce secteur
                       </span>
@@ -577,12 +603,12 @@ const SecteursContent = () => {
                         className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
                       >
                         {/* En-tête Filière (pas d'accordion) */}
-                        <div className="bg-gradient-to-r from-gray-50 to-white py-4 px-6 flex items-center justify-between border-b border-gray-200">
-                          <h3 className="text-lg font-bold text-[#221F1F] flex items-center gap-3">
-                            <span className="text-2xl">{getFiliereIcon(filiere.name)}</span>
-                            {decodeHtmlEntities(filiere.name)}
+                        <div className="bg-gradient-to-r from-gray-50 to-white py-3 sm:py-4 px-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 border-b border-gray-200">
+                          <h3 className="text-base sm:text-lg font-bold text-[#221F1F] flex items-center gap-2 sm:gap-3">
+                            <span className="text-xl sm:text-2xl flex-shrink-0">{getFiliereIcon(filiere.name)}</span>
+                            <span className="break-words">{decodeHtmlEntities(filiere.name)}</span>
                           </h3>
-                          <div className="text-xs font-bold text-cpu-orange bg-orange-50 border border-orange-200 rounded-full px-4 py-1.5">
+                          <div className="text-[10px] sm:text-xs font-bold text-cpu-orange bg-orange-50 border border-orange-200 rounded-full px-3 sm:px-4 py-1 sm:py-1.5 whitespace-nowrap flex-shrink-0">
                             {countSelectedActivitesForFiliere(filiere)} / {countActivitesForFiliere(filiere)} tags
                           </div>
                         </div>
@@ -724,27 +750,27 @@ const SecteursContent = () => {
 
       {/* Bottom Action Bar */}
       {hasSelection && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t-4 border-cpu-orange shadow-2xl backdrop-blur-sm">
-          <div className="max-w-[1400px] mx-auto px-6 py-5">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-br from-cpu-orange to-orange-600 text-white rounded-full font-bold text-sm shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t-2 sm:border-t-4 border-cpu-orange shadow-2xl backdrop-blur-sm">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-3 sm:py-5">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start">
+                <div className="inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-cpu-orange to-orange-600 text-white rounded-full font-bold text-xs sm:text-sm shadow-lg flex-shrink-0">
                   {selectedActivites.size}
                 </div>
-                <span className="font-semibold text-[#221F1F] text-base">
+                <span className="font-semibold text-[#221F1F] text-sm sm:text-base">
                   {selectedActivites.size > 1 ? "activités sélectionnées" : "activité sélectionnée"}
                 </span>
               </div>
-              <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                 <Button
                   variant="outline"
                   onClick={clearAllSelections}
-                  className="border-red-300 text-red-600 hover:bg-red-50 px-6 py-6 text-sm font-semibold transition-all rounded-xl"
+                  className="flex-1 sm:flex-none border-red-300 text-red-600 hover:bg-red-50 px-4 sm:px-6 py-4 sm:py-6 text-xs sm:text-sm font-semibold transition-all rounded-lg sm:rounded-xl"
                 >
-                  Tout désélectionner
+                  Désélectionner
                 </Button>
-                <Link href={buildMembresUrl()} className="w-full sm:w-auto">
-                  <Button className="w-full sm:w-auto bg-gradient-to-r from-cpu-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-10 py-6 text-base font-bold transition-all shadow-lg hover:shadow-xl rounded-xl">
+                <Link href={buildMembresUrl()} className="flex-1 sm:flex-none">
+                  <Button className="w-full bg-gradient-to-r from-cpu-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 sm:px-10 py-4 sm:py-6 text-sm sm:text-base font-bold transition-all shadow-lg hover:shadow-xl rounded-lg sm:rounded-xl">
                     Voir les membres
                   </Button>
                 </Link>

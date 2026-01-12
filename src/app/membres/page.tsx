@@ -294,209 +294,8 @@ interface RegionData {
   [region: string]: CommuneData;
 }
 
-// Données hiérarchiques des régions de Côte d'Ivoire
-const regionsData: RegionData = {
-  "Abidjan": {
-    "Abobo": ["Abobo-Baoulé", "Abobo-Gare", "Abobo-PK18", "Anonkoua-Kouté", "Avocatier", "Sagbé"],
-    "Adjamé": ["Adjamé-Village", "Adjamé-Liberté", "Adjamé-Williamsville", "Adjamé-220 Logements"],
-    "Attécoubé": ["Attécoubé-Centre", "Attécoubé-Santé", "Attécoubé-Locodjoro", "Attécoubé-Gbato"],
-    "Cocody": ["Cocody-Centre", "Cocody-Riviera", "Cocody-Angré", "Cocody-Blockhaus", "Cocody-Deux-Plateaux", "Cocody-Saint-Jean", "Cocody-Danga"],
-    "Koumassi": ["Koumassi-Centre", "Koumassi-Remblais", "Koumassi-Grand-Campement", "Koumassi-Zone Industrielle"],
-    "Marcory": ["Marcory-Zone 4", "Marcory-Résidentiel", "Marcory-Anoumabo", "Marcory-Biétry"],
-    "Plateau": ["Plateau-Ville", "Plateau-Dokui", "Plateau-Centre des Affaires"],
-    "Port-Bouët": ["Port-Bouët-Centre", "Port-Bouët-Vridi", "Port-Bouët-Zone 4", "Port-Bouët-Gonzagueville"],
-    "Treichville": ["Treichville-Centre", "Treichville-Biafra", "Treichville-Arras", "Treichville-Zone 3"],
-    "Yopougon": ["Yopougon-Attié", "Yopougon-Niangon", "Yopougon-Sicogi", "Yopougon-Selmer", "Yopougon-Millionnaire"],
-    "Bingerville": ["Bingerville-Centre", "Bingerville-Akandjé"],
-    "Songon": ["Songon-Centre", "Songon-Agban"],
-    "Anyama": ["Anyama-Centre", "Anyama-M'Pouto"]
-  },
-  "Agnéby-Tiassa": {
-    "Agboville": ["Agboville-Centre", "Agboville-Guessabo", "Agboville-Odiénné"],
-    "Rubino": ["Rubino-Centre"],
-    "Azaguié": ["Azaguié-Centre", "Azaguié-Akoupé"],
-    "Oress-Krobou": ["Oress-Krobou-Centre"],
-    "Céchi": ["Céchi-Centre"],
-    "Taabo": ["Taabo-Centre", "Taabo-Village"]
-  },
-  "Bélier": {
-    "Yamoussoukro": ["Yamoussoukro-Centre", "Yamoussoukro-Kokrenou", "Yamoussoukro-Habitat", "Yamoussoukro-N'Gokro"],
-    "Attiégouakro": ["Attiégouakro-Centre"],
-    "Tiébissou": ["Tiébissou-Centre", "Tiébissou-Yakpabo"],
-    "Toumodi": ["Toumodi-Centre", "Toumodi-Kokumbo"]
-  },
-  "Gbêkê": {
-    "Bouaké": ["Bouaké-Centre", "Bouaké-Koko", "Bouaké-Dar-Es-Salam", "Bouaké-Belleville", "Bouaké-Nimbo"],
-    "Béoumi": ["Béoumi-Centre", "Béoumi-Sakassou"],
-    "Bodokro": ["Bodokro-Centre"],
-    "Botro": ["Botro-Centre"],
-    "Sakassou": ["Sakassou-Centre"]
-  },
-  "Haut-Sassandra": {
-    "Daloa": ["Daloa-Centre", "Daloa-Tazibouo", "Daloa-Lobia", "Daloa-Gbokora"],
-    "Issia": ["Issia-Centre", "Issia-Saïoua"],
-    "Vavoua": ["Vavoua-Centre", "Vavoua-Dania"],
-    "Zoukougbeu": ["Zoukougbeu-Centre"]
-  },
-  "San-Pédro": {
-    "San-Pédro": ["San-Pédro-Centre", "San-Pédro-Bardot", "San-Pédro-Wharf", "San-Pédro-Balmer"],
-    "Grand-Béréby": ["Grand-Béréby-Centre"],
-    "Tabou": ["Tabou-Centre", "Tabou-Grabo"]
-  },
-  "Poro": {
-    "Korhogo": ["Korhogo-Centre", "Korhogo-Tchengué", "Korhogo-Koko", "Korhogo-Soba"],
-    "M'Bengué": ["M'Bengué-Centre"],
-    "Dikodougou": ["Dikodougou-Centre"],
-    "Sinématiali": ["Sinématiali-Centre"]
-  },
-  "Tonkpi": {
-    "Man": ["Man-Centre", "Man-Libreville", "Man-Marabadjan", "Man-Zéaglo"],
-    "Biankouma": ["Biankouma-Centre", "Biankouma-Gbonné"],
-    "Danané": ["Danané-Centre", "Danané-Zouan"],
-    "Logoualé": ["Logoualé-Centre"],
-    "Sipilou": ["Sipilou-Centre"],
-    "Zouan-Hounien": ["Zouan-Hounien-Centre"]
-  },
-  "Gôh": {
-    "Gagnoa": ["Gagnoa-Centre", "Gagnoa-Bayota", "Gagnoa-Guébiasso", "Gagnoa-Diahouin"],
-    "Oumé": ["Oumé-Centre", "Oumé-Diegonéfla"],
-    "Bayota": ["Bayota-Centre"],
-    "Guibéroua": ["Guibéroua-Centre"],
-    "Ouragahio": ["Ouragahio-Centre"],
-    "Serihio": ["Serihio-Centre"]
-  },
-  "Bounkani": {
-    "Bouna": ["Bouna-Centre", "Bouna-Lassiri"],
-    "Doropo": ["Doropo-Centre", "Doropo-Tehini"],
-    "Nassian": ["Nassian-Centre"],
-    "Téhini": ["Téhini-Centre"]
-  },
-  "Cavally": {
-    "Guiglo": ["Guiglo-Centre", "Guiglo-Kaadé"],
-    "Bloléquin": ["Bloléquin-Centre", "Bloléquin-Zéo"],
-    "Taï": ["Taï-Centre", "Taï-Village"],
-    "Toulepleu": ["Toulepleu-Centre"]
-  },
-  "Folon": {
-    "Minignan": ["Minignan-Centre", "Minignan-Sokourala"],
-    "Koro": ["Koro-Centre"],
-    "Madinani": ["Madinani-Centre"]
-  },
-  "Gbôklé": {
-    "Sassandra": ["Sassandra-Centre", "Sassandra-Dakpadou", "Sassandra-San-Pédro"],
-    "Fresco": ["Fresco-Centre", "Fresco-Gbagbam"],
-    "Méagui": ["Méagui-Centre"]
-  },
-  "Gontougo": {
-    "Bondoukou": ["Bondoukou-Centre", "Bondoukou-Lafia", "Bondoukou-Gouméré"],
-    "Koun-Fao": ["Koun-Fao-Centre"],
-    "Sandégué": ["Sandégué-Centre"],
-    "Tanda": ["Tanda-Centre", "Tanda-Assuéfry"],
-    "Transua": ["Transua-Centre"]
-  },
-  "Grands-Ponts": {
-    "Dabou": ["Dabou-Centre", "Dabou-Lopou", "Dabou-Toupah"],
-    "Jacqueville": ["Jacqueville-Centre", "Jacqueville-Attoutou"],
-    "Grand-Lahou": ["Grand-Lahou-Centre", "Grand-Lahou-Lahou-Kpanda"]
-  },
-  "Guémon": {
-    "Duékoué": ["Duékoué-Centre", "Duékoué-Guézon"],
-    "Bangolo": ["Bangolo-Centre", "Bangolo-Bédi-Goazon"],
-    "Facobly": ["Facobly-Centre"],
-    "Kouibly": ["Kouibly-Centre"]
-  },
-  "Hambol": {
-    "Katiola": ["Katiola-Centre", "Katiola-Niakara", "Katiola-Fronan"],
-    "Dabakala": ["Dabakala-Centre", "Dabakala-Satama-Sokoro"],
-    "Niakaramandougou": ["Niakaramandougou-Centre"]
-  },
-  "Iffou": {
-    "Daoukro": ["Daoukro-Centre", "Daoukro-Ettrokro"],
-    "M'Bahiakro": ["M'Bahiakro-Centre", "M'Bahiakro-Andé"],
-    "Prikro": ["Prikro-Centre"]
-  },
-  "Indénié-Djuablin": {
-    "Abengourou": ["Abengourou-Centre", "Abengourou-Zaranou", "Abengourou-Ebilassokro"],
-    "Agnibilékrou": ["Agnibilékrou-Centre", "Agnibilékrou-Tanguelan"],
-    "Bettié": ["Bettié-Centre", "Bettié-Diamarakro"]
-  },
-  "Kabadougou": {
-    "Odienné": ["Odienné-Centre", "Odienné-Samatiguila", "Odienné-Madinani"],
-    "Gbéléban": ["Gbéléban-Centre"],
-    "Madinani": ["Madinani-Centre"],
-    "Samatiguila": ["Samatiguila-Centre"],
-    "Séguélon": ["Séguélon-Centre"]
-  },
-  "La Mé": {
-    "Adzopé": ["Adzopé-Centre", "Adzopé-Annépé"],
-    "Akoupé": ["Akoupé-Centre", "Akoupé-Zeudji"],
-    "Alépé": ["Alépé-Centre", "Alépé-Danguira"],
-    "Yakassé-Attobrou": ["Yakassé-Attobrou-Centre"]
-  },
-  "Lôh-Djiboua": {
-    "Divo": ["Divo-Centre", "Divo-Hiré", "Divo-Zégo"],
-    "Guitry": ["Guitry-Centre", "Guitry-Oghlawapo"],
-    "Lakota": ["Lakota-Centre", "Lakota-Babouakro"]
-  },
-  "Marahoué": {
-    "Bouaflé": ["Bouaflé-Centre", "Bouaflé-Kononfla"],
-    "Sinfra": ["Sinfra-Centre", "Sinfra-Kouetinfla"],
-    "Zuénoula": ["Zuénoula-Centre", "Zuénoula-Gohitafla"]
-  },
-  "Moronou": {
-    "Bongouanou": ["Bongouanou-Centre", "Bongouanou-Tiémélékro"],
-    "M'Batto": ["M'Batto-Centre"],
-    "Arrah": ["Arrah-Centre"]
-  },
-  "Nawa": {
-    "Soubré": ["Soubré-Centre", "Soubré-Liliyo", "Soubré-Okrouyo"],
-    "Buyo": ["Buyo-Centre"],
-    "Guéyo": ["Guéyo-Centre"],
-    "Méadji": ["Méadji-Centre"]
-  },
-  "N'Zi": {
-    "Dimbokro": ["Dimbokro-Centre", "Dimbokro-Ettien"],
-    "Bocanda": ["Bocanda-Centre", "Bocanda-Kouassi-Datekro"],
-    "Kouassi-Kouassikro": ["Kouassi-Kouassikro-Centre"]
-  },
-  "Tchologo": {
-    "Ferkessédougou": ["Ferkessédougou-Centre", "Ferkessédougou-Sikolo"],
-    "Kong": ["Kong-Centre", "Kong-Nafana"],
-    "Ouangolodougou": ["Ouangolodougou-Centre", "Ouangolodougou-Niellé"]
-  },
-  "Worodougou": {
-    "Séguéla": ["Séguéla-Centre", "Séguéla-Worofla", "Séguéla-Massala"],
-    "Kani": ["Kani-Centre"],
-    "Mankono": ["Mankono-Centre", "Mankono-Tiéningboué"]
-  },
-  "Moyen-Cavally": {
-    "Guiglo": ["Guiglo-Centre", "Guiglo-Kaadé"],
-    "Duékoué": ["Duékoué-Centre", "Duékoué-Guézon"],
-    "Taï": ["Taï-Centre", "Taï-Village"]
-  },
-  "Moyen-Comoé": {
-    "Aboisso": ["Aboisso-Centre", "Aboisso-Yaou", "Aboisso-Bianouan"],
-    "Adiaké": ["Adiaké-Centre", "Adiaké-Etuéboué"],
-    "Ayamé": ["Ayamé-Centre"],
-    "Grand-Bassam": ["Grand-Bassam-Centre", "Grand-Bassam-Bongo", "Grand-Bassam-Modeste"],
-    "Tiapoum": ["Tiapoum-Centre"]
-  },
-  "Sud-Comoé": {
-    "Aboisso": ["Aboisso-Centre", "Aboisso-Yaou", "Aboisso-Bianouan"],
-    "Adiaké": ["Adiaké-Centre", "Adiaké-Etuéboué"],
-    "Grand-Bassam": ["Grand-Bassam-Centre", "Grand-Bassam-Bongo"],
-    "Tiapoum": ["Tiapoum-Centre"]
-  }
-};
-
-// Pour les régions non détaillées, communes génériques
-const getDefaultCommunes = (): CommuneData => ({
-  "Commune Centre": ["Ville Centre"],
-  "Commune Nord": ["Ville Nord"],
-  "Commune Sud": ["Ville Sud"],
-  "Commune Est": ["Ville Est"],
-  "Commune Ouest": ["Ville Ouest"]
-});
+// Les données sont maintenant gérées uniquement via l'API
+// Plus de données statiques
 
 // Données des organisations par type en Côte d'Ivoire
 const organisationsByType: { [key: string]: string[] } = {
@@ -686,8 +485,8 @@ const MembersContent = () => {
         .map((r) => r.name)
         .sort();
     }
-    // Fallback vers les données statiques
-    return Object.keys(regionsData).sort();
+    // Pas de fallback - retourner un tableau vide si l'API n'est pas disponible
+    return [];
   };
 
   // Simuler le chargement initial
@@ -801,18 +600,8 @@ const MembersContent = () => {
       return allFilieres;
     }
     
-    // Fallback vers les données statiques
-    const allFilieres: Array<{ filiere: { id: string; nom: string; sousCategories: any[] }; secteurId: string; secteurNom: string }> = [];
-    Object.values(secteursData).forEach((secteur) => {
-      secteur.filieres.forEach((filiere) => {
-        allFilieres.push({
-          filiere,
-          secteurId: secteur.id,
-          secteurNom: secteur.nom,
-        });
-      });
-    });
-    return allFilieres;
+    // Pas de fallback - retourner un tableau vide si l'API n'est pas disponible
+    return [];
   };
 
   // Trouver le secteur d'une filière donnée (depuis l'API ou données statiques)
@@ -830,13 +619,7 @@ const MembersContent = () => {
       return null;
     }
     
-    // Fallback vers les données statiques
-    for (const secteur of Object.values(secteursData)) {
-      const filiere = secteur.filieres.find((f) => f.id === filiereId);
-      if (filiere) {
-        return { secteurId: secteur.id, secteurNom: secteur.nom };
-      }
-    }
+    // Pas de fallback - retourner null si l'API n'est pas disponible
     return null;
   };
 
@@ -851,9 +634,8 @@ const MembersContent = () => {
       return [];
     }
     
-    // Fallback vers les données statiques
-    if (!selectedMainSector || !secteursData[selectedMainSector]) return [];
-    return secteursData[selectedMainSector].filieres;
+    // Pas de fallback - retourner un tableau vide si l'API n'est pas disponible
+    return [];
   };
 
   // Obtenir les sous-filières de la filière sélectionnée (depuis l'API ou données statiques)
@@ -875,19 +657,7 @@ const MembersContent = () => {
       return [];
     }
     
-    // Fallback vers les données statiques
-    const allFilieres = getAllFilieres();
-    const filiereData = allFilieres.find((f) => f.filiere.id === selectedFiliere);
-    if (filiereData) {
-      // Vérifier si c'est une structure API (sousFiliere) ou statique (sousCategories)
-      if ('sousFiliere' in filiereData.filiere) {
-        return (filiereData.filiere as any).sousFiliere
-          .filter((sf: any) => sf.isActive !== false)
-          .map((sf: any) => ({ id: sf.id, nom: sf.name }));
-      } else if ('sousCategories' in filiereData.filiere) {
-        return (filiereData.filiere as any).sousCategories;
-      }
-    }
+    // Pas de fallback - retourner un tableau vide si l'API n'est pas disponible
     return [];
   };
 
@@ -916,19 +686,8 @@ const MembersContent = () => {
       return [];
     }
     
-    // Fallback vers les données statiques
-    const sousCategories = getSubCategoriesForFiliere();
-    const sousCategorie = sousCategories.find((sc: { nom: string; sectionsDeTags: any[] }) => sc.nom === selectedSubCategory);
-    if (!sousCategorie) return [];
-    
-    // Collecter tous les tags de toutes les sections
-    const allTags: string[] = [];
-    if ('sectionsDeTags' in sousCategorie && Array.isArray(sousCategorie.sectionsDeTags)) {
-      sousCategorie.sectionsDeTags.forEach((section: { tags: string[] }) => {
-        allTags.push(...section.tags);
-      });
-    }
-    return allTags;
+    // Pas de fallback - retourner un tableau vide si l'API n'est pas disponible
+    return [];
   };
 
   // Gérer la sélection/désélection d'une activité
@@ -992,17 +751,8 @@ const MembersContent = () => {
       return allCommunes;
     }
     
-    // Fallback vers les données statiques
-    const allCommunes: Array<{ commune: { name: string }; regionName: string }> = [];
-    Object.keys(regionsData).forEach((regionName) => {
-      Object.keys(regionsData[regionName]).forEach((communeName) => {
-        allCommunes.push({
-          commune: { name: communeName },
-          regionName: regionName,
-        });
-      });
-    });
-    return allCommunes;
+    // Pas de fallback - retourner un tableau vide si l'API n'est pas disponible
+    return [];
   };
 
   // Obtenir les communes disponibles (filtrées par région si une région est sélectionnée)
@@ -1016,8 +766,7 @@ const MembersContent = () => {
         if ('regionId' in item) {
           return item.regionId === siegeRegion || item.regionName === siegeRegion;
         }
-        // Pour les données statiques : comparer par nom
-        return item.regionName === siegeRegion;
+        return false;
       });
     }
     
@@ -1044,12 +793,7 @@ const MembersContent = () => {
       return null;
     }
     
-    // Fallback vers les données statiques
-    for (const regionName of Object.keys(regionsData)) {
-      if (regionsData[regionName][communeName]) {
-        return { regionId: regionName, regionName: regionName };
-      }
-    }
+    // Pas de fallback - retourner null si l'API n'est pas disponible
     return null;
   };
 
@@ -1074,11 +818,8 @@ const MembersContent = () => {
       return [];
     }
     
-    // Fallback vers les données statiques
-    if (regionsData[region]) {
-      return Object.keys(regionsData[region]).sort();
-    }
-    return Object.keys(getDefaultCommunes());
+    // Pas de fallback - retourner un tableau vide si l'API n'est pas disponible
+    return [];
   };
 
   // Obtenir les villes d'une commune (depuis l'API ou données statiques)
@@ -1102,15 +843,8 @@ const MembersContent = () => {
       return [];
     }
     
-    // Fallback vers les données statiques
-    if (regionsData[region] && regionsData[region][commune]) {
-      return regionsData[region][commune];
-    }
-    const defaults = getDefaultCommunes();
-    if (defaults[commune]) {
-      return defaults[commune];
-    }
-    return ["Ville Centre"];
+    // Pas de fallback - retourner un tableau vide si l'API n'est pas disponible
+    return [];
   };
 
   // Récupérer les paramètres d'URL au chargement
@@ -1358,7 +1092,7 @@ const MembersContent = () => {
         // Trouver l'ID de la commune sélectionnée
         let communeId = '';
         for (const region of regionsApi) {
-          const foundCommune = region.communes?.find(
+          const foundCommune = (region as any).communes?.find(
             (c: any) => c.name === siegeCommune
           );
           if (foundCommune) {
@@ -1894,36 +1628,38 @@ const MembersContent = () => {
           >
             {/* Navigation par Onglets */}
             <div className="flex justify-center mb-8">
-              <TabsList className="inline-flex items-center justify-center gap-4 sm:gap-5 md:gap-6 px-4 sm:px-6 md:px-8 py-3 sm:py-4 bg-gray-50/50 rounded-xl border border-gray-100 shadow-sm h-auto w-auto">
-                <TabsTrigger
-                  value="annuaire"
-                  className="flex items-center justify-center gap-2 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 rounded-lg font-inter text-sm sm:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
+              <div className="w-full max-w-lg sm:max-w-none sm:w-auto">
+                <TabsList className="!grid grid-cols-2 gap-2 p-2 bg-white rounded-xl border border-gray-200 shadow-lg h-auto w-full sm:!inline-flex sm:items-center sm:justify-center sm:gap-3 md:gap-4 lg:gap-5 sm:px-3 md:px-5 lg:px-6 sm:py-2.5 sm:rounded-2xl sm:w-auto">
+                  <TabsTrigger
+                    value="annuaire"
+                    className="flex items-center justify-center gap-2 px-2 sm:px-4 md:px-5 lg:px-7 py-3 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-inter text-[11px] sm:text-xs md:text-sm font-semibold transition-all duration-200 data-[state=active]:bg-gradient-to-br data-[state=active]:from-cpu-orange data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-gray-50 hover:text-gray-800 whitespace-normal sm:whitespace-nowrap text-center leading-tight"
                 >
                   <Users className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                   <span>Annuaire</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="pass-pme"
-                  className="flex items-center justify-center gap-2 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 rounded-lg font-inter text-sm sm:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
+                  className="flex items-center justify-center gap-2 px-2 sm:px-4 md:px-5 lg:px-7 py-3 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-inter text-[11px] sm:text-xs md:text-sm font-semibold transition-all duration-200 data-[state=active]:bg-gradient-to-br data-[state=active]:from-cpu-orange data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-gray-50 hover:text-gray-800 whitespace-normal sm:whitespace-nowrap text-center leading-tight"
                 >
                   <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                   <span>Pass PME</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="avantages"
-                  className="flex items-center justify-center gap-2 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 rounded-lg font-inter text-sm sm:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
+                  className="flex items-center justify-center gap-2 px-2 sm:px-4 md:px-5 lg:px-7 py-3 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-inter text-[11px] sm:text-xs md:text-sm font-semibold transition-all duration-200 data-[state=active]:bg-gradient-to-br data-[state=active]:from-cpu-orange data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-gray-50 hover:text-gray-800 whitespace-normal sm:whitespace-nowrap text-center leading-tight"
                 >
                   <Award className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                   <span>Avantages</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="adhesion"
-                  className="flex items-center justify-center gap-2 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 rounded-lg font-inter text-sm sm:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
+                  className="flex items-center justify-center gap-2 px-2 sm:px-4 md:px-5 lg:px-7 py-3 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-inter text-[11px] sm:text-xs md:text-sm font-semibold transition-all duration-200 data-[state=active]:bg-gradient-to-br data-[state=active]:from-cpu-orange data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-gray-50 hover:text-gray-800 whitespace-normal sm:whitespace-nowrap text-center leading-tight"
                 >
                   <Building2 className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                   <span>Adhérer</span>
                 </TabsTrigger>
               </TabsList>
+              </div>
             </div>
             {/* Annuaire Tab */}
             <TabsContent value="annuaire" className="mt-8">
@@ -4072,20 +3808,20 @@ const MembersContent = () => {
                                   onClick={toggleAllRegions}
                                   className="border-cpu-orange text-cpu-orange hover:bg-orange-50"
                                 >
-                                  {selectedRegions.length === Object.keys(regionsData).length
+                                  {selectedRegions.length === (regionsApi?.length || 0)
                                     ? "Tout décocher"
                                     : "Tout sélectionner"}
                                 </Button>
                               </div>
                               
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4 border border-gray-200 rounded-lg bg-gray-50 max-h-96 overflow-y-auto">
-                                {Object.keys(regionsData).sort().map((region) => (
-                                  <div key={region} className="flex items-start space-x-2">
+                                {(regionsApi || []).filter(r => r.isActive !== false).map((region) => (
+                                  <div key={region.id} className="flex items-start space-x-2">
                                     <input
                                       type="checkbox"
-                                      id={`region-inst-${region}`}
-                                      checked={selectedRegions.includes(region)}
-                                      onChange={() => toggleRegion(region)}
+                                      id={`region-inst-${region.name}`}
+                                      checked={selectedRegions.includes(region.name)}
+                                      onChange={() => toggleRegion(region.name)}
                                       className="h-4 w-4 border-2 border-cpu-orange rounded focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange"
                                       style={{ 
                                         accentColor: '#F27A20',
@@ -4093,10 +3829,10 @@ const MembersContent = () => {
                                       }}
                                     />
                                     <Label 
-                                      htmlFor={`region-inst-${region}`} 
+                                      htmlFor={`region-inst-${region.name}`} 
                                       className="text-sm cursor-pointer font-normal leading-tight"
                                     >
-                                      {region}
+                                      {region.name}
                                     </Label>
                                   </div>
                                 ))}
@@ -4533,7 +4269,7 @@ const MembersContent = () => {
                                       ? regionsApi
                                           .filter((r) => r.isActive !== false)
                                           .map((r) => ({ id: r.id, name: r.name }))
-                                      : Object.keys(regionsData).map((regionName) => ({ id: regionName, name: regionName }));
+                                      : (regionsApi || []).filter(r => r.isActive !== false).map((r) => ({ id: r.id, name: r.name }));
                                     
                                     return regions.map((region) => (
                                       <SelectItem key={region.id} value={region.id} className="cursor-pointer">
@@ -4565,8 +4301,8 @@ const MembersContent = () => {
                                   <SelectValue placeholder="Sélectionnez une ville" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {getVillesForCommune(siegeRegion, siegeCommune).map((ville) => (
-                                    <SelectItem key={ville} value={ville}>
+                                  {getVillesForCommune(siegeRegion, siegeCommune).map((ville, index) => (
+                                    <SelectItem key={`${siegeRegion}-${siegeCommune}-${ville}-${index}`} value={ville}>
                                       {ville}
                                   </SelectItem>
                                 ))}
