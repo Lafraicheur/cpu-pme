@@ -5166,7 +5166,7 @@ const MembersContent = () => {
                                 htmlFor="siegeVillage"
                                 className="text-sm font-semibold text-gray-700"
                               >
-                                Village / Quartier
+                                Rue / Quartier / Village
                               </Label>
                               <Input
                                 id="siegeVillage"
