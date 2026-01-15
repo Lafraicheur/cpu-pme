@@ -38,6 +38,7 @@ export interface Partenaire {
   offre: string | null;
   reduction: string | null;
   note: string | null;
+  couleurHeader: string | null;
 }
 
 export interface GetPartenairesParams {

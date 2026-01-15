@@ -311,6 +311,7 @@ interface PartenaireAPI {
   offre: string | null;
   reduction: string | null;
   note: string | null;
+  couleurHeader: string | null;
 }
 
 // Données hiérarchiques des régions de Côte d'Ivoire
@@ -889,20 +890,25 @@ const MembersContent = () => {
     }
   }, [selectedFiliere]);
 
-  // Déterminer automatiquement la région quand une commune est sélectionnée
+  // Déterminer automatiquement la région et la ville quand une commune est sélectionnée
   useEffect(() => {
     if (siegeCommune) {
-      const regionInfo = findRegionForCommune(siegeCommune);
-      if (regionInfo) {
-        // Utiliser l'ID si disponible, sinon le nom
-        const regionValue = regionInfo.regionId || regionInfo.regionName;
+      const info = findRegionAndVilleForCommune(siegeCommune);
+      if (info) {
+        // Mettre à jour la région
+        const regionValue = info.regionId || info.regionName;
         if (siegeRegion !== regionValue) {
           setSiegeRegion(regionValue);
         }
+        // Mettre à jour la ville automatiquement
+        if (info.villeName && siegeVille !== info.villeName) {
+          setSiegeVille(info.villeName);
+        }
       }
     } else {
-      // Si aucune commune n'est sélectionnée, réinitialiser la région
+      // Si aucune commune n'est sélectionnée, réinitialiser la région et la ville
       setSiegeRegion("");
+      setSiegeVille("");
     }
   }, [siegeCommune]);
 
@@ -1196,8 +1202,9 @@ const MembersContent = () => {
     const allCommunes = getAllCommunes();
 
     // Si une région est sélectionnée et pas de commune, filtrer par région
+    let filteredCommunes;
     if (siegeRegion && !siegeCommune) {
-      return allCommunes.filter((item) => {
+      filteredCommunes = allCommunes.filter((item) => {
         // Pour l'API : comparer par ID ou nom
         if ("regionId" in item) {
           return (
@@ -1207,10 +1214,62 @@ const MembersContent = () => {
         // Pour les données statiques : comparer par nom
         return item.regionName === siegeRegion;
       });
+    } else {
+      filteredCommunes = allCommunes;
     }
 
-    // Sinon, retourner toutes les communes
-    return allCommunes;
+    // Filtrer les doublons par nom de commune pour éviter les erreurs de clés React
+    const seenNames = new Set<string>();
+    return filteredCommunes.filter((item) => {
+      const communeName =
+        "name" in item.commune ? item.commune.name : (item.commune as any).name;
+      if (seenNames.has(communeName)) {
+        return false;
+      }
+      seenNames.add(communeName);
+      return true;
+    });
+  };
+
+  // Trouver la région et la ville d'une commune donnée (depuis l'API ou données statiques)
+  const findRegionAndVilleForCommune = (communeName: string) => {
+    // Utiliser les données de l'API si disponibles
+    if (regionsApi && Array.isArray(regionsApi) && regionsApi.length > 0) {
+      for (const region of regionsApi) {
+        if (region.villes && region.villes.length > 0) {
+          for (const ville of region.villes) {
+            if (
+              ville.isActive !== false &&
+              ville.communes &&
+              ville.communes.length > 0
+            ) {
+              const commune = ville.communes.find(
+                (c) =>
+                  (c.name === communeName || c.id === communeName) &&
+                  c.isActive !== false
+              );
+              if (commune) {
+                return {
+                  regionId: region.id,
+                  regionName: region.name,
+                  villeId: ville.id,
+                  villeName: ville.name,
+                };
+              }
+            }
+          }
+        }
+      }
+      return null;
+    }
+
+    // Fallback vers les données statiques (pas de ville dans ce cas)
+    for (const regionName of Object.keys(regionsData)) {
+      if (regionsData[regionName][communeName]) {
+        return { regionId: regionName, regionName: regionName, villeId: null, villeName: null };
+      }
+    }
+    return null;
   };
 
   // Trouver la région d'une commune donnée (depuis l'API ou données statiques)
@@ -1283,21 +1342,33 @@ const MembersContent = () => {
   const getVillesForCommune = (region: string, commune: string): string[] => {
     // Utiliser les données de l'API si disponibles
     if (regionsApi && Array.isArray(regionsApi) && regionsApi.length > 0) {
-      const regionData = regionsApi.find(
-        (r) => (r.id === region || r.name === region) && r.isActive !== false
-      );
-      if (regionData && regionData.villes) {
-        for (const ville of regionData.villes) {
-          if (ville.isActive !== false && ville.communes) {
-            const communeData = ville.communes.find(
-              (c) =>
-                (c.name === commune || c.id === commune) && c.isActive !== false
-            );
-            if (communeData && communeData.quartiers) {
-              return communeData.quartiers
-                .filter((q) => q.isActive !== false)
-                .map((q) => q.name)
-                .sort();
+      // Si la région est fournie, chercher uniquement dans cette région
+      // Sinon, chercher dans toutes les régions
+      const regionsToSearch = region
+        ? regionsApi.filter(
+            (r) => (r.id === region || r.name === region) && r.isActive !== false
+          )
+        : regionsApi.filter((r) => r.isActive !== false);
+
+      for (const regionData of regionsToSearch) {
+        if (regionData && regionData.villes) {
+          for (const ville of regionData.villes) {
+            if (ville.isActive !== false && ville.communes) {
+              const communeData = ville.communes.find(
+                (c) =>
+                  (c.name === commune || c.id === commune) && c.isActive !== false
+              );
+              if (communeData) {
+                // Si la commune a des quartiers, les retourner
+                if (communeData.quartiers && communeData.quartiers.length > 0) {
+                  return communeData.quartiers
+                    .filter((q) => q.isActive !== false)
+                    .map((q) => q.name)
+                    .sort();
+                }
+                // Sinon, retourner la ville parente comme option
+                return [ville.name];
+              }
             }
           }
         }
@@ -1306,7 +1377,14 @@ const MembersContent = () => {
     }
 
     // Fallback vers les données statiques
-    if (regionsData[region] && regionsData[region][commune]) {
+    // Si la région n'est pas fournie, chercher dans toutes les régions
+    if (!region) {
+      for (const regionName of Object.keys(regionsData)) {
+        if (regionsData[regionName][commune]) {
+          return regionsData[regionName][commune];
+        }
+      }
+    } else if (regionsData[region] && regionsData[region][commune]) {
       return regionsData[region][commune];
     }
     const defaults = getDefaultCommunes();
@@ -2550,9 +2628,7 @@ const MembersContent = () => {
                       </div>
                       {/* Select de tri */}
                       <Select value={sortOrder} onValueChange={setSortOrder}>
-                        <SelectTrigger
-                          className="w-[170px] border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange"
-                        >
+                        <SelectTrigger className="w-[170px] border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
                           <SelectValue placeholder="Trier par" />
                         </SelectTrigger>
                         <SelectContent>
@@ -3265,7 +3341,10 @@ const MembersContent = () => {
                             </div>
 
                             <ul className="space-y-3 mb-6 flex-1">
-                              {(Array.isArray(plan.avantages) ? plan.avantages : [])
+                              {(Array.isArray(plan.avantages)
+                                ? plan.avantages
+                                : []
+                              )
                                 .filter((a: any) => a.actif)
                                 .map((avantage: any, idx: number) => (
                                   <li
@@ -3424,7 +3503,10 @@ const MembersContent = () => {
                             </div>
 
                             <ul className="space-y-3 mb-6 flex-1">
-                              {(Array.isArray(plan.avantages) ? plan.avantages : [])
+                              {(Array.isArray(plan.avantages)
+                                ? plan.avantages
+                                : []
+                              )
                                 .filter((a: any) => a.actif)
                                 .map((avantage: any) => (
                                   <li
@@ -3767,43 +3849,66 @@ const MembersContent = () => {
 
                           return (
                             <CardWrapper key={partner.id}>
-                              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-                                <div className="h-32 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-                                  <img
-                                    src={partner.logo}
-                                    alt={partner.nom}
-                                    className="max-h-full max-w-full object-contain"
-                                    onError={(e) => {
-                                      e.currentTarget.src = "/logo.png";
-                                    }}
-                                  />
-                                </div>
-                                <div className="p-5 relative">
-                                  {partner.reduction && (
-                                    <div className="absolute top-4 right-4">
-                                      <Badge className="bg-cpu-orange text-white px-3 py-1 text-sm font-semibold">
-                                        {partner.reduction}
-                                      </Badge>
+                              <div className="bg-white border border-gray-200 rounded-[12px] overflow-hidden shadow-sm transition-all duration-300 flex flex-col h-full">
+                                {/* Bandeau coloré en haut avec logo, nom et badge réduction */}
+                                <div
+                                  className="h-24 flex items-center justify-between p-4 relative flex-shrink-0"
+                                  style={{
+                                    backgroundColor:
+                                      partner.couleurHeader || "#f97316",
+                                  }}
+                                >
+                                  {/* Logo et nom côte à côte */}
+                                  <div className="flex items-center gap-3 flex-1">
+                                    <div className="w-15 h-15 flex items-center justify-center p-2 shrink-0">
+                                      <img
+                                        src={partner.logo}
+                                        alt={partner.nom}
+                                        className="max-h-full rounded-sm max-w-full object-contain"
+                                        onError={(e) => {
+                                          e.currentTarget.src = "/logo.png";
+                                        }}
+                                      />
                                     </div>
-                                  )}
-                                  <h3 className="text-lg font-bold text-[#221F1F] mb-2 mt-2">
-                                    {partner.nom}
-                                  </h3>
-                                  {partner.offre && (
-                                    <p className="text-sm text-gray-600 mb-2">
-                                      {partner.offre}
-                                    </p>
-                                  )}
-                                  {partner.note && (
-                                    <p className="text-xs text-gray-500 italic mb-3">
-                                      {partner.note}
-                                    </p>
-                                  )}
-                                  <div className="flex flex-wrap gap-2">
+                                    <div className="flex flex-col gap-1">
+                                      <h3 className="text-base font-bold text-white">
+                                        {partner.nom}
+                                      </h3>
+                                      {partner.reduction && (
+                                        <Badge className="bg-[#f97316] text-white px-2 py-0.5 text-xs font-bold rounded w-fit">
+                                          {partner.reduction}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Contenu blanc en dessous */}
+                                <div className="p-5 flex flex-col flex-1 justify-between">
+                                  <div>
+                                    <h3 className="text-base font-bold text-black mb-3">
+                                      {partner.nom}
+                                    </h3>
+                                    {partner.offre && (
+                                      <p className="text-sm text-gray-800 font-medium mb-2">
+                                        {partner.offre}
+                                      </p>
+                                    )}
+                                    {partner.note && (
+                                      <p className="text-xs text-gray-500 italic mb-4">
+                                        {partner.note}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div className="border-t border-gray-200 my-4"></div>
+
+                                  {/* Badge catégorie en bas - fixe */}
+                                  <div className="flex flex-wrap gap-2 mt-auto">
                                     {partner.categorie && (
                                       <Badge
                                         variant="outline"
-                                        className="text-xs"
+                                        className="text-xs bg-blue-300 text-blue-500 border-blue-200"
                                       >
                                         {categoryLabels[
                                           partner.categorie.toLowerCase()
@@ -3828,7 +3933,7 @@ const MembersContent = () => {
                 )}
 
                 {/* Section CTA Partenaires */}
-                <div className="bg-gray-100 rounded-xl p-8 md:p-12 text-center mb-8">
+                {/* <div className="bg-gray-100 rounded-xl p-8 md:p-12 text-center mb-8">
                   <p className="text-lg md:text-xl text-gray-700 mb-6">
                     Vous êtes partenaire ? Rejoignez notre programme Pass PME et
                     offrez des avantages exclusifs aux membres CPU-PME.CI
@@ -3836,7 +3941,7 @@ const MembersContent = () => {
                   <Button className="bg-cpu-orange hover:bg-[#D97420] text-white px-8 py-6 text-lg font-semibold cursor-pointer">
                     Devenir partenaire
                   </Button>
-                </div>
+                </div> */}
               </div>
             </TabsContent>
 
@@ -4614,7 +4719,9 @@ const MembersContent = () => {
                                       <Check className="h-5 w-5 text-cpu-green" />
                                       <span className="font-bold text-cpu-green">
                                         {selectedRegions.length} région
-                                        {selectedRegions.length > 1 ? "s" : ""}{" "}
+                                        {selectedRegions.length > 1
+                                          ? "s"
+                                          : ""}{" "}
                                         sélectionnée
                                         {selectedRegions.length > 1 ? "s" : ""}
                                       </span>
@@ -5197,7 +5304,7 @@ const MembersContent = () => {
                                   value={siegeCommune}
                                   onValueChange={(value) => {
                                     setSiegeCommune(value);
-                                    setSiegeVille(""); // Réinitialiser la ville
+                                    // La ville et la région sont déterminées automatiquement par le useEffect
                                   }}
                                   required
                                   disabled={isLoadingRegions}
