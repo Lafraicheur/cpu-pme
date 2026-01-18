@@ -404,7 +404,7 @@ const NewsContent = () => {
             Actualités & Publications
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in">
-            Restez informés sur l'actualité du CPU-PME et accédez à nos
+            Restez informés sur l'actualité de la CPU-PME et accédez à nos
             publications : rapports, guides, études et documents stratégiques
           </p>
         </div>
