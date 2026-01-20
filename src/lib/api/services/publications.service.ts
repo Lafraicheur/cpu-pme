@@ -2,6 +2,7 @@
  * Service API pour les publications
  */
 
+import { proxyApiClient } from '../proxy-client';
 import { API_ENDPOINTS, API_BASE_URL } from '../config';
 
 /**
@@ -97,25 +98,16 @@ export const publicationsService = {
         queryParams.append('status', params.status);
       }
 
-      const endpoint = params && (params.category || params.type || params.status)
-        ? `${API_BASE_URL}${API_ENDPOINTS.PUBLICATIONS.LIST}?${queryParams.toString()}`
-        : `${API_BASE_URL}${API_ENDPOINTS.PUBLICATIONS.LIST}`;
+      const endpoint = queryParams.toString()
+        ? `${API_ENDPOINTS.PUBLICATIONS.LIST}?${queryParams.toString()}`
+        : API_ENDPOINTS.PUBLICATIONS.LIST;
 
-      const response = await fetch(endpoint, {
-        method: 'GET',
-        headers: {
-          'Accept': '*/*',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const responseData = await response.json();
+      const response = await proxyApiClient.get<any>(endpoint);
 
       // La réponse a une structure imbriquée : { success: true, data: { success: true, data: Publication[] } }
       let data: Publication[] = [];
+
+      const responseData = response.data;
 
       // Gérer la structure imbriquée
       if (responseData && typeof responseData === 'object') {
@@ -136,7 +128,7 @@ export const publicationsService = {
 
       // S'assurer que c'est un tableau
       if (!Array.isArray(data)) {
-        console.warn('⚠️ Publications API: La réponse n\'est pas un tableau:', responseData);
+        console.warn('⚠️ Publications API: La réponse n\'est pas un tableau:', response.data);
         return [];
       }
 
@@ -164,21 +156,12 @@ export const publicationsService = {
    */
   async getPublicationById(id: string): Promise<Publication | null> {
     try {
-      const endpoint = `${API_BASE_URL}${API_ENDPOINTS.PUBLICATIONS.GET(id)}`;
+      const endpoint = API_ENDPOINTS.PUBLICATIONS.GET(id);
 
-      const response = await fetch(endpoint, {
-        method: 'GET',
-        headers: {
-          'Accept': '*/*',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+      const response = await proxyApiClient.get<any>(endpoint);
 
       // La réponse a une structure imbriquée
-      const responseData = await response.json();
+      const responseData = response.data;
 
       let publication: Publication | null = null;
 

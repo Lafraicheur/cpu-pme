@@ -94,6 +94,7 @@ import {
   useSecteursForSiteWeb,
   useAbonnementsForSiteWeb,
   usePartenairesForSiteWeb,
+  useCentresInteretForSiteWeb,
 } from "@/hooks/use-api";
 import { quartiersService } from "@/lib/api/services/quartiers.service";
 import {
@@ -646,8 +647,8 @@ const organisationsByType: { [key: string]: string[] } = {
   ],
 };
 
-// Axes d'intérêt pour les membres institutionnels
-const axesInteretOptions = [
+// Axes d'intérêt statiques (fallback si l'API ne répond pas)
+const axesInteretOptionsFallback = [
   "Financement des PME",
   "Export & Commerce international",
   "Transformation numérique",
@@ -817,6 +818,12 @@ const MembersContent = () => {
     isLoading: isLoadingAbonnements,
     error: errorAbonnements,
   } = useAbonnementsForSiteWeb();
+
+  // Récupérer les centres d'intérêt depuis l'API
+  const {
+    data: centresInteretApi = [],
+    isLoading: isLoadingCentresInteret,
+  } = useCentresInteretForSiteWeb({ activeOnly: true });
 
   // Debug: Log des secteurs récupérés
   useEffect(() => {
@@ -4549,36 +4556,46 @@ const MembersContent = () => {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6 border-2 border-gray-100 rounded-2xl bg-gradient-to-br from-gray-50 to-white shadow-sm">
-                              {axesInteretOptions.map((axe) => (
-                                <div
-                                  key={axe}
-                                  className="flex items-start space-x-3 p-3 rounded-lg hover:bg-white transition-colors"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    id={`axe-${axe}`}
-                                    checked={selectedAxesInteret.includes(axe)}
-                                    onChange={() => {
-                                      setSelectedAxesInteret((prev) =>
-                                        prev.includes(axe)
-                                          ? prev.filter((a) => a !== axe)
-                                          : [...prev, axe]
-                                      );
-                                    }}
-                                    className="h-5 w-5 border-2 border-cpu-orange rounded-md focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange transition-all"
-                                    style={{
-                                      accentColor: "#F27A20",
-                                      colorScheme: "light",
-                                    }}
-                                  />
-                                  <Label
-                                    htmlFor={`axe-${axe}`}
-                                    className="text-sm cursor-pointer font-medium text-gray-700 leading-tight"
-                                  >
-                                    {axe}
-                                  </Label>
+                              {isLoadingCentresInteret ? (
+                                <div className="col-span-2 flex items-center justify-center py-4">
+                                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cpu-orange"></div>
+                                  <span className="ml-2 text-gray-500">Chargement des axes d'intérêt...</span>
                                 </div>
-                              ))}
+                              ) : (
+                                (centresInteretApi.length > 0
+                                  ? centresInteretApi.map((ci) => ci.name)
+                                  : axesInteretOptionsFallback
+                                ).map((axe) => (
+                                  <div
+                                    key={axe}
+                                    className="flex items-start space-x-3 p-3 rounded-lg hover:bg-white transition-colors"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      id={`axe-${axe}`}
+                                      checked={selectedAxesInteret.includes(axe)}
+                                      onChange={() => {
+                                        setSelectedAxesInteret((prev) =>
+                                          prev.includes(axe)
+                                            ? prev.filter((a) => a !== axe)
+                                            : [...prev, axe]
+                                        );
+                                      }}
+                                      className="h-5 w-5 border-2 border-cpu-orange rounded-md focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange transition-all"
+                                      style={{
+                                        accentColor: "#F27A20",
+                                        colorScheme: "light",
+                                      }}
+                                    />
+                                    <Label
+                                      htmlFor={`axe-${axe}`}
+                                      className="text-sm cursor-pointer font-medium text-gray-700 leading-tight"
+                                    >
+                                      {axe}
+                                    </Label>
+                                  </div>
+                                ))
+                              )}
                             </div>
                           </div>
 

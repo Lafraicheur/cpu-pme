@@ -2,6 +2,7 @@
  * Service API pour les actualités
  */
 
+import { proxyApiClient } from '../proxy-client';
 import { API_ENDPOINTS, API_BASE_URL } from '../config';
 
 /**
@@ -90,25 +91,16 @@ export const actualitiesService = {
         queryParams.append('featuredOnly', params.featuredOnly.toString());
       }
 
-      const endpoint = params && (params.category || params.featuredOnly !== undefined)
-        ? `${API_BASE_URL}${API_ENDPOINTS.ACTUALITIES.LIST}?${queryParams.toString()}`
-        : `${API_BASE_URL}${API_ENDPOINTS.ACTUALITIES.LIST}`;
+      const endpoint = queryParams.toString()
+        ? `${API_ENDPOINTS.ACTUALITIES.LIST}?${queryParams.toString()}`
+        : API_ENDPOINTS.ACTUALITIES.LIST;
 
-      const response = await fetch(endpoint, {
-        method: 'GET',
-        headers: {
-          'Accept': '*/*',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const responseData = await response.json();
+      const response = await proxyApiClient.get<any>(endpoint);
 
       // La réponse a une structure imbriquée : { success: true, data: { success: true, data: Actuality[] } }
       let data: Actuality[] = [];
+
+      const responseData = response.data;
 
       // Gérer la structure imbriquée
       if (responseData && typeof responseData === 'object') {
@@ -129,7 +121,7 @@ export const actualitiesService = {
 
       // S'assurer que c'est un tableau
       if (!Array.isArray(data)) {
-        console.warn('⚠️ Actualités API: La réponse n\'est pas un tableau:', responseData);
+        console.warn('⚠️ Actualités API: La réponse n\'est pas un tableau:', response.data);
         return [];
       }
 
@@ -156,21 +148,12 @@ export const actualitiesService = {
    */
   async getActualityById(id: string): Promise<Actuality | null> {
     try {
-      const endpoint = `${API_BASE_URL}${API_ENDPOINTS.ACTUALITIES.GET(id)}`;
+      const endpoint = API_ENDPOINTS.ACTUALITIES.GET(id);
 
-      const response = await fetch(endpoint, {
-        method: 'GET',
-        headers: {
-          'Accept': '*/*',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+      const response = await proxyApiClient.get<any>(endpoint);
 
       // La réponse a une structure imbriquée
-      const responseData = await response.json();
+      const responseData = response.data;
 
       let actuality: Actuality | null = null;
 

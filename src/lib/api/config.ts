@@ -68,6 +68,10 @@ export const API_ENDPOINTS = {
   EQUIPE: {
     FOR_SITE_WEB: isClient ? '/siteequipe/for-site-web' : '/siteequipe/for-site-web',
   },
+  // Centres d'intérêt
+  CENTRES_INTERET: {
+    FOR_SITE_WEB: isClient ? '/centreinteret/for-site-web' : '/centreinteret/for-site-web',
+  },
 };
 
 export { API_BASE_URL };
