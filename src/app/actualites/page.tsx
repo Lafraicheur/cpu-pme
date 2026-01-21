@@ -240,22 +240,25 @@ const NewsContent = () => {
   } = usePublications();
 
   // Mapper les données de l'API au format attendu par le composant
-  const newsData = (actualitiesData || []).map((actuality) => ({
-    id: actuality.id,
-    titre: actuality.title,
-    description: actuality.content || actuality.title, // Utiliser le titre si content est null
-    categorie: actuality.category.toLowerCase(),
-    created_at: actuality.publicationDate || actuality.createdAt,
-    couverture: {
-      url: actuality.imageUrl,
-    },
-    isFeatured: actuality.isFeatured,
-  }));
+  // et trier du plus récent au plus ancien
+  const newsData = (actualitiesData || [])
+    .map((actuality) => ({
+      id: actuality.id,
+      titre: actuality.title,
+      description: actuality.content || actuality.title, // Utiliser le titre si content est null
+      categorie: actuality.category.toLowerCase(),
+      created_at: actuality.publicationDate || actuality.createdAt,
+      couverture: {
+        url: actuality.imageUrl,
+      },
+      isFeatured: actuality.isFeatured,
+    }))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
 
-  // Mapper les données des publications
-  const mappedPublicationsData = (publicationsData || []).map(
-    (publication) => ({
+  // Mapper les données des publications et trier du plus récent au plus ancien
+  const mappedPublicationsData = (publicationsData || [])
+    .map((publication) => ({
       id: publication.id,
       titre: publication.title,
       description: publication.description,
@@ -271,8 +274,8 @@ const NewsContent = () => {
           ? publication.fileUrl
           : getCategoryImage(publication.category),
       },
-    })
-  );
+    }))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   // Fonction pour obtenir une image par défaut selon la catégorie
   function getCategoryImage(category: string) {

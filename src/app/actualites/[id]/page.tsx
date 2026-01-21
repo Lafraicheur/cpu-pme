@@ -71,6 +71,7 @@ export default function NewsDetailPage() {
         url: actualityData.imageUrl,
       },
       other_images: actualityData.other_images_url || [],
+      linksUrl: actualityData.linksUrl || null,
     };
 
     // Actualités similaires
