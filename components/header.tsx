@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import {
   LogIn,
   UserPlus,
@@ -20,8 +20,6 @@ import {
   Users,
   Award,
   Building2,
-  Megaphone,
-  HandshakeIcon,
 } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -136,7 +134,7 @@ function HeaderContent() {
             </div>
 
             {/* Navigation Desktop */}
-            <nav className="hidden xl:flex items-center gap-4 flex-1 justify-center">
+            <nav className="hidden md:flex items-center gap-4 flex-1 justify-center">
               <Link
                 href="/"
                 className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
@@ -391,7 +389,7 @@ function HeaderContent() {
             </nav>
 
             {/* CTA Buttons Desktop */}
-            <div className="hidden xl:flex items-center gap-2 shrink-0">
+            <div className="hidden md:flex items-center gap-2 shrink-0">
               <Button
                 variant="outline"
                 onClick={() => setIsLoginOpen(true)}
@@ -412,7 +410,7 @@ function HeaderContent() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="xl:hidden flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 text-[#221F1F]"
+              className="md:hidden flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 text-[#221F1F]"
               aria-label="Ouvrir le menu"
             >
               <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -426,12 +424,12 @@ function HeaderContent() {
         <>
           {/* Overlay */}
           <div
-            className="fixed inset-0 bg-black/50 z-40 xl:hidden animate-in fade-in duration-200"
+            className="fixed inset-0 bg-black/50 z-40 md:hidden animate-in fade-in duration-200"
             onClick={() => setIsDrawerOpen(false)}
           />
 
           {/* Drawer */}
-          <div className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 xl:hidden shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
+          <div className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 md:hidden shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
             {/* Header du drawer */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <Image

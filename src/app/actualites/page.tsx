@@ -28,18 +28,198 @@ import {
   FileText,
   Download,
   X,
+  File,
+  FileImage,
+  FileSpreadsheet,
+  FileVideo,
+  FileAudio,
+  Archive,
 } from "lucide-react";
-import actualites1 from "@/assets/actualites1.png";
-import actualites2 from "@/assets/actualites2.png";
-import actualites3 from "@/assets/actualites3.png";
-import actualites4 from "@/assets/actualites4.png";
 import Image from "next/image";
+import { useActualities, usePublications } from "@/hooks/use-api";
+
+// Fonction utilitaire pour obtenir les informations sur le type de fichier
+function getFileTypeInfo(fileUrl: string | null, publicationType?: string) {
+  if (!fileUrl) {
+    return {
+      icon: File,
+      label: "Fichier",
+      color: "text-gray-600",
+      bgGradient: "from-gray-50 via-gray-100 to-gray-50",
+      badgeColor: "bg-gray-600",
+    };
+  }
+
+  // Obtenir l'extension du fichier
+  const extension = fileUrl.split('.').pop()?.toLowerCase() || '';
+
+  // Types de fichiers supportés
+  const fileTypes: Record<string, {
+    icon: any;
+    label: string;
+    color: string;
+    bgGradient: string;
+    badgeColor: string;
+  }> = {
+    // PDF
+    'pdf': {
+      icon: FileText,
+      label: 'PDF',
+      color: 'text-red-600',
+      bgGradient: 'from-red-50 via-orange-50 to-amber-50',
+      badgeColor: 'bg-red-600',
+    },
+    // Images
+    'jpg': {
+      icon: FileImage,
+      label: 'IMAGE',
+      color: 'text-blue-600',
+      bgGradient: 'from-blue-50 via-cyan-50 to-sky-50',
+      badgeColor: 'bg-blue-600',
+    },
+    'jpeg': {
+      icon: FileImage,
+      label: 'IMAGE',
+      color: 'text-blue-600',
+      bgGradient: 'from-blue-50 via-cyan-50 to-sky-50',
+      badgeColor: 'bg-blue-600',
+    },
+    'png': {
+      icon: FileImage,
+      label: 'PNG',
+      color: 'text-blue-600',
+      bgGradient: 'from-blue-50 via-cyan-50 to-sky-50',
+      badgeColor: 'bg-blue-600',
+    },
+    'gif': {
+      icon: FileImage,
+      label: 'GIF',
+      color: 'text-blue-600',
+      bgGradient: 'from-blue-50 via-cyan-50 to-sky-50',
+      badgeColor: 'bg-blue-600',
+    },
+    'webp': {
+      icon: FileImage,
+      label: 'IMAGE',
+      color: 'text-blue-600',
+      bgGradient: 'from-blue-50 via-cyan-50 to-sky-50',
+      badgeColor: 'bg-blue-600',
+    },
+    // Word
+    'doc': {
+      icon: FileText,
+      label: 'DOC',
+      color: 'text-blue-700',
+      bgGradient: 'from-blue-50 via-indigo-50 to-blue-100',
+      badgeColor: 'bg-blue-700',
+    },
+    'docx': {
+      icon: FileText,
+      label: 'WORD',
+      color: 'text-blue-700',
+      bgGradient: 'from-blue-50 via-indigo-50 to-blue-100',
+      badgeColor: 'bg-blue-700',
+    },
+    // Excel
+    'xls': {
+      icon: FileSpreadsheet,
+      label: 'XLS',
+      color: 'text-green-700',
+      bgGradient: 'from-green-50 via-emerald-50 to-green-100',
+      badgeColor: 'bg-green-700',
+    },
+    'xlsx': {
+      icon: FileSpreadsheet,
+      label: 'EXCEL',
+      color: 'text-green-700',
+      bgGradient: 'from-green-50 via-emerald-50 to-green-100',
+      badgeColor: 'bg-green-700',
+    },
+    'csv': {
+      icon: FileSpreadsheet,
+      label: 'CSV',
+      color: 'text-green-700',
+      bgGradient: 'from-green-50 via-emerald-50 to-green-100',
+      badgeColor: 'bg-green-700',
+    },
+    // PowerPoint
+    'ppt': {
+      icon: FileText,
+      label: 'PPT',
+      color: 'text-orange-600',
+      bgGradient: 'from-orange-50 via-amber-50 to-orange-100',
+      badgeColor: 'bg-orange-600',
+    },
+    'pptx': {
+      icon: FileText,
+      label: 'POWERPOINT',
+      color: 'text-orange-600',
+      bgGradient: 'from-orange-50 via-amber-50 to-orange-100',
+      badgeColor: 'bg-orange-600',
+    },
+    // Vidéos
+    'mp4': {
+      icon: FileVideo,
+      label: 'VIDÉO',
+      color: 'text-purple-600',
+      bgGradient: 'from-purple-50 via-violet-50 to-purple-100',
+      badgeColor: 'bg-purple-600',
+    },
+    'avi': {
+      icon: FileVideo,
+      label: 'VIDÉO',
+      color: 'text-purple-600',
+      bgGradient: 'from-purple-50 via-violet-50 to-purple-100',
+      badgeColor: 'bg-purple-600',
+    },
+    'mov': {
+      icon: FileVideo,
+      label: 'VIDÉO',
+      color: 'text-purple-600',
+      bgGradient: 'from-purple-50 via-violet-50 to-purple-100',
+      badgeColor: 'bg-purple-600',
+    },
+    // Audio
+    'mp3': {
+      icon: FileAudio,
+      label: 'AUDIO',
+      color: 'text-pink-600',
+      bgGradient: 'from-pink-50 via-rose-50 to-pink-100',
+      badgeColor: 'bg-pink-600',
+    },
+    'wav': {
+      icon: FileAudio,
+      label: 'AUDIO',
+      color: 'text-pink-600',
+      bgGradient: 'from-pink-50 via-rose-50 to-pink-100',
+      badgeColor: 'bg-pink-600',
+    },
+    // Archives
+    'zip': {
+      icon: Archive,
+      label: 'ZIP',
+      color: 'text-yellow-700',
+      bgGradient: 'from-yellow-50 via-amber-50 to-yellow-100',
+      badgeColor: 'bg-yellow-700',
+    },
+    'rar': {
+      icon: Archive,
+      label: 'RAR',
+      color: 'text-yellow-700',
+      bgGradient: 'from-yellow-50 via-amber-50 to-yellow-100',
+      badgeColor: 'bg-yellow-700',
+    },
+  };
+
+  return fileTypes[extension] || fileTypes['pdf']; // Par défaut PDF
+}
 
 const NewsContent = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeMainTab = searchParams?.get("tab") || "actualites";
+  const [activeTab, setActiveTab] = useState(activeMainTab);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -47,220 +227,105 @@ const NewsContent = () => {
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const itemsPerPage = 9;
 
-  // Données d'actualités (réattribuées aux nouvelles catégories)
-  const newsData = [
-    {
-      id: "1",
-      titre:
-        "Réunion à Man pour soutenir le développement du secteur vivrier en Côte d'Ivoire",
-      description:
-        "Le 12 avril 2025, la CPU-PME.CI s'est réunie à Man pour soutenir la Présidente Gbakayoro qui, malgré des moyens limités, fait preuve d'une résilience remarquable dans le développement du secteur du vivrier en Côte d'Ivoire.",
-      categorie: "regions",
-      created_at: Date.now() - 86400000 * 2,
-      couverture: {
-        url: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop",
-      },
-    },
-    {
-      id: "2",
-      titre:
-        "Rencontre fructueuse entre la Délégation de l'Union Européenne en Côte d'Ivoire et la CPU-PME.CI pour le développement des PME ivoiriennes",
-      description:
-        "La Délégation de l'Union Européenne en Côte d'Ivoire et la Confédération Patronale Unique des PME de Côte d'Ivoire (CPU-PME.CI) ont échangé ce jour de 10h à 12h dans les locaux de l'institution européenne. Les discussions ont porté sur des sujets clés pour le développement des PME ivoiriennes, ainsi que pour l'économie locale et sous-régionale. La première puissance patronale de Côte d'Ivoire s'est félicitée de la qualité des échanges et a réitéré ses sincères remerciements à SEM Mme l'Ambassadrice Francesca Di Mauro, représentante de la Délégation de l'Union européenne près la République de Côte d'Ivoire. Pour le Dr Elias Farakhan Moussa Diomandé, président de la CPU-PME.CI, cette première rencontre ouvre de belles perspectives pour les PME ivoiriennes, avec des chantiers prometteurs à venir. Les échanges ont été jugés fructueux, annonçant une collaboration renforcée pour soutenir la croissance et la compétitivité des PME en Côte d'Ivoire.",
-      categorie: "cpu-pme",
-      created_at: Date.now() - 86400000 * 5,
-      couverture: {
-        url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=600&fit=crop",
-      },
-    },
-    {
-      id: "3",
-      titre: "Le Gala des PME-CI est officiellement lancé !",
-      description:
-        "Ce mercredi 23 avril, nous avons donné le coup d'envoi de la 4ᵉ édition du Gala des PME de Côte d'Ivoire, lors d'un lancement réussi à la Chambre de Commerce et d'Industrie. Une édition placée sous le signe de l'ambition, de la résilience et de la transformation des PME ivoiriennes.Le rendez-vous est pris : 20 & 21 juin 2025 au Sofitel Hôtel Ivoire.Cet événement majeur rassemblera les acteurs clés de l'écosystème entrepreneurial ivoirien pour célébrer l'excellence et l'innovation dans le secteur des PME.Au programme : conférences de haut niveau, ateliers thématiques, remise de prix et opportunités de networking.",
-      categorie: "evenements",
-      created_at: Date.now() - 86400000 * 10,
-      couverture: {
-        url: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=600&fit=crop",
-      },
-    },
-    {
-      id: "4",
-      titre: "ECONOMIE BLEUE, LA PÊCHE",
-      description:
-        "C'était le mercredi dernier 24 Avril 2025 à la Patinoire de Sofitel Hôtel l'Ivoire. La CPU-PME.CI a été invitée par l'Union Européenne au cours de la séance de travail avec la Délégation UE Abidjan à prendre part aux échanges avec les acteurs de l'Economie Bleue. l s'agit de l'écosystème des ressources animales, halieutiques et notamment des pêches et ses démembrements. La cérémonie a été placée sous la présidence du Premier Ministre BEUGRE MANBE et le patronage du Ministre Sidi Tiemoko TOURE, Ministère de tutelle et sous l'égide de la FAO, la BAD et l'UE.Le Président Dr DIOMANDE Moussa Elias Farakhan a participé aux différents panels, a visité stand par stand pour mieux s'imprégner du milieu aquatique, aquarium, aquaculture. Ce que nous avons découvert est impressionnant et encouragent.Le Président a échangé personnellement avec les Jeunes de la Société Coopérative Simplifiée des Jeunes Aquaculteurs du Poro 'SCOOPS JA PORO', un véritable vivier de Champions Nationaux.Nous avons eu de nombreux échanges avec les acteurs, les producteurs d'engrais, les marailleurs et l'Interprofession de la Filière Pêche et le FIRCA.Ce fut une journée rude pour nous mais riche en perspective pour la CPU-PME.CI. Les Contact pris au niveau national et international seront mis à la disposition de nos membres du Secteur Pêche.",
-      categorie: "filieres",
-      created_at: Date.now() - 86400000 * 18,
-      couverture: {
-        url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop",
-      },
-    },
-    {
-      id: "5",
-      titre: "Nouvelle réglementation pour les entreprises du secteur agricole",
-      description:
-        "Le gouvernement a adopté une nouvelle réglementation pour les entreprises du secteur agricole. Cette réglementation vise à simplifier les procédures administratives et à faciliter l'accès au foncier pour les PME du secteur. La CPU-PME.CI salue cette initiative qui répond à plusieurs de ses recommandations formulées lors des assises de l'agriculture en 2024.",
-      categorie: "reglementation",
-      created_at: Date.now() - 86400000 * 7,
-      couverture: {
-        url: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=600&fit=crop",
-      },
-    },
+  // Appels API
+  const {
+    data: actualitiesData,
+    isLoading: loadingActualities,
+    error: errorActualities,
+  } = useActualities();
+  const {
+    data: publicationsData,
+    isLoading: loadingPublications,
+    error: errorPublications,
+  } = usePublications();
 
-    {
-      id: "6",
-      titre: "Lancement du nouveau programme de financement pour les PME",
-      description:
-        "Le ministère de l'Économie et des Finances a lancé un nouveau programme de financement destiné aux PME ivoiriennes. Ce programme, d'un montant global de 100 milliards de FCFA, vise à soutenir la croissance et le développement des petites et moyennes entreprises dans tous les secteurs d'activité. La CPU-PME.CI a participé activement à la conception de ce programme et assurera un rôle clé dans sa mise en œuvre.",
-      categorie: "opportunites",
-      created_at: Date.now() - 86400000 * 20,
+  // Mapper les données de l'API au format attendu par le composant
+  // et trier du plus récent au plus ancien
+  const newsData = (actualitiesData || [])
+    .map((actuality) => ({
+      id: actuality.id,
+      titre: actuality.title,
+      description: actuality.content || actuality.title, // Utiliser le titre si content est null
+      categorie: actuality.category.toLowerCase(),
+      created_at: actuality.publicationDate || actuality.createdAt,
       couverture: {
-        url: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=600&fit=crop",
+        url: actuality.imageUrl,
       },
-    },
-    {
-      id: "7",
-      titre:
-        "Forum National sur l'Économie Bleue : Les PME au cœur de la stratégie nationale",
-      description:
-        "Le Forum National sur l'Économie Bleue s'est tenu du 20 au 22 Mars 2025 au Palais des Congrès d'Abidjan. Plus de 500 participants issus du secteur privé, des organisations internationales et des institutions gouvernementales ont pris part à cet événement majeur. La CPU-PME.CI a présenté sa vision pour l'intégration des PME dans la stratégie nationale de développement de l'économie bleue. Plusieurs recommandations ont été formulées, notamment la création d'un fonds d'appui spécifique aux PME du secteur maritime et halieutique.",
-      categorie: "evenements",
-      created_at: Date.now() - 86400000 * 25,
-      couverture: {
-        url: "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&h=600&fit=crop",
-      },
-    },
-    {
-      id: "8",
-      titre:
-        "Forum national des entrepreneurs : les inscriptions sont ouvertes",
-      description:
-        "Le Forum national des entrepreneurs se tiendra du 5 au 7 avril 2025 à Abidjan. Les inscriptions sont désormais ouvertes pour tous les entrepreneurs et porteurs de projets souhaitant participer à cet événement majeur. Au programme : conférences, ateliers pratiques, networking et rencontres avec des investisseurs.",
-      categorie: "evenements",
-      created_at: Date.now() - 86400000 * 30,
-      couverture: {
-        url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop",
-      },
-    },
-  ];
+      isFeatured: actuality.isFeatured,
+    }))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-  // Données de publications (nouvelles)
-  const publicationsData = [
-    {
-      id: "pub-1",
-      titre: "Plan Stratégique 2025-2030 de la CPU-PME.CI",
-      description:
-        "Document stratégique définissant les orientations et objectifs de la CPU-PME.CI pour les cinq prochaines années, avec un focus sur l'innovation, la digitalisation et l'accompagnement des PME ivoiriennes.",
-      categorie: "strategie",
-      created_at: Date.now() - 86400000 * 3,
-      type: "document",
-      fileUrl: "/documents/plan-strategique-2025-2030.pdf",
-      fileSize: "2.5 MB",
-    },
-    {
-      id: "pub-2",
-      titre: "Rapport annuel 2024 : Observatoire des PME en Côte d'Ivoire",
-      description:
-        "Analyse complète du tissu économique des PME ivoiriennes, incluant des données statistiques, des tendances sectorielles et des recommandations pour soutenir la croissance du secteur privé.",
-      categorie: "observatoire",
-      created_at: Date.now() - 86400000 * 15,
-      type: "document",
-      fileUrl: "/documents/rapport-observatoire-2024.pdf",
-      fileSize: "4.8 MB",
-    },
-    {
-      id: "pub-3",
-      titre:
-        "Guide pratique : Comment créer et développer sa PME en Côte d'Ivoire",
-      description:
-        "Guide complet destiné aux entrepreneurs, couvrant toutes les étapes de la création d'entreprise, de l'idée initiale jusqu'au développement et à la pérennisation de l'activité.",
-      categorie: "guides",
-      created_at: Date.now() - 86400000 * 8,
-      type: "card",
-      couverture: {
-        url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&h=600&fit=crop",
-      },
-    },
-    {
-      id: "pub-4",
-      titre: "Plaidoyer pour un accès facilité au financement des PME",
-      description:
-        "Document de plaidoyer présenté aux institutions financières et au gouvernement, proposant des mesures concrètes pour améliorer l'accès des PME au crédit et aux mécanismes de financement.",
-      categorie: "plaidoyer",
-      created_at: Date.now() - 86400000 * 12,
-      type: "document",
-      fileUrl: "/documents/plaidoyer-financement-pme.pdf",
-      fileSize: "1.9 MB",
-    },
-    {
-      id: "pub-5",
-      titre: "Étude : Impact de la digitalisation sur les PME ivoiriennes",
-      description:
-        "Étude menée en partenariat avec l'Union Européenne analysant l'impact de la transformation numérique sur la compétitivité et la croissance des PME en Côte d'Ivoire.",
-      categorie: "etudes",
-      created_at: Date.now() - 86400000 * 20,
-      type: "card",
-      couverture: {
-        url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop",
-      },
-    },
-    {
-      id: "pub-6",
-      titre: "Synthèse du Gala des PME 2024",
-      description:
-        "Document de synthèse reprenant les temps forts, les lauréats et les principales recommandations issues de la 3ème édition du Gala des PME qui s'est tenu en juin 2024.",
-      categorie: "syntheses",
-      created_at: Date.now() - 86400000 * 25,
-      type: "document",
-      fileUrl: "/documents/synthese-gala-pme-2024.pdf",
-      fileSize: "3.2 MB",
-    },
-  ];
 
-  const isLoading = false;
+  // Mapper les données des publications et trier du plus récent au plus ancien
+  const mappedPublicationsData = (publicationsData || [])
+    .map((publication) => ({
+      id: publication.id,
+      titre: publication.title,
+      description: publication.description,
+      categorie: publication.category, // Garder la catégorie telle quelle (ex: "Strategy & Plans")
+      created_at: publication.publicationDate || publication.createdAt,
+      type: publication.type, // Conserver le type original (pdf, article, etc.)
+      fileUrl: publication.fileUrl,
+      status: publication.status,
+      // Les publications n'ont pas d'image de couverture dans l'API
+      // On utilise soit le fileUrl (si c'est une image), soit une image par défaut
+      couverture: {
+        url: publication.fileUrl && /\.(jpg|jpeg|png|gif|webp)$/i.test(publication.fileUrl)
+          ? publication.fileUrl
+          : getCategoryImage(publication.category),
+      },
+    }))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  // Fonction pour obtenir une image par défaut selon la catégorie
+  function getCategoryImage(category: string) {
+    const categoryImages: { [key: string]: string } = {
+      "Strategy & Plans": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=600&fit=crop",
+      "Observatory & Reports": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop",
+      "SME Guides": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&h=600&fit=crop",
+      "Advocacy": "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=600&fit=crop",
+      "Partner Studies": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop",
+      "Event Summaries": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=600&fit=crop",
+    };
+    return categoryImages[category] || "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&h=600&fit=crop";
+  }
+
+  // État de chargement combiné
+  const isLoading =
+    activeTab === "actualites" ? loadingActualities : loadingPublications;
 
   // Catégories d'actualités (nouvelles catégories)
   const categoriesActualites = [
     { id: "all", name: "Toutes" },
-    { id: "cpu-pme", name: "CPU-PME institutionnel" },
-    { id: "filieres", name: "Filières" },
+    { id: "institutionnel", name: "CPU-PME institutionnel" },
+    { id: "filiere", name: "Filières" },
     { id: "regions", name: "Régions" },
     { id: "opportunites", name: "Opportunités PME" },
-    { id: "reglementation", name: "Réglementation & alertes" },
+    { id: "reglementations", name: "Réglementation & alertes" },
     { id: "evenements", name: "Événements (annonces)" },
   ];
 
   // Catégories de publications
   const categoriesPublications = [
     { id: "all", name: "Toutes" },
-    { id: "strategie", name: "Stratégie & plans" },
-    { id: "observatoire", name: "Observatoire & rapports" },
-    { id: "guides", name: "Guides PME" },
-    { id: "plaidoyer", name: "Plaidoyer" },
-    { id: "etudes", name: "Études partenaires" },
-    { id: "syntheses", name: "Synthèses d'événements" },
+    { id: "Strategy & Plans", name: "Stratégie & plans" },
+    { id: "Observatory & Reports", name: "Observatoire & rapports" },
+    { id: "SME Guides", name: "Guides PME" },
+    { id: "Advocacy", name: "Plaidoyer" },
+    { id: "Partner Studies", name: "Études partenaires" },
+    { id: "Event Summaries", name: "Synthèses d'événements" },
   ];
 
   // Variable dynamique pour les catégories selon l'onglet actif
   const categories =
-    activeMainTab === "actualites"
+    activeTab === "actualites"
       ? categoriesActualites
       : categoriesPublications;
 
-  // Fonction pour obtenir l'image selon l'ID
-  const getNewsImage = (id: string) => {
-    const images: { [key: string]: any } = {
-      "1": actualites1,
-      "2": actualites2,
-      "3": actualites3,
-      "4": actualites4,
-    };
-    return images[id] || null;
-  };
-
   // Données dynamiques selon l'onglet actif
   const currentData =
-    activeMainTab === "actualites" ? newsData : publicationsData;
+    activeTab === "actualites" ? newsData : mappedPublicationsData;
+
 
   // Filtrer les actualités ou publications
   const filteredNews = (currentData || []).filter((item) => {
@@ -325,32 +390,78 @@ const NewsContent = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
       <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
+        {/* BACKGROUND IMAGE */}
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bmV3c3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=1470&q=80"
-            alt="Actualités"
+            src="/logo.png"
+            alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
         </div>
-        <div className="relative z-10 container mx-auto px-4 text-center text-white animate-in fade-in duration-1000">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold mb-4">
+
+        {/* CONTENU */}
+        <div className="relative z-10 container mx-auto px-4 text-center text-white">
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold mb-6 animate-fade-in">
             Actualités & Publications
           </h1>
-          <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto">
-            Restez informés sur l'actualité du CPU-PME et accédez à nos
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in">
+            Restez informés sur l'actualité de la CPU-PME et accédez à nos
             publications : rapports, guides, études et documents stratégiques
           </p>
         </div>
       </section>
 
       {/* Onglets principaux : Actualités et Publications */}
-      <section className="py-8 bg-white border-b border-slate-200">
+      <section className="py-16 sm:py-20 bg-white">
         <div className="container mx-auto px-4">
-          <Tabs value={activeMainTab} className="w-full">
-            {/* <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 h-12">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <div className="flex justify-center mb-8">
+              <TabsList
+                className="
+      grid grid-cols-2 md:grid-cols-4
+      w-full max-w-5xl
+      gap-4
+      p-3
+      bg-gray-50/50
+      rounded-xl
+    "
+              >
+                {[
+                  { value: "actualites", label: "Actualites" },
+                  { value: "publications", label: "Publication" },
+                ].map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className="
+          w-full
+          flex items-center justify-center
+          px-6 py-4
+          rounded-lg
+          font-semibold
+          text-sm sm:text-base
+          transition-all duration-300
+          data-[state=active]:bg-white
+          data-[state=active]:text-[#221F1F]
+          data-[state=active]:shadow-md
+          data-[state=inactive]:bg-slate-100
+          data-[state=inactive]:text-gray-600
+          hover:bg-slate-200
+        "
+                  >
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+
+            {/* <TabsList className="grid grid-cols-2 md:grid-cols-2 w-full max-w-7xl bg-[#F1F5F9] p-4 rounded-sm">
               <TabsTrigger
                 value="actualites"
                 onClick={() => {
@@ -415,12 +526,11 @@ const NewsContent = () => {
                                   }
                                 >
                                   <div className="relative overflow-hidden h-[500px] md:h-[600px]">
-                                    {getNewsImage(news.id) ? (
-                                      <Image
-                                        src={getNewsImage(news.id)}
+                                    {news.couverture?.url ? (
+                                      <img
+                                        src={news.couverture.url}
                                         alt={news.titre}
-                                        fill
-                                        className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                       />
                                     ) : (
                                       <div className="w-full h-full bg-slate-200 flex flex-col items-center justify-center text-slate-500">
@@ -437,9 +547,9 @@ const NewsContent = () => {
                                       <Badge className="bg-primary text-white shadow-lg backdrop-blur-sm px-4 py-1.5">
                                         À la une
                                       </Badge>
-                                      <Badge className="bg-white/90 text-slate-900 shadow-lg backdrop-blur-sm px-4 py-1.5">
+                                      {/* <Badge className="bg-white/90 text-slate-900 shadow-lg backdrop-blur-sm px-4 py-1.5">
                                         {getCategoryName(news.categorie)}
-                                      </Badge>
+                                      </Badge> */}
                                     </div>
 
                                     {/* Contenu superposé */}
@@ -572,7 +682,10 @@ const NewsContent = () => {
                 </div>
 
                 {/* Bouton flottant pour filtres - Mobile uniquement */}
-                <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+                <Sheet
+                  open={isFilterSheetOpen}
+                  onOpenChange={setIsFilterSheetOpen}
+                >
                   <SheetTrigger asChild>
                     <Button
                       className="md:hidden fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40 bg-white hover:bg-white/90"
@@ -581,7 +694,10 @@ const NewsContent = () => {
                       <Filter className="h-6 w-6 text-primary" />
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl bg-white">
+                  <SheetContent
+                    side="bottom"
+                    className="h-[80vh] rounded-t-3xl bg-white"
+                  >
                     <SheetHeader className="mb-6">
                       <SheetTitle className="text-2xl font-bold text-center">
                         Filtrer les actualités
@@ -606,9 +722,7 @@ const NewsContent = () => {
                             setIsFilterSheetOpen(false);
                           }}
                           className={`w-full justify-start text-left h-14 text-base font-medium ${
-                            selectedCategory === category.id
-                              ? "shadow-md"
-                              : ""
+                            selectedCategory === category.id ? "shadow-md" : ""
                           }`}
                         >
                           {category.name}
@@ -640,7 +754,7 @@ const NewsContent = () => {
                           ? Array.from({ length: 9 }).map((_, index) => (
                               <Card
                                 key={index}
-                                className="overflow-hidden animate-pulse border-0 bg-white"
+                                className="overflow-hidden animate-pulse border-gray-200 bg-white"
                               >
                                 <div className="h-52 bg-gray-200" />
                                 <CardContent className="p-6">
@@ -654,18 +768,17 @@ const NewsContent = () => {
                           : paginatedNews.map((news) => (
                               <Card
                                 key={news.id}
-                                className="overflow-hidden transition-all duration-300 cursor-pointer group border-0 bg-white flex flex-col"
+                                className="overflow-hidden transition-all duration-300 cursor-pointer group border-gray-200 bg-white flex flex-col"
                                 onClick={() =>
                                   router.push(`/actualites/${news.id}`)
                                 }
                               >
                                 <div className="relative h-52 overflow-hidden">
-                                  {getNewsImage(news.id) ? (
-                                    <Image
-                                      src={getNewsImage(news.id)}
+                                  {news.couverture?.url ? (
+                                    <img
+                                      src={news.couverture.url}
                                       alt={news.titre}
-                                      fill
-                                      className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                     />
                                   ) : (
                                     <div className="w-full h-full bg-slate-200 flex flex-col items-center justify-center text-slate-500">
@@ -678,11 +791,11 @@ const NewsContent = () => {
                                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
                                   {/* Badge catégorie */}
-                                  <div className="absolute top-3 right-3">
+                                   <div className="absolute top-3 right-3">
                                     <Badge className="bg-white/95 text-slate-900 shadow-md backdrop-blur-sm border-0 font-medium">
                                       {getCategoryName(news.categorie)}
                                     </Badge>
-                                  </div>
+                                  </div> 
                                 </div>
 
                                 <CardContent className="p-6 flex flex-col flex-grow">
@@ -848,16 +961,22 @@ const NewsContent = () => {
                 </div>
 
                 {/* Bouton flottant pour filtres - Mobile uniquement */}
-                <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+                <Sheet
+                  open={isFilterSheetOpen}
+                  onOpenChange={setIsFilterSheetOpen}
+                >
                   <SheetTrigger asChild>
                     <Button
-                      className="md:hidden fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40 bg-primary hover:bg-primary/90"
+                      className="md:hidden fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40 bg-white hover:bg-white"
                       size="icon"
                     >
-                      <Filter className="h-6 w-6" />
+                      <Filter className="h-6 w-6 text-primary" />
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl">
+                  <SheetContent
+                    side="bottom"
+                    className="h-[80vh] rounded-t-3xl bg-white"
+                  >
                     <SheetHeader className="mb-6">
                       <SheetTitle className="text-2xl font-bold text-center">
                         Filtrer les publications
@@ -882,9 +1001,7 @@ const NewsContent = () => {
                             setIsFilterSheetOpen(false);
                           }}
                           className={`w-full justify-start text-left h-14 text-base font-medium ${
-                            selectedCategory === category.id
-                              ? "shadow-md"
-                              : ""
+                            selectedCategory === category.id ? "shadow-md" : ""
                           }`}
                         >
                           {category.name}
@@ -912,27 +1029,88 @@ const NewsContent = () => {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                        {paginatedNews.map((publication: any) =>
-                          publication.type === "document" ? (
-                            // Format document avec téléchargement et preview
+                        {paginatedNews.map((publication: any) => {
+                          // Obtenir les informations sur le type de fichier
+                          const fileInfo = getFileTypeInfo(publication.fileUrl, publication.type);
+                          const FileIcon = fileInfo.icon;
+                          const isImage = publication.fileUrl && /\.(jpg|jpeg|png|gif|webp)$/i.test(publication.fileUrl);
+                          const isPDF = publication.fileUrl && publication.fileUrl.toLowerCase().endsWith('.pdf');
+                          const isOfficeDoc = publication.fileUrl && /\.(doc|docx|xls|xlsx|ppt|pptx)$/i.test(publication.fileUrl);
+
+                          return (
+                            // Affichage de la publication avec aperçu visuel
                             <Card
                               key={publication.id}
-                              className="overflow-hidden transition-all duration-300 cursor-pointer group border-0 bg-white hover:shadow-xl flex flex-col"
+                              className={`overflow-hidden transition-all duration-300 group border-gray-200 bg-white hover:shadow-xl flex flex-col ${
+                                isPDF || isOfficeDoc ? '' : 'cursor-pointer'
+                              }`}
+                              onClick={() => {
+                                // Ne rediriger que si ce n'est pas un document (PDF ou Office)
+                                if (!isPDF && !isOfficeDoc) {
+                                  router.push(`/actualites/${publication.id}`);
+                                }
+                              }}
                             >
                               {/* Preview du document */}
-                              <div className="relative h-52 overflow-hidden bg-gradient-to-br from-red-50 via-orange-50 to-amber-50">
-                                <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-                                  {/* Icône PDF */}
-                                  <div className="relative">
-                                    <FileText
-                                      className="h-24 w-24 text-red-600 group-hover:scale-110 transition-transform duration-300"
-                                      strokeWidth={1.5}
+                              <div className={`relative h-52 overflow-hidden bg-gradient-to-br ${fileInfo.bgGradient}`}>
+                                {isImage ? (
+                                  // Afficher l'image si c'est un fichier image
+                                  <img
+                                    src={publication.fileUrl}
+                                    alt={publication.titre}
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                  />
+                                ) : isPDF ? (
+                                  // Aperçu du PDF avec iframe
+                                  <div className="relative w-full h-full">
+                                    <iframe
+                                      src={`${publication.fileUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                                      className="w-full h-full border-0 pointer-events-none scale-[1.2] origin-top"
+                                      title={`Aperçu de ${publication.titre}`}
                                     />
-                                    <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg">
-                                      PDF
+                                    {/* Overlay pour éviter les clics sur l'iframe */}
+                                    <div className="absolute inset-0 bg-transparent pointer-events-auto"></div>
+                                    {/* Badge PDF en overlay */}
+                                    <div className="absolute bottom-3 left-3">
+                                      <div className={`${fileInfo.badgeColor} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1`}>
+                                        <FileText className="h-3.5 w-3.5" />
+                                        {fileInfo.label}
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
+                                ) : isOfficeDoc ? (
+                                  // Aperçu des documents Office avec Google Docs Viewer
+                                  <div className="relative w-full h-full">
+                                    <iframe
+                                      src={`https://docs.google.com/viewer?url=${encodeURIComponent(publication.fileUrl)}&embedded=true`}
+                                      className="w-full h-full border-0 pointer-events-none"
+                                      title={`Aperçu de ${publication.titre}`}
+                                    />
+                                    {/* Overlay pour éviter les clics sur l'iframe */}
+                                    <div className="absolute inset-0 bg-transparent pointer-events-auto"></div>
+                                    {/* Badge Type de fichier en overlay */}
+                                    <div className="absolute bottom-3 left-3">
+                                      <div className={`${fileInfo.badgeColor} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1`}>
+                                        <FileIcon className="h-3.5 w-3.5" />
+                                        {fileInfo.label}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  // Afficher l'icône pour les autres types de fichiers
+                                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
+                                    {/* Icône dynamique selon le type */}
+                                    <div className="relative">
+                                      <FileIcon
+                                        className={`h-24 w-24 ${fileInfo.color} group-hover:scale-110 transition-transform duration-300`}
+                                        strokeWidth={1.5}
+                                      />
+                                      <div className={`absolute -bottom-2 -right-2 ${fileInfo.badgeColor} text-white text-xs font-bold px-2 py-1 rounded shadow-lg`}>
+                                        {fileInfo.label}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
 
                                 {/* Overlay au hover */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -969,79 +1147,60 @@ const NewsContent = () => {
                                 {/* Ligne de séparation */}
                                 <div className="w-full h-px bg-slate-100 mb-4"></div>
 
-                                {/* Bouton de téléchargement */}
-                                <Button
-                                  variant="outline"
-                                  className="w-full group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    // Logique de téléchargement ici
-                                    window.open(publication.fileUrl, "_blank");
-                                  }}
-                                >
-                                  <Download className="h-4 w-4 mr-2" />
-                                  Télécharger le PDF
-                                </Button>
-                              </CardContent>
-                            </Card>
-                          ) : (
-                            // Format carte visuelle classique
-                            <Card
-                              key={publication.id}
-                              className="overflow-hidden transition-all duration-300 cursor-pointer group border-0 bg-white flex flex-col"
-                              onClick={() =>
-                                router.push(`/actualites/${publication.id}`)
-                              }
-                            >
-                              <div className="relative h-52 overflow-hidden">
-                                <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                                  <FileText className="h-20 w-20 text-primary/40" />
-                                </div>
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                {/* Bouton de téléchargement pour documents */}
+                                {publication.fileUrl && (isPDF || isOfficeDoc) && (
+                                  // Si c'est un document (PDF, Word, Excel, etc.), afficher uniquement le bouton de téléchargement
+                                  <Button
+                                    variant="outline"
+                                    className="w-full group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
 
-                                {/* Badge catégorie */}
-                                <div className="absolute top-3 right-3">
-                                  <Badge className="bg-white/95 text-slate-900 shadow-md backdrop-blur-sm border-0 font-medium">
-                                    {getCategoryName(publication.categorie)}
-                                  </Badge>
-                                </div>
-                              </div>
+                                      // Fonction pour télécharger le fichier
+                                      const downloadFile = async () => {
+                                        try {
+                                          // Extraire le nom du fichier de l'URL
+                                          const fileName = publication.fileUrl.split('/').pop() || 'document';
 
-                              <CardContent className="p-6 flex flex-col flex-grow">
-                                {/* Métadonnées */}
-                                <div className="flex items-center gap-3 text-xs text-slate-500 mb-3 font-medium">
-                                  <div className="flex items-center gap-1.5">
-                                    <Calendar className="h-3.5 w-3.5" />
-                                    <span>
-                                      {formatDate(publication.created_at)}
+                                          // Créer un lien temporaire pour forcer le téléchargement
+                                          const link = document.createElement('a');
+                                          link.href = publication.fileUrl;
+                                          link.download = fileName;
+                                          link.target = '_blank';
+                                          link.rel = 'noopener noreferrer';
+
+                                          // Ajouter au DOM, cliquer et supprimer
+                                          document.body.appendChild(link);
+                                          link.click();
+                                          document.body.removeChild(link);
+                                        } catch (error) {
+                                          console.error('Erreur lors du téléchargement:', error);
+                                          // En cas d'erreur, ouvrir dans un nouvel onglet
+                                          window.open(publication.fileUrl, "_blank");
+                                        }
+                                      };
+
+                                      downloadFile();
+                                    }}
+                                  >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Télécharger le fichier
+                                  </Button>
+                                )}
+
+                                {/* Lien de lecture pour images et actualités */}
+                                {!isPDF && !isOfficeDoc && (
+                                  <div className="flex items-center justify-between cursor-pointer">
+                                    <span className="text-sm font-semibold text-primary group-hover:underline">
+                                      Lire la suite
                                     </span>
+                                    <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-2 transition-transform" />
                                   </div>
-                                </div>
-
-                                {/* Titre */}
-                                <h3 className="text-xl font-heading font-bold mb-3 line-clamp-2 group-hover:text-primary transition-colors leading-tight">
-                                  {publication.titre}
-                                </h3>
-
-                                {/* Extrait */}
-                                <p className="text-sm text-slate-600 mb-4 line-clamp-3 leading-relaxed flex-grow">
-                                  {publication.description}
-                                </p>
-
-                                {/* Ligne de séparation */}
-                                <div className="w-full h-px bg-slate-100 mb-4"></div>
-
-                                {/* Lien de lecture */}
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-semibold text-primary group-hover:underline">
-                                    Lire la suite
-                                  </span>
-                                  <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-2 transition-transform" />
-                                </div>
+                                )}
                               </CardContent>
                             </Card>
-                          )
-                        )}
+                          );
+                        })}
                       </div>
 
                       {/* Pagination */}
@@ -1117,14 +1276,16 @@ const NewsContent = () => {
 
 const News = () => {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-slate-600">Chargement...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-slate-600">Chargement...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <NewsContent />
     </Suspense>
   );

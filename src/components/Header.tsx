@@ -25,8 +25,9 @@ import {
   Handshake,
   Newspaper,
   FileText,
+  Layers,
 } from "lucide-react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -41,6 +42,7 @@ function HeaderContent() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const [isMembersMenuOpen, setIsMembersMenuOpen] = useState(false);
   const [membersMenuTimeout, setMembersMenuTimeout] =
     useState<NodeJS.Timeout | null>(null);
@@ -53,17 +55,19 @@ function HeaderContent() {
   const [isActualitesMenuOpen, setIsActualitesMenuOpen] = useState(false);
   const [actualitesMenuTimeout, setActualitesMenuTimeout] =
     useState<NodeJS.Timeout | null>(null);
+  const [isServicesMenuOpen, setIsServicesMenuOpen] = useState(false);
+  const [servicesMenuTimeout, setServicesMenuTimeout] =
+    useState<NodeJS.Timeout | null>(null);
   // États pour les menus mobiles
   const [isMobileMembersOpen, setIsMobileMembersOpen] = useState(false);
   const [isMobileSecteursOpen, setIsMobileSecteursOpen] = useState(false);
   const [isMobileAProposOpen, setIsMobileAProposOpen] = useState(false);
   const [isMobileActualitesOpen, setIsMobileActualitesOpen] = useState(false);
+  const [isMobileServicesOpen, setIsMobileServicesOpen] = useState(false);
   const searchParams = useSearchParams();
 
   // Debug: afficher le pathname
-  useEffect(() => {
-    console.log("Current pathname:", pathname);
-  }, [pathname]);
+  useEffect(() => {}, [pathname]);
 
   // Nettoyer le timeout au démontage
   useEffect(() => {
@@ -80,8 +84,17 @@ function HeaderContent() {
       if (actualitesMenuTimeout) {
         clearTimeout(actualitesMenuTimeout);
       }
+      if (servicesMenuTimeout) {
+        clearTimeout(servicesMenuTimeout);
+      }
     };
-  }, [membersMenuTimeout, secteursMenuTimeout, aProposMenuTimeout, actualitesMenuTimeout]);
+  }, [
+    membersMenuTimeout,
+    secteursMenuTimeout,
+    aProposMenuTimeout,
+    actualitesMenuTimeout,
+    servicesMenuTimeout,
+  ]);
 
   // Empêcher le scroll quand le drawer est ouvert
   useEffect(() => {
@@ -112,36 +125,8 @@ function HeaderContent() {
   };
 
   // Fonction pour vérifier quel secteur est actif
-  const getActiveSecteurTab = () => {
-    if (pathname === "/secteurs") {
-      const tab = searchParams.get("tab");
-      return tab || "primaire";
-    }
-    return null;
-  };
-
-  // Fonction pour vérifier quel onglet À Propos est actif
-  const getActiveAProposTab = () => {
-    if (pathname === "/a-propos") {
-      const tab = searchParams.get("tab");
-      return tab || "mission";
-    }
-    return null;
-  };
-
-  // Fonction pour vérifier quel onglet Actualités est actif
-  const getActiveActualitesTab = () => {
-    if (pathname === "/actualites") {
-      const tab = searchParams.get("tab");
-      return tab || "actualites";
-    }
-    return null;
-  };
 
   const activeMemberTab = getActiveMemberTab();
-  const activeSecteurTab = getActiveSecteurTab();
-  const activeAProposTab = getActiveAProposTab();
-  const activeActualitesTab = getActiveActualitesTab();
 
   return (
     <>
@@ -175,375 +160,143 @@ function HeaderContent() {
               </Link>
 
               {/* Menu À Propos avec sous-menu */}
-              <div
-                className="relative"
-                onMouseEnter={() => {
-                  if (aProposMenuTimeout) {
-                    clearTimeout(aProposMenuTimeout);
-                    setAProposMenuTimeout(null);
-                  }
-                  setIsAProposMenuOpen(true);
-                }}
-                onMouseLeave={() => {
-                  const timeout = setTimeout(() => {
-                    setIsAProposMenuOpen(false);
-                  }, 200);
-                  setAProposMenuTimeout(timeout);
-                }}
-              >
-                <button
-                  className={`font-inter text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1 pb-1 border-b-2 ${
-                    isActive("/a-propos")
-                      ? "text-[#F08223] font-semibold border-[#F08223]"
-                      : "text-[#6F6F6F] hover:text-[#221F1F] border-transparent"
-                  }`}
-                >
-                  À Propos
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform ${
-                      isAProposMenuOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Sous-menu À Propos */}
-                {isAProposMenuOpen && (
-                  <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                    onMouseEnter={() => {
-                      if (aProposMenuTimeout) {
-                        clearTimeout(aProposMenuTimeout);
-                        setAProposMenuTimeout(null);
-                      }
-                      setIsAProposMenuOpen(true);
-                    }}
-                    onMouseLeave={() => {
-                      const timeout = setTimeout(() => {
-                        setIsAProposMenuOpen(false);
-                      }, 200);
-                      setAProposMenuTimeout(timeout);
-                    }}
-                  >
-                    <Link
-                      href="/a-propos?tab=mission"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-t-lg mx-2 ${
-                        activeAProposTab === "mission"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Target className="w-4 h-4" />
-                      Mission & Vision
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=histoire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeAProposTab === "histoire"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Clock className="w-4 h-4" />
-                      Histoire
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=equipe"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeAProposTab === "equipe"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Users className="w-4 h-4" />
-                      Équipe
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=partenaires"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
-                        activeAProposTab === "partenaires"
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                      }`}
-                    >
-                      <Handshake className="w-4 h-4" />
-                      Partenaires
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              {/* Menu Actualités & Publications avec sous-menu */}
-              <div
-                className="relative"
-                onMouseEnter={() => {
-                  if (actualitesMenuTimeout) {
-                    clearTimeout(actualitesMenuTimeout);
-                    setActualitesMenuTimeout(null);
-                  }
-                  setIsActualitesMenuOpen(true);
-                }}
-                onMouseLeave={() => {
-                  const timeout = setTimeout(() => {
-                    setIsActualitesMenuOpen(false);
-                  }, 200);
-                  setActualitesMenuTimeout(timeout);
-                }}
-              >
-                <button
-                  className={`font-inter text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1 pb-1 border-b-2 ${
-                    isActive("/actualites")
-                      ? "text-[#F08223] font-semibold border-[#F08223]"
-                      : "text-[#6F6F6F] hover:text-[#221F1F] border-transparent"
-                  }`}
-                >
-                  Actualités & Publications
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform ${
-                      isActualitesMenuOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Sous-menu Actualités & Publications */}
-                {isActualitesMenuOpen && (
-                  <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                    onMouseEnter={() => {
-                      if (actualitesMenuTimeout) {
-                        clearTimeout(actualitesMenuTimeout);
-                        setActualitesMenuTimeout(null);
-                      }
-                      setIsActualitesMenuOpen(true);
-                    }}
-                    onMouseLeave={() => {
-                      const timeout = setTimeout(() => {
-                        setIsActualitesMenuOpen(false);
-                      }, 200);
-                      setActualitesMenuTimeout(timeout);
-                    }}
-                  >
-                    <Link
-                      href="/actualites?tab=actualites"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-t-lg mx-2 ${
-                        activeActualitesTab === "actualites"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Newspaper className="w-4 h-4" />
-                      Actualités
-                    </Link>
-                    <Link
-                      href="/actualites?tab=publications"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
-                        activeActualitesTab === "publications"
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                      }`}
-                    >
-                      <FileText className="w-4 h-4" />
-                      Publications
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              {/* Menu Secteurs avec sous-menu */}
-              <div
-                className="relative"
-                onMouseEnter={() => {
-                  if (secteursMenuTimeout) {
-                    clearTimeout(secteursMenuTimeout);
-                    setSecteursMenuTimeout(null);
-                  }
-                  setIsSecteursMenuOpen(true);
-                }}
-                onMouseLeave={() => {
-                  const timeout = setTimeout(() => {
-                    setIsSecteursMenuOpen(false);
-                  }, 200);
-                  setSecteursMenuTimeout(timeout);
-                }}
-              >
-                <button
-                  className={`font-inter text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1 pb-1 border-b-2 ${
-                    isActive("/secteurs")
-                      ? "text-[#F08223] font-semibold hover:text-[#D97420]"
-                      : "text-[#6F6F6F] hover:text-[#221F1F] border-transparent"
-                  }`}
-                >
-                  Secteurs & Filières
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform ${
-                      isSecteursMenuOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Sous-menu Secteurs */}
-                {isSecteursMenuOpen && (
-                  <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                    onMouseEnter={() => {
-                      if (secteursMenuTimeout) {
-                        clearTimeout(secteursMenuTimeout);
-                        setSecteursMenuTimeout(null);
-                      }
-                      setIsSecteursMenuOpen(true);
-                    }}
-                    onMouseLeave={() => {
-                      const timeout = setTimeout(() => {
-                        setIsSecteursMenuOpen(false);
-                      }, 200);
-                      setSecteursMenuTimeout(timeout);
-                    }}
-                  >
-                    <Link
-                      href="/secteurs?tab=primaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-t-lg mx-2 ${
-                        activeSecteurTab === "primaire"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Factory className="w-4 h-4" />
-                      Primaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=secondaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeSecteurTab === "secondaire"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Building className="w-4 h-4" />
-                      Secondaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=tertiaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeSecteurTab === "tertiaire"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Briefcase className="w-4 h-4" />
-                      Tertiaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=quaternaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
-                        activeSecteurTab === "quaternaire"
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                      }`}
-                    >
-                      <Network className="w-4 h-4" />
-                      Quaternaire
-                    </Link>
-                  </div>
-                )}
-              </div>
-              {/* Menu Membres avec sous-menu */}
-              <div
-                className="relative"
-                onMouseEnter={() => {
-                  // Annuler le timeout si on revient sur le menu
-                  if (membersMenuTimeout) {
-                    clearTimeout(membersMenuTimeout);
-                    setMembersMenuTimeout(null);
-                  }
-                  setIsMembersMenuOpen(true);
-                }}
-                onMouseLeave={() => {
-                  // Ajouter un délai avant de fermer le menu
-                  const timeout = setTimeout(() => {
-                    setIsMembersMenuOpen(false);
-                  }, 200); // 200ms de délai
-                  setMembersMenuTimeout(timeout);
-                }}
-              >
-                <button
-                  className={`font-inter text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1 pb-1 border-b-2 ${
-                    isActive("/membres")
-                      ? "text-[#F08223] font-semibold hover:text-[#D97420]"
-                      : "text-[#6F6F6F] hover:text-[#221F1F] border-transparent"
-                  }`}
-                >
-                  Membres
-                  <ChevronDown
-                    className={`w-3 h-3 transition-transform ${
-                      isMembersMenuOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Sous-menu */}
-                {isMembersMenuOpen && (
-                  <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                    onMouseEnter={() => {
-                      // Annuler le timeout si on entre dans le sous-menu
-                      if (membersMenuTimeout) {
-                        clearTimeout(membersMenuTimeout);
-                        setMembersMenuTimeout(null);
-                      }
-                      setIsMembersMenuOpen(true);
-                    }}
-                    onMouseLeave={() => {
-                      // Ajouter un délai avant de fermer le menu
-                      const timeout = setTimeout(() => {
-                        setIsMembersMenuOpen(false);
-                      }, 200);
-                      setMembersMenuTimeout(timeout);
-                    }}
-                  >
-                    <Link
-                      href="/membres?tab=annuaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-t-lg mx-2 ${
-                        activeMemberTab === "annuaire"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Users className="w-4 h-4" />
-                      Annuaire
-                    </Link>
-                    <Link
-                      href="/membres?tab=avantages"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 border-b border-gray-100 rounded-md mx-2 ${
-                        activeMemberTab === "avantages"
-                          ? "text-white bg-[#F08223] border-b-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223] hover:border-b-[#F08223]"
-                      }`}
-                    >
-                      <Award className="w-4 h-4" />
-                      Avantages
-                    </Link>
-                    <Link
-                      href="/membres?tab=adhesion"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-all duration-200 rounded-b-lg mx-2 ${
-                        activeMemberTab === "adhesion"
-                          ? "text-white bg-[#F08223]"
-                          : "text-[#6F6F6F] hover:text-white hover:bg-[#F08223]"
-                      }`}
-                    >
-                      <Building2 className="w-4 h-4" />
-                      Adhérer
-                    </Link>
-                  </div>
-                )}
-              </div>
               <Link
-                href="/contact"
+                href="/a-propos"
                 className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
-                  pathname.startsWith("/contact")
-                    ? "text-[#F08223] font-semibold border-[#F08223]"
+                  isActive("/a-propos")
+                    ? "text-[#F08223] font-semibold hover:text-[#D97420]"
                     : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
                 }`}
               >
-                Contact & Assistance
+                À propos
+              </Link>
+
+              {/* Menu Services avec sous-menu */}
+              <div
+                className="relative"
+                onMouseEnter={() => {
+                  if (servicesMenuTimeout) {
+                    clearTimeout(servicesMenuTimeout);
+                    setServicesMenuTimeout(null);
+                  }
+                  setIsServicesMenuOpen(true);
+                }}
+                onMouseLeave={() => {
+                  const timeout = setTimeout(() => {
+                    setIsServicesMenuOpen(false);
+                  }, 200);
+                  setServicesMenuTimeout(timeout);
+                }}
+              >
+                <button
+                  className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 flex items-center gap-1 cursor-pointer ${
+                    isActive("/services")
+                      ? "text-[#F08223] font-semibold hover:text-[#D97420] border-[#F08223]"
+                      : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                  }`}
+                >
+                  Services
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${
+                      isServicesMenuOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* Sous-menu Services */}
+                {isServicesMenuOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <Award className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223] cursor-pointer">
+                        Incubateur Champion 225
+                      </span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <FileText className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
+                        Appels d&apos;offres & Opportunités
+                      </span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <Building2 className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
+                        Formation / CPU-Académie
+                      </span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <Layers className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
+                        Marketplace
+                      </span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <Briefcase className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
+                        Financement
+                      </span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <Network className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
+                        Réseautage & Événements
+                      </span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              <Link
+                href="/actualites"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  isActive("/actualites")
+                    ? "text-[#F08223] font-semibold hover:text-[#D97420]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
+              >
+                Actualités & Publications
+              </Link>
+
+              {/* Menu Actualités & Publications avec sous-menu */}
+              <Link
+                href="/secteurs"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  isActive("/secteurs")
+                    ? "text-[#F08223] font-semibold hover:text-[#D97420]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
+              >
+                Secteurs & Filières
+              </Link>
+
+              {/* Menu Secteurs avec sous-menu */}
+              <Link
+                href="/membres"
+                className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
+                  isActive("/membres")
+                    ? "text-[#F08223] font-semibold hover:text-[#D97420]"
+                    : "text-[#6F6F6F] font-medium hover:text-[#221F1F] border-transparent"
+                }`}
+              >
+                Membres
               </Link>
 
               {/* CTA Buttons */}
@@ -551,12 +304,15 @@ function HeaderContent() {
                 <Button
                   variant="outline"
                   onClick={() => setIsLoginOpen(true)}
-                  className="border-success text-success hover:bg-success hover:text-white w-full rounded-sm font-inter text-xs font-semibold px-3 py-1.5 transition-all"
+                  className="border-success text-success hover:bg-success hover:text-white w-full rounded-sm font-inter text-xs font-semibold px-3 py-1.5 transition-all cursor-pointer"
                 >
                   <LogIn className="w-3.5 h-3.5" />
                   Connexion
                 </Button>
-                <Button className="bg-[#F08223] text-white hover:bg-opacity-90 w-full font-inter text-xs font-semibold px-3 py-1.5 rounded-sm transition-all shadow-sm hover:shadow-md">
+                <Button
+                  onClick={() => router.push("/membres?tab=adhesion")}
+                  className="bg-[#F08223] text-white hover:bg-opacity-90 w-full font-inter text-xs font-semibold px-3 py-1.5 rounded-sm transition-all shadow-sm hover:shadow-md cursor-pointer"
+                >
                   <UserPlus className="w-3.5 h-3.5" />
                   Adhérer
                 </Button>
@@ -620,307 +376,148 @@ function HeaderContent() {
                 Accueil
               </Link>
 
-              {/* Menu À Propos avec accordéon mobile */}
-              <div>
-                <button
-                  onClick={() => setIsMobileAProposOpen(!isMobileAProposOpen)}
-                  className={`w-full flex items-center justify-between font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                    pathname.startsWith("/a-propos")
-                      ? "text-[#F08223] bg-orange-50 font-semibold"
-                      : "text-[#6F6F6F] hover:bg-gray-50"
-                  }`}
-                >
-                  À Propos
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      isMobileAProposOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isMobileAProposOpen && (
-                  <div className="mt-1 ml-4 space-y-1">
-                    <Link
-                      href="/a-propos?tab=mission"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeAProposTab === "mission"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Target className="w-4 h-4" />
-                      Mission & Vision
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=histoire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeAProposTab === "histoire"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Clock className="w-4 h-4" />
-                      Histoire
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=equipe"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeAProposTab === "equipe"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Users className="w-4 h-4" />
-                      Équipe
-                    </Link>
-                    <Link
-                      href="/a-propos?tab=partenaires"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeAProposTab === "partenaires"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Handshake className="w-4 h-4" />
-                      Partenaires
-                    </Link>
-                  </div>
-                )}
-              </div>
+              <Link
+                href="/a-propos"
+                className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/a-propos")
+                    ? "text-[#F08223] bg-orange-50"
+                    : "text-[#6F6F6F] hover:bg-gray-50"
+                }`}
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                À Propos
+              </Link>
 
-              {/* Menu Actualités & Publications avec accordéon mobile */}
+              {/* Menu Services avec sous-menu mobile */}
               <div>
                 <button
-                  onClick={() => setIsMobileActualitesOpen(!isMobileActualitesOpen)}
-                  className={`w-full flex items-center justify-between font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                    pathname.startsWith("/actualites")
-                      ? "text-[#F08223] bg-orange-50 font-semibold"
+                  onClick={() => setIsMobileServicesOpen(!isMobileServicesOpen)}
+                  className={`w-full flex items-center justify-between font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors cursor-pointer ${
+                    isActive("/services")
+                      ? "text-[#F08223] bg-orange-50"
                       : "text-[#6F6F6F] hover:bg-gray-50"
                   }`}
                 >
-                  Actualités & Publications
+                  <span>Services</span>
                   <ChevronDown
                     className={`w-4 h-4 transition-transform ${
-                      isMobileActualitesOpen ? "rotate-180" : ""
+                      isMobileServicesOpen ? "rotate-180" : ""
                     }`}
                   />
                 </button>
-                {isMobileActualitesOpen && (
-                  <div className="mt-1 ml-4 space-y-1">
-                    <Link
-                      href="/actualites?tab=actualites"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeActualitesTab === "actualites"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Newspaper className="w-4 h-4" />
-                      Actualités
-                    </Link>
-                    <Link
-                      href="/actualites?tab=publications"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeActualitesTab === "publications"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <FileText className="w-4 h-4" />
-                      Publications
-                    </Link>
-                  </div>
-                )}
-              </div>
 
-              {/* Menu Secteurs avec accordéon mobile */}
-              <div>
-                <button
-                  onClick={() => setIsMobileSecteursOpen(!isMobileSecteursOpen)}
-                  className={`w-full flex items-center justify-between font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                    pathname.startsWith("/secteurs")
-                      ? "text-[#F08223] bg-orange-50 font-semibold"
-                      : "text-[#6F6F6F] hover:bg-gray-50"
-                  }`}
-                >
-                  Secteurs & Filières
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      isMobileSecteursOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isMobileSecteursOpen && (
-                  <div className="mt-1 ml-4 space-y-1">
+                {/* Sous-menu Services mobile */}
+                {isMobileServicesOpen && (
+                  <div className="ml-4 mt-1 space-y-1">
                     <Link
-                      href="/secteurs?tab=primaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeSecteurTab === "primaire"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Factory className="w-4 h-4" />
-                      Primaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=secondaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeSecteurTab === "secondaire"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Building className="w-4 h-4" />
-                      Secondaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=tertiaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeSecteurTab === "tertiaire"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Briefcase className="w-4 h-4" />
-                      Tertiaire
-                    </Link>
-                    <Link
-                      href="/secteurs?tab=quaternaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeSecteurTab === "quaternaire"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Network className="w-4 h-4" />
-                      Quaternaire
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              {/* Menu Membres avec accordéon mobile */}
-              <div>
-                <button
-                  onClick={() => setIsMobileMembersOpen(!isMobileMembersOpen)}
-                  className={`w-full flex items-center justify-between font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                    pathname.startsWith("/membres")
-                      ? "text-[#F08223] bg-orange-50 font-semibold"
-                      : "text-[#6F6F6F] hover:bg-gray-50"
-                  }`}
-                >
-                  Membres
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      isMobileMembersOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isMobileMembersOpen && (
-                  <div className="mt-1 ml-4 space-y-1">
-                    <Link
-                      href="/membres?tab=annuaire"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeMemberTab === "annuaire"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Users className="w-4 h-4" />
-                      Annuaire
-                    </Link>
-                    <Link
-                      href="/membres?tab=avantages"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeMemberTab === "avantages"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
                       onClick={() => setIsDrawerOpen(false)}
                     >
                       <Award className="w-4 h-4" />
-                      Avantages
+                      <span>Incubateur Champion 225</span>
                     </Link>
                     <Link
-                      href="/membres?tab=adhesion"
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                        activeMemberTab === "adhesion"
-                          ? "text-white bg-[#F08223] font-semibold"
-                          : "text-[#6F6F6F] hover:bg-gray-50"
-                      }`}
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>Appels d&apos;offres & Opportunités</span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
                       onClick={() => setIsDrawerOpen(false)}
                     >
                       <Building2 className="w-4 h-4" />
-                      Adhérer
+                      <span>Formation / CPU-Académie</span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      <Layers className="w-4 h-4" />
+                      <span>Marketplace</span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      <Briefcase className="w-4 h-4" />
+                      <span>Financement</span>
+                    </Link>
+                    <Link
+                      href="#"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      <Network className="w-4 h-4" />
+                      <span>Réseautage & Événements</span>
                     </Link>
                   </div>
                 )}
               </div>
+
               <Link
-                href="/plaidoyer"
+                href="/actualites"
                 className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                  pathname.startsWith("/plaidoyer")
-                    ? "text-[#F08223] bg-orange-50 font-semibold"
+                  isActive("/actualites")
+                    ? "text-[#F08223] bg-orange-50"
                     : "text-[#6F6F6F] hover:bg-gray-50"
                 }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
-                Plaidoyer & Influence
+                Actualités & Publications
               </Link>
+              {/* Lien Secteurs simple (sans sous-menu) dans le drawer mobile */}
               <Link
-                href="/crm"
+                href="/secteurs"
                 className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                  pathname.startsWith("/crm")
-                    ? "text-[#F08223] bg-orange-50 font-semibold"
+                  isActive("/secteurs")
+                    ? "text-[#F08223] bg-orange-50"
                     : "text-[#6F6F6F] hover:bg-gray-50"
                 }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
-                CRM & Réseautage
+                Secteurs & Filières
               </Link>
+
               <Link
-                href="/contact"
+                href="/membres"
                 className={`font-inter text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
-                  pathname.startsWith("/contact")
-                    ? "text-[#F08223] bg-orange-50 font-semibold"
+                  isActive("/membres")
+                    ? "text-[#F08223] bg-orange-50"
                     : "text-[#6F6F6F] hover:bg-gray-50"
                 }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
-                Contact & Assistance
+                Membres
               </Link>
             </nav>
 
             {/* CTA Buttons dans le drawer */}
             <div className="flex flex-col gap-3 p-4 border-t border-gray-200 mt-auto">
-              <button
-                className="flex items-center justify-center gap-2 bg-white border-2 border-[#F08223] text-[#F08223] hover:bg-[#F08223] hover:text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all"
-                onClick={() => {
-                  setIsDrawerOpen(false);
-                  setIsLoginOpen(true);
-                }}
+              <Button
+                variant="outline"
+                onClick={() => setIsLoginOpen(true)}
+                className="border-success text-success hover:bg-success hover:text-white w-full rounded-sm font-inter text-xs font-semibold px-3 py-1.5 transition-all cursor-pointer"
               >
-                <LogIn className="w-4 h-4" />
+                <LogIn className="w-3.5 h-3.5" />
                 Connexion
-              </button>
-              <button
-                className="flex items-center justify-center gap-2 bg-[#F08223] hover:bg-[#D97420] text-white font-inter text-sm font-semibold px-5 py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
-                onClick={() => setIsDrawerOpen(false)}
+              </Button>
+              <Button
+                onClick={() => {
+                  router.push("/membres?tab=adhesion");
+                  setIsDrawerOpen(false);
+                }}
+                className="bg-[#F08223] text-white hover:bg-opacity-90 w-full font-inter text-xs font-semibold px-3 py-1.5 rounded-sm transition-all shadow-sm hover:shadow-md cursor-pointer"
               >
-                <UserPlus className="w-4 h-4" />
+                <UserPlus className="w-3.5 h-3.5" />
                 Adhérer
-              </button>
+              </Button>
             </div>
           </div>
         </>

@@ -725,6 +725,7 @@ export interface Member {
     features: string[];
     recommended?: boolean;
     isInstitutional?: boolean; // Pour le plan Institutionnel (sur devis)
+    memberTypes?: MemberType[]; // Types de membres autorisés pour ce plan
   }
   
   export const membershipPlans: MembershipPlan[] = [
@@ -741,7 +742,8 @@ export interface Member {
         "Annuaire des membres",
         "Support par email",
         "Accès aux formations de base"
-      ]
+      ],
+      memberTypes: ["individuel", "entreprise"]
     },
     {
       name: "Argent",
@@ -758,7 +760,8 @@ export interface Member {
         "Support prioritaire",
         "Accès aux webinaires exclusifs"
       ],
-      recommended: true
+      recommended: true,
+      memberTypes: ["individuel", "entreprise"]
     },
     {
       name: "Or",
@@ -775,7 +778,45 @@ export interface Member {
         "Accompagnement VIP",
         "Événements exclusifs",
         "Accès aux outils de gestion avancés"
-      ]
+      ],
+      memberTypes: ["individuel", "entreprise"]
+    },
+    {
+      name: "Abonnement (Association, Coopérative, Groupement)",
+      description: "Formule spéciale pour les associations, coopératives et groupements.",
+      priceMonthly: 17500,
+      priceYearly: 210000,
+      period: "FCFA",
+      features: [
+        "Tous les avantages Or",
+        "Accès multi-utilisateurs",
+        "Formations spécialisées",
+        "Accompagnement dédié",
+        "Visibilité renforcée",
+        "Support prioritaire",
+        "Événements réservés aux organisations",
+        "Outils de gestion collaborative"
+      ],
+      memberTypes: ["associatif"]
+    },
+    {
+      name: "Abonnement Fédération",
+      description: "Formule premium pour les fédérations et structures fédératives.",
+      priceMonthly: 30000,
+      priceYearly: 360000,
+      period: "FCFA",
+      features: [
+        "Tous les avantages Or",
+        "Accès multi-utilisateurs illimité",
+        "Formations sur mesure",
+        "Accompagnement dédié VIP",
+        "Visibilité premium",
+        "Support 24/7",
+        "Événements privés exclusifs",
+        "Outils de gestion avancés",
+        "Statistiques et reporting personnalisés"
+      ],
+      memberTypes: ["associatif"]
     },
     {
       name: "Institutionnel",
@@ -793,7 +834,8 @@ export interface Member {
         "Support 24/7",
         "Événements privés"
       ],
-      isInstitutional: true
+      isInstitutional: true,
+      memberTypes: ["institutionnel"]
     }
   ];
   
