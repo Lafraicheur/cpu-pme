@@ -25,6 +25,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -96,7 +103,7 @@ import {
   usePartenairesForSiteWeb,
   useCentresInteretForSiteWeb,
 } from "@/hooks/use-api";
-import { quartiersService } from "@/lib/api/services/quartiers.service";
+import { adhesionsService } from "@/lib/api/services/adhesions.service";
 import {
   IconBTP,
   IconCommerce,
@@ -732,7 +739,10 @@ const MembersContent = () => {
   const [formEmail, setFormEmail] = useState<string>("");
   const [formPhone, setFormPhone] = useState<string>("");
   const [formMessage, setFormMessage] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState<boolean>(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] =
+    useState<boolean>(false);
   // États spécifiques aux membres institutionnels
   const [selectedAxesInteret, setSelectedAxesInteret] = useState<string[]>([]);
   const [selectedFilieresPrioritaires, setSelectedFilieresPrioritaires] =
@@ -1641,56 +1651,311 @@ const MembersContent = () => {
     return () => clearInterval(interval);
   }, [recentMembers.length]);
 
+  const isUuid = (value?: string) =>
+    Boolean(
+      value &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+          value
+        )
+    );
+
+  const mapProfilToValue = (
+    profilName: string,
+    memberType: MemberType | ""
+  ) => {
+    const name = profilName.toLowerCase();
+
+    if (memberType === "individuel") {
+      if (name.includes("jeune") || name.includes("étudiant") || name.includes("etudiant")) {
+        return "jeune_etudiant";
+      }
+      if (name.includes("entrepreneur") || name.includes("projet")) {
+        return "entrepreneur_projet";
+      }
+      if (name.includes("professionnel") || name.includes("expert")) {
+        return "professionnel_expert";
+      }
+      if (name.includes("salarié") || name.includes("salarie") || name.includes("cadre")) {
+        return "salarie_cadre";
+      }
+    }
+
+    if (memberType === "entreprise") {
+      if (name.includes("micro")) {
+        return "micro_entreprise";
+      }
+      if (name.includes("petite")) {
+        return "petite_entreprise";
+      }
+      if (name.includes("moyenne")) {
+        return "moyenne_entreprise";
+      }
+      if (name.includes("startup")) {
+        return "startup";
+      }
+    }
+
+    if (memberType === "associatif") {
+      if (name.includes("coopérative") || name.includes("cooperative")) {
+        return "cooperative";
+      }
+      if (
+        name.includes("fédération") ||
+        name.includes("federation") ||
+        name.includes("filière") ||
+        name.includes("filiere")
+      ) {
+        return "federation_filiere";
+      }
+      if (name.includes("association") && name.includes("professionnelle")) {
+        return "association_professionnelle";
+      }
+      if (name.includes("groupement") || name.includes("gie")) {
+        return "groupement_gie";
+      }
+    }
+
+    if (memberType === "institutionnel") {
+      if (name.includes("grande") && name.includes("entreprise")) {
+        return "grande_entreprise";
+      }
+      if (name.includes("banque")) {
+        return "banque";
+      }
+      if (name.includes("assureur")) {
+        return "assureur";
+      }
+      if (name.includes("bailleur")) {
+        return "bailleur";
+      }
+      if (name.includes("agence") && name.includes("publique")) {
+        return "agence_publique";
+      }
+      if (name.includes("collectivité") || name.includes("collectivite")) {
+        return "collectivite";
+      }
+      if (name.includes("programme") && name.includes("international")) {
+        return "programme_international";
+      }
+    }
+
+    return null;
+  };
+
+  const resolveProfilId = () => {
+    if (!selectedSubProfile || !Array.isArray(profilsApi)) {
+      return undefined;
+    }
+
+    const match = profilsApi.find((profil) => {
+      if (profil.id === selectedSubProfile) {
+        return true;
+      }
+      const mappedValue = mapProfilToValue(profil.name, selectedAdhesionType);
+      return mappedValue === selectedSubProfile;
+    });
+
+    return isUuid(match?.id) ? match?.id : undefined;
+  };
+
+  const resolveAbonnementId = () => {
+    if (!selectedBadge || !selectedTypeMembre?.id || !Array.isArray(abonnementsApi)) {
+      return undefined;
+    }
+
+    const plan = abonnementsApi.find(
+      (item) =>
+        item.isActive &&
+        item.typeMembreId === selectedTypeMembre.id &&
+        item.libelle === selectedBadge
+    );
+
+    return isUuid(plan?.id) ? plan?.id : undefined;
+  };
+
+  const resolveRegionId = (regionValue: string) => {
+    if (!regionValue || !Array.isArray(regionsApi)) {
+      return undefined;
+    }
+
+    const directMatch = regionsApi.find((region) => region.id === regionValue);
+    if (directMatch) {
+      return isUuid(directMatch.id) ? directMatch.id : undefined;
+    }
+
+    const nameMatch = regionsApi.find((region) => region.name === regionValue);
+    return isUuid(nameMatch?.id) ? nameMatch?.id : undefined;
+  };
+
+  const resolveCommuneId = (communeName: string) => {
+    if (!communeName || !Array.isArray(regionsApi)) {
+      return undefined;
+    }
+
+    for (const region of regionsApi) {
+      if (!region.villes) continue;
+      for (const ville of region.villes) {
+        const commune = ville.communes?.find((c) => c.name === communeName);
+        if (commune?.id && isUuid(commune.id)) {
+          return commune.id;
+        }
+      }
+    }
+
+    return undefined;
+  };
+
+  const resolveRegionIds = (regionNames: string[]) => {
+    if (!Array.isArray(regionsApi) || regionNames.length === 0) {
+      return [];
+    }
+
+    const regionMap = new Map(regionsApi.map((region) => [region.name, region.id]));
+    return regionNames
+      .map((name) => regionMap.get(name))
+      .filter((id): id is string => Boolean(id && isUuid(id)));
+  };
+
+  const resolveCentresInteretIds = () => {
+    if (!Array.isArray(centresInteretApi) || selectedAxesInteret.length === 0) {
+      return [];
+    }
+
+    const map = new Map(centresInteretApi.map((ci) => [ci.name, ci.id]));
+    return selectedAxesInteret
+      .map((name) => map.get(name))
+      .filter((id): id is string => Boolean(id && isUuid(id)));
+  };
+
+  const resolveActiviteIds = () => {
+    if (!Array.isArray(secteursApi) || selectedActivities.length === 0) {
+      return [];
+    }
+
+    const ids = new Set<string>();
+    const selectedLower = selectedActivities.map((activity) => activity.toLowerCase());
+
+    secteursApi.forEach((secteur) => {
+      secteur.filieres?.forEach((filiere) => {
+        filiere.sousFiliere?.forEach((sousFiliere) => {
+          sousFiliere.activites?.forEach((activite) => {
+            if (
+              selectedLower.includes(activite.name.toLowerCase()) &&
+              isUuid(activite.id)
+            ) {
+              ids.add(activite.id);
+            }
+          });
+        });
+      });
+    });
+
+    return Array.from(ids);
+  };
+
+  const resolveFilieresPrioritairesIds = () => {
+    if (!Array.isArray(secteursApi) || selectedFilieresPrioritaires.length === 0) {
+      return [];
+    }
+
+    const ids = new Set<string>();
+    const selectedLower = selectedFilieresPrioritaires.map((f) => f.toLowerCase());
+
+    secteursApi.forEach((secteur) => {
+      secteur.filieres?.forEach((filiere) => {
+        if (selectedLower.includes(filiere.name.toLowerCase()) && isUuid(filiere.id)) {
+          ids.add(filiere.id);
+        }
+      });
+    });
+
+    return Array.from(ids);
+  };
+
+  const resolveSousFiliereId = () => {
+    if (!selectedSubCategory) {
+      return undefined;
+    }
+
+    const subCategories = getSubCategoriesForFiliere();
+    const match = subCategories.find((subCat: { id?: string; nom: string }) => {
+      const value = subCat.id || subCat.nom;
+      return value === selectedSubCategory;
+    });
+
+    return isUuid(match?.id) ? match?.id : undefined;
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      // Si un village/quartier est renseigné et qu'une commune est sélectionnée, créer le quartier
-      if (siegeVillage && siegeCommune && regionsApi) {
-        // Trouver l'ID de la commune sélectionnée
-        let communeId = "";
-        for (const region of regionsApi) {
-          // Itérer sur les villes de chaque région
-          if (region.villes) {
-            for (const ville of region.villes) {
-              // Chercher la commune dans les communes de chaque ville
-              const foundCommune = ville.communes?.find(
-                (c: any) => c.name === siegeCommune
-              );
-              if (foundCommune) {
-                communeId = foundCommune.id;
-                break;
-              }
-            }
-          }
-          if (communeId) break;
-        }
-
-        if (communeId) {
-          try {
-            // Créer le quartier/village via l'API
-            await quartiersService.create({
-              commune_id: communeId,
-              name: siegeVillage,
-              type: "quartier", // Par défaut, on peut adapter selon le contexte
-              isActive: true,
-            });
-
-            console.log("Quartier/Village créé avec succès:", siegeVillage);
-          } catch (error) {
-            console.error("Erreur lors de la création du quartier:", error);
-            // On continue même si la création du quartier échoue
-            // Car l'utilisateur a quand même rempli le formulaire
-          }
-        }
-      }
-
-      // Afficher le toast de succès
+    if (isSubmitting) return;
+    if (!selectedTypeMembre?.id) {
       toast({
-        title: "Demande envoyée !",
+        title: "Type de membre requis",
         description:
-          "Nous avons bien reçu votre demande d'adhésion. Notre équipe vous contactera sous 48h.",
+          "Veuillez sélectionner un type de membre avant d'envoyer votre demande.",
+        variant: "destructive",
       });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const communeId = resolveCommuneId(siegeCommune);
+
+      const activitesIds = resolveActiviteIds();
+      const centresInteretIds = resolveCentresInteretIds();
+      const filieresPrioritairesIds = resolveFilieresPrioritairesIds();
+      const regionsInterventionIds = resolveRegionIds(selectedRegions);
+
+      const adhesionPayload = {
+        name: formName,
+        position: formPosition || undefined,
+        email: formEmail,
+        phone: formPhone,
+        message: formMessage || undefined,
+        typeMembreId: selectedTypeMembre.id,
+        profilId: resolveProfilId(),
+        abonnementId: resolveAbonnementId(),
+        secteurPrincipalId: isUuid(selectedMainSector)
+          ? selectedMainSector
+          : undefined,
+        filiereId: isUuid(selectedFiliere) ? selectedFiliere : undefined,
+        sousFiliereId: resolveSousFiliereId(),
+        ...(activitesIds.length > 0 ? { activitesIds } : {}),
+        ...(centresInteretIds.length > 0 ? { centresInteretIds } : {}),
+        ...(filieresPrioritairesIds.length > 0
+          ? { filieresPrioritairesIds }
+          : {}),
+        ...(regionsInterventionIds.length > 0
+          ? { regionsInterventionIds }
+          : {}),
+        interventionScope: interventionScope || undefined,
+        siegeRegionId: resolveRegionId(siegeRegion),
+        siegeCommuneId: communeId,
+        siegeVille: siegeVille || undefined,
+        siegeVillage: siegeVillage || undefined,
+        hasBureauCI:
+          selectedAdhesionType === "institutionnel" ? hasBureauCI : undefined,
+        hasAffiliation: hasAffiliation || undefined,
+        organisationType: hasAffiliation ? selectedOrgType || undefined : undefined,
+        organisationName: hasAffiliation
+          ? selectedOrganisation || undefined
+          : undefined,
+        customOrganisationName: hasAffiliation
+          ? customOrganisationName || undefined
+          : undefined,
+        isCompetitionSubcontractor:
+          isCompetitionSubcontractor ?? undefined,
+        hasFinancingProject: hasFinancingProject ?? undefined,
+      };
+
+      await adhesionsService.create(adhesionPayload);
+
+      setIsSuccessModalOpen(true);
 
       // Réinitialiser le formulaire
       setSelectedAdhesionType("");
@@ -1711,12 +1976,19 @@ const MembersContent = () => {
       setSiegeVillage("");
     } catch (error) {
       console.error("Erreur lors de la soumission:", error);
+      const apiErrorMessage =
+        error && typeof error === "object" && "message" in error
+          ? String((error as { message?: string }).message)
+          : "";
       toast({
         title: "Erreur",
         description:
+          apiErrorMessage ||
           "Une erreur est survenue lors de l'envoi de votre demande. Veuillez réessayer.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -2125,6 +2397,35 @@ const MembersContent = () => {
 
   return (
     <div className="flex flex-col">
+      <Dialog
+        open={isSuccessModalOpen}
+        onOpenChange={(open) => {
+          setIsSuccessModalOpen(open);
+          if (!open) {
+            router.push("/");
+          }
+        }}
+      >
+        <DialogContent className="max-w-md bg-white text-black border-0 rounded-2xl shadow-xl">
+          <DialogHeader>
+            <DialogTitle className="text-black">
+              Demande envoyée avec succès
+            </DialogTitle>
+            <DialogDescription className="text-black/80">
+              Votre demande d&apos;adhésion a été prise en compte et sera
+              traitée le plus vite possible.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end pt-4">
+            <Button
+              onClick={() => setIsSuccessModalOpen(false)}
+              className="bg-cpu-orange text-white hover:bg-[#D97420]"
+            >
+              Retour à l&apos;accueil
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       {/* Hero Section */}
       <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
         {/* BACKGROUND IMAGE */}
@@ -5677,6 +5978,7 @@ const MembersContent = () => {
                               Veuillez d'abord sélectionner un type de membre
                             </p>
                           )}
+
                         </div>
                       </div>
 
@@ -5706,11 +6008,14 @@ const MembersContent = () => {
                       <div className="pt-6">
                         <Button
                           type="submit"
+                          disabled={isSubmitting}
                           className="w-full h-14 bg-gradient-to-r from-cpu-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5"
                         >
                           <span className="flex items-center justify-center gap-2">
                             <Award className="h-6 w-6" />
-                            Soumettre ma demande
+                            {isSubmitting
+                              ? "Envoi en cours..."
+                              : "Soumettre ma demande"}
                           </span>
                         </Button>
                         <p className="text-center text-sm text-gray-500 mt-4">

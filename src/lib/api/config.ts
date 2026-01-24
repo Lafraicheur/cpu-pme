@@ -46,6 +46,10 @@ export const API_ENDPOINTS = {
     FOR_SITE_WEB: isClient ? '/abonnements/for-site-web' : '/abonnements/for-site-web',
     GET: (id: string) => isClient ? `/abonnements/${id}` : `/abonnements/${id}`,
   },
+  // Adhésions
+  ADHESIONS: {
+    CREATE: isClient ? '/adhesions' : '/adhesions',
+  },
   // Actualités
   ACTUALITIES: {
     LIST: isClient ? '/actualities' : '/actualities/for-site-web',
