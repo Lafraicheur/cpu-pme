@@ -1,4 +1,4 @@
-import { proxyApiClient } from '../proxy-client';
+import { apiClient } from '../client';
 
 export interface CreateAdhesionDto {
   name: string;
@@ -34,7 +34,7 @@ export interface CreateAdhesionDto {
 
 export const adhesionsService = {
   create: async (data: CreateAdhesionDto) => {
-    const response = await proxyApiClient.post<any>('/adhesions', data);
+    const response = await apiClient.post<any>('/adhesions', data);
     return response.data;
   },
 };

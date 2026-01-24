@@ -2,7 +2,7 @@
  * Service API pour les publications
  */
 
-import { proxyApiClient } from '../proxy-client';
+import { apiClient } from '../client';
 import { API_ENDPOINTS, API_BASE_URL } from '../config';
 
 /**
@@ -102,7 +102,7 @@ export const publicationsService = {
         ? `${API_ENDPOINTS.PUBLICATIONS.LIST}?${queryParams.toString()}`
         : API_ENDPOINTS.PUBLICATIONS.LIST;
 
-      const response = await proxyApiClient.get<any>(endpoint);
+      const response = await apiClient.get<any>(endpoint);
 
       // La réponse a une structure imbriquée : { success: true, data: { success: true, data: Publication[] } }
       let data: Publication[] = [];
@@ -158,7 +158,7 @@ export const publicationsService = {
     try {
       const endpoint = API_ENDPOINTS.PUBLICATIONS.GET(id);
 
-      const response = await proxyApiClient.get<any>(endpoint);
+      const response = await apiClient.get<any>(endpoint);
 
       // La réponse a une structure imbriquée
       const responseData = response.data;

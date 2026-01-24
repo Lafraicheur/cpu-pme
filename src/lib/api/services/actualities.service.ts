@@ -2,7 +2,7 @@
  * Service API pour les actualités
  */
 
-import { proxyApiClient } from '../proxy-client';
+import { apiClient } from '../client';
 import { API_ENDPOINTS, API_BASE_URL } from '../config';
 
 /**
@@ -128,7 +128,7 @@ export const actualitiesService = {
         ? `${API_ENDPOINTS.ACTUALITIES.LIST}?${queryParams.toString()}`
         : API_ENDPOINTS.ACTUALITIES.LIST;
 
-      const response = await proxyApiClient.get<any>(endpoint);
+      const response = await apiClient.get<any>(endpoint);
 
       // La réponse a une structure imbriquée : { success: true, data: { success: true, data: Actuality[] } }
       let data: Actuality[] = [];
@@ -184,7 +184,7 @@ export const actualitiesService = {
     try {
       const endpoint = API_ENDPOINTS.ACTUALITIES.GET(id);
 
-      const response = await proxyApiClient.get<any>(endpoint);
+      const response = await apiClient.get<any>(endpoint);
 
       // La réponse a une structure imbriquée
       const responseData = response.data;
