@@ -743,6 +743,8 @@ const MembersContent = () => {
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] =
     useState<boolean>(false);
+  const [hasSubmittedSuccess, setHasSubmittedSuccess] =
+    useState<boolean>(false);
   // États spécifiques aux membres institutionnels
   const [selectedAxesInteret, setSelectedAxesInteret] = useState<string[]>([]);
   const [selectedFilieresPrioritaires, setSelectedFilieresPrioritaires] =
@@ -870,6 +872,12 @@ const MembersContent = () => {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (hasSubmittedSuccess && !isSuccessModalOpen) {
+      router.push("/");
+    }
+  }, [hasSubmittedSuccess, isSuccessModalOpen, router]);
 
   // Réinitialiser les états quand le type de membre change
   useEffect(() => {
@@ -1955,6 +1963,7 @@ const MembersContent = () => {
 
       await adhesionsService.create(adhesionPayload);
 
+      setHasSubmittedSuccess(true);
       setIsSuccessModalOpen(true);
 
       // Réinitialiser le formulaire
@@ -2409,11 +2418,11 @@ const MembersContent = () => {
         <DialogContent className="max-w-md bg-white text-black border-0 rounded-2xl shadow-xl">
           <DialogHeader>
             <DialogTitle className="text-black">
-              Demande envoyée avec succès
+              Merci pour votre demande d&apos;adhésion
             </DialogTitle>
             <DialogDescription className="text-black/80">
-              Votre demande d&apos;adhésion a été prise en compte et sera
-              traitée le plus vite possible.
+              Nous avons bien reçu votre demande. Notre équipe va la traiter
+              dans les meilleurs délais et vous recontactera dès que possible.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end pt-4">
