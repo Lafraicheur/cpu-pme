@@ -206,7 +206,7 @@ function HeaderContent() {
                 {/* Sous-menu Services */}
                 {isServicesMenuOpen && (
                   <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
-                    <Link
+                    {/* <Link
                       href="#"
                       className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
                     >
@@ -223,7 +223,7 @@ function HeaderContent() {
                       <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
                         Appels d&apos;offres & Opportunités
                       </span>
-                    </Link>
+                    </Link> */}
                     <Link
                       href="#"
                       className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
@@ -233,7 +233,7 @@ function HeaderContent() {
                         Formation / CPU-Académie
                       </span>
                     </Link>
-                    <Link
+                    {/* <Link
                       href="#"
                       className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
                     >
@@ -259,7 +259,7 @@ function HeaderContent() {
                       <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
                         Réseautage & Événements
                       </span>
-                    </Link>
+                    </Link> */}
                   </div>
                 )}
               </div>

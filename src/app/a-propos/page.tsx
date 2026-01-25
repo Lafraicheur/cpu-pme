@@ -21,8 +21,10 @@ function AProposContent() {
   const [activeTab, setActiveTab] = useState(initialTab);
 
   // Utiliser les hooks pour récupérer les données
-  const { data: partenaires = [], isLoading: isLoadingPartenaires } = usePartenairesForSiteWeb({ type: 'strategique' });
-  const { data: equipe = [], isLoading: isLoadingEquipe } = useEquipeForSiteWeb();
+  const { data: partenaires = [], isLoading: isLoadingPartenaires } =
+    usePartenairesForSiteWeb({ type: "strategique" });
+  const { data: equipe = [], isLoading: isLoadingEquipe } =
+    useEquipeForSiteWeb();
 
   return (
     <>
@@ -349,9 +351,14 @@ function AProposContent() {
                       Notre engagement
                     </p>
                     <p className="italic">
-                      "Nous nous engageons à être la voix des PME ivoiriennes et
-                      à créer les conditions nécessaires à leur épanouissement
-                      dans un environnement économique en constante évolution."
+                      "Nous nous engageons à porter la voix des PME ivoiriennes
+                      et à créer les conditions durables de leur épanouissement
+                      dans un environnement économique en constante mutation, au
+                      service de la compétitivité nationale et internationale. "
+                    </p>
+                    <p className="mt-4 font-semibold">
+                      Dr. Moussa Élias Farakhan Diomandé Président Confédération
+                      Patronale Unique des PME de Côte d’Ivoire (CPU-PME CI)
                     </p>
                   </div>
                 </div>

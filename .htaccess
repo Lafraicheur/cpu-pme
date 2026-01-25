@@ -1,0 +1,24 @@
+# Activation du proxy
+RewriteEngine On
+
+# Headers pour le proxy
+<IfModule mod_headers.c>
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Host "%{HTTP_HOST}e"
+</IfModule>
+
+# Redirection vers l'application Node.js sur le port 4100
+RewriteCond %{HTTP_HOST} ^(www\.)?cpupme\.com$ [NC]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ http://localhost:4100/$1 [P,L]
+
+# Gestion des erreurs
+ErrorDocument 503 "Application en maintenance"
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “ea-php82” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php82 .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit

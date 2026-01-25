@@ -151,8 +151,14 @@ export default function Home() {
       try {
         setIsLoadingActualities(true);
         const data = await actualitiesService.getActualities();
+        // Trier par date du plus récent au plus ancien
+        const sortedData = [...data].sort((a, b) => {
+          const dateA = new Date(a.publicationDate || a.createdAt).getTime();
+          const dateB = new Date(b.publicationDate || b.createdAt).getTime();
+          return dateB - dateA;
+        });
         // Limiter aux 3 dernières actualités
-        setActualities(data.slice(0, 3));
+        setActualities(sortedData.slice(0, 3));
       } catch (error) {
         console.error("Erreur lors du chargement des actualités:", error);
       } finally {
