@@ -1,17 +1,12 @@
 # Activation du proxy
 RewriteEngine On
 
-# Headers pour le proxy
-<IfModule mod_headers.c>
-    RequestHeader set X-Forwarded-Proto "https"
-    RequestHeader set X-Forwarded-Host "%{HTTP_HOST}e"
-</IfModule>
+DirectoryIndex disabled
 
 # Redirection vers l'application Node.js sur le port 4100
-RewriteCond %{HTTP_HOST} ^(www\.)?cpupme\.com$ [NC]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ http://localhost:4100/$1 [P,L]
+RewriteCond %{HTTP_HOST} ^(www\.)?site-officiel\.cpupme\.com$ [NC]
+#RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
+RewriteRule ^(.*)$ http://localhost:4000/$1 [P,L]
 
 # Gestion des erreurs
 ErrorDocument 503 "Application en maintenance"
