@@ -40,7 +40,7 @@ jobs:
         with:
           server: ftp.cpupme.com
           username: devopschrist@cpupme.com
-          password: Kobenan@@?   # ⚠️ mettre ton mot de passe dans GitHub Secrets
+          password: Kobenan@@?   # ⚠️ mettre ton mot de passe dans GitHub Secrets 🤫 
           protocol: ftp  # ou ftps si ton serveur supporte FTPS
           local-dir: ./out/
           server-dir: /    # dossier distant
