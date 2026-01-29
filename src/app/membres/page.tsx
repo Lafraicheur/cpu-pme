@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -82,9 +82,6 @@ import {
   Target,
 } from "lucide-react";
 import {
-  membersData,
-  sectors,
-  regions,
   membershipBenefits,
   membershipPlans,
   Member,
@@ -102,6 +99,7 @@ import {
   useAbonnementsForSiteWeb,
   usePartenairesForSiteWeb,
   useCentresInteretForSiteWeb,
+  useAdhesionsForSiteWeb,
 } from "@/hooks/use-api";
 import { adhesionsService } from "@/lib/api/services/adhesions.service";
 import {
@@ -734,6 +732,7 @@ const MembersContent = () => {
   const [siegeVillage, setSiegeVillage] = useState<string>("");
   const [selectedBadge, setSelectedBadge] = useState<string>("");
   // États pour les champs du formulaire d'adhésion
+  const [orgName, setOrgName] = useState<string>("");
   const [formName, setFormName] = useState<string>("");
   const [formPosition, setFormPosition] = useState<string>("");
   const [formEmail, setFormEmail] = useState<string>("");
@@ -836,6 +835,95 @@ const MembersContent = () => {
     data: centresInteretApi = [],
     isLoading: isLoadingCentresInteret,
   } = useCentresInteretForSiteWeb({ activeOnly: true });
+
+  // Récupérer les adhésions approuvées pour alimenter les listes d'organisations
+  const adhesionsParams = useMemo(
+    () => ({ statut: "approved", limit: 1000 }),
+    []
+  );
+  const { data: adhesionsApi = [], isLoading: isLoadingAdhesions } =
+    useAdhesionsForSiteWeb(adhesionsParams);
+
+  const membersFromApi = useMemo<Member[]>(() => {
+    const mapTypeMembreName = (name?: string): MemberType => {
+      const lowerName = (name || "").toLowerCase();
+      if (lowerName.includes("individuel")) return "individuel";
+      if (
+        lowerName.includes("associatif") ||
+        lowerName.includes("organisation")
+      ) {
+        return "associatif";
+      }
+      if (lowerName.includes("institutionnel")) return "institutionnel";
+      if (lowerName.includes("entreprise")) return "entreprise";
+      return "entreprise";
+    };
+
+    const mapBadge = (
+      plan?: string,
+      libelle?: string,
+      memberType?: MemberType
+    ) => {
+      if (memberType === "institutionnel") return "Institutionnel";
+      const source = `${plan || ""} ${libelle || ""}`.toLowerCase();
+      if (source.includes("gold") || source.includes("or")) return "Or";
+      if (source.includes("silver") || source.includes("argent")) return "Argent";
+      if (source.includes("basic")) return "Basic";
+      return undefined;
+    };
+
+    const buildDescription = (adhesion: any) => {
+      const parts = [
+        adhesion?.typeMembre?.name,
+        adhesion?.profil?.name,
+      ].filter(Boolean);
+      return parts.length > 0 ? parts.join(" • ") : "Membre CPU-PME";
+    };
+
+    return adhesionsApi.map((adhesion: any) => {
+      const memberType = mapTypeMembreName(adhesion?.typeMembre?.name);
+      return {
+        id: adhesion?.id || `${adhesion?.email || adhesion?.phone || Math.random()}`,
+        name:
+          adhesion?.customOrganisationName ||
+          adhesion?.name ||
+          "Membre CPU-PME",
+        logoUrl: undefined,
+        sector: adhesion?.secteurPrincipal?.name || "Non renseigné",
+        region:
+          adhesion?.siegeRegion?.name ||
+          adhesion?.siegeVille ||
+          "Non renseignée",
+        description: buildDescription(adhesion),
+        website: undefined,
+        featured: false,
+        memberType,
+        badge: mapBadge(adhesion?.abonnement?.plan, adhesion?.abonnement?.libelle, memberType),
+        subProfile: undefined,
+        profileLabel: adhesion?.profil?.name || undefined,
+      };
+    });
+  }, [adhesionsApi]);
+
+  const membersSignature = useMemo(
+    () => membersFromApi.map((member) => member.id).join("|"),
+    [membersFromApi]
+  );
+  const shuffledSignatureRef = useRef<string>("");
+
+  const directorySectors = useMemo(
+    () =>
+      Array.from(new Set(membersFromApi.map((member) => member.sector))).sort(),
+    [membersFromApi]
+  );
+
+  const directoryRegions = useMemo(
+    () =>
+      Array.from(new Set(membersFromApi.map((member) => member.region))).sort(),
+    [membersFromApi]
+  );
+
+  const isLoadingMembers = isLoading || isLoadingAdhesions;
 
   // Debug: Log des secteurs récupérés
   useEffect(() => {
@@ -956,6 +1044,41 @@ const MembersContent = () => {
       setCustomOrganisationName("");
     }
   }, [hasAffiliation]);
+
+  const getApprovedOrganisationsByType = (orgType?: string) => {
+    if (!orgType) return [];
+
+    const normalizedType = orgType.toLowerCase();
+    const orgTypeKeywords: Record<string, string[]> = {
+      federation: ["fédération", "federation"],
+      cooperative: ["coopérative", "cooperative"],
+      association: ["association"],
+      groupement: ["groupement", "gie"],
+    };
+    const typeKeywords = orgTypeKeywords[normalizedType] || [];
+    const namesFromApi = adhesionsApi
+      .filter((adhesion) => {
+        const status = String(adhesion.statut || adhesion.status || "").toLowerCase();
+        const typeMembreName = String(adhesion.typeMembre?.name || "").toLowerCase();
+        const profilName = String(adhesion.profil?.name || "").toLowerCase();
+        const isAssociatif = typeMembreName.includes("associatif");
+        const matchesProfil =
+          typeKeywords.length === 0
+            ? false
+            : typeKeywords.some((keyword) => profilName.includes(keyword));
+        return status === "approved" && isAssociatif && matchesProfil;
+      })
+      .map((adhesion) => {
+        return (
+          adhesion.customOrganisationName ||
+          adhesion.organisationName ||
+          ""
+        );
+      })
+      .filter((name) => Boolean(name));
+
+    return Array.from(new Set(namesFromApi));
+  };
 
   // Obtenir toutes les filières de tous les secteurs (depuis l'API ou données statiques)
   const getAllFilieres = () => {
@@ -1576,10 +1699,11 @@ const MembersContent = () => {
 
   // Initialiser le mélange aléatoire au chargement
   useEffect(() => {
-    if (shuffledMembers.length === 0) {
-      setShuffledMembers(shuffleArray(membersData));
+    if (membersSignature !== shuffledSignatureRef.current) {
+      setShuffledMembers(shuffleArray(membersFromApi));
+      shuffledSignatureRef.current = membersSignature;
     }
-  }, []);
+  }, [membersFromApi, membersSignature]);
 
   // Mélanger les membres toutes les 3 minutes quand le tri est aléatoire
   useEffect(() => {
@@ -1587,13 +1711,13 @@ const MembersContent = () => {
 
     // Mélanger toutes les 3 minutes si le tri est aléatoire
     const interval = setInterval(() => {
-      setShuffledMembers(shuffleArray(membersData));
+      setShuffledMembers(shuffleArray(membersFromApi));
     }, 3 * 60 * 1000); // 3 minutes
 
     return () => clearInterval(interval);
-  }, [sortOrder]);
+  }, [sortOrder, membersFromApi, membersSignature]);
 
-  const filteredMembers = membersData.filter((member) => {
+  const filteredMembers = membersFromApi.filter((member) => {
     // Recherche insensible à la casse
     const searchLower = searchTerm.toLowerCase().trim();
     const matchesSearch =
@@ -1647,7 +1771,7 @@ const MembersContent = () => {
   const paginatedMembers = filteredMembers.slice(startIndex, endIndex);
 
   // Membres récemment inscrits (les 5 derniers de la liste)
-  const recentMembers = [...membersData].slice(-5).reverse();
+  const recentMembers = [...membersFromApi].slice(-5).reverse();
 
   useEffect(() => {
     if (recentMembers.length === 0) return;
@@ -1800,15 +1924,15 @@ const MembersContent = () => {
       return undefined;
     }
 
-    for (const region of regionsApi) {
+        for (const region of regionsApi) {
       if (!region.villes) continue;
-      for (const ville of region.villes) {
+            for (const ville of region.villes) {
         const commune = ville.communes?.find((c) => c.name === communeName);
         if (commune?.id && isUuid(commune.id)) {
           return commune.id;
-        }
-      }
-    }
+              }
+            }
+          }
 
     return undefined;
   };
@@ -1918,13 +2042,23 @@ const MembersContent = () => {
       const centresInteretIds = resolveCentresInteretIds();
       const filieresPrioritairesIds = resolveFilieresPrioritairesIds();
       const regionsInterventionIds = resolveRegionIds(selectedRegions);
+      const adhesionName =
+        selectedAdhesionType === "individuel"
+          ? formName
+          : orgName || formName;
+      const messageWithRepresentative =
+        selectedAdhesionType === "individuel" || !formName
+          ? formMessage || undefined
+          : `${formMessage ? `${formMessage}\n\n` : ""}Représentant: ${formName}`;
+      const companyName =
+        selectedAdhesionType === "individuel" ? undefined : orgName || undefined;
 
       const adhesionPayload = {
-        name: formName,
+        name: adhesionName,
         position: formPosition || undefined,
         email: formEmail,
         phone: formPhone,
-        message: formMessage || undefined,
+        message: messageWithRepresentative,
         typeMembreId: selectedTypeMembre.id,
         profilId: resolveProfilId(),
         abonnementId: resolveAbonnementId(),
@@ -1953,9 +2087,7 @@ const MembersContent = () => {
         organisationName: hasAffiliation
           ? selectedOrganisation || undefined
           : undefined,
-        customOrganisationName: hasAffiliation
-          ? customOrganisationName || undefined
-          : undefined,
+        customOrganisationName: companyName,
         isCompetitionSubcontractor:
           isCompetitionSubcontractor ?? undefined,
         hasFinancingProject: hasFinancingProject ?? undefined,
@@ -1974,6 +2106,7 @@ const MembersContent = () => {
       setSelectedBadge("");
       setSelectedMainSector("");
       setSelectedFiliere("");
+      setOrgName("");
       setFormName("");
       setFormPosition("");
       setFormEmail("");
@@ -2036,6 +2169,54 @@ const MembersContent = () => {
     return sectorColors[sector] || "from-gray-500 to-gray-700";
   };
 
+  const getMemberProfileColor = (member: Member) => {
+    const profile = (member.profileLabel || "").toLowerCase();
+
+    if (
+      profile.includes("étudiant") ||
+      profile.includes("etudiant") ||
+      profile.includes("jeune")
+    ) {
+      return "from-cpu-green to-emerald-600";
+    }
+    if (profile.includes("startup") || profile.includes("entrepreneur")) {
+      return "from-cpu-orange to-orange-600";
+    }
+    if (profile.includes("micro") || profile.includes("petite")) {
+      return "from-amber-500 to-amber-700";
+    }
+    if (profile.includes("moyenne")) {
+      return "from-slate-600 to-slate-800";
+    }
+    if (profile.includes("banque") || profile.includes("assureur")) {
+      return "from-indigo-500 to-indigo-700";
+    }
+    if (profile.includes("fédération") || profile.includes("federation")) {
+      return "from-cpu-green to-emerald-700";
+    }
+    if (profile.includes("coopérative") || profile.includes("cooperative")) {
+      return "from-cpu-orange to-orange-700";
+    }
+    if (profile.includes("association")) {
+      return "from-teal-500 to-teal-700";
+    }
+    if (profile.includes("groupement") || profile.includes("gie")) {
+      return "from-purple-500 to-purple-700";
+    }
+
+    switch (member.memberType) {
+      case "individuel":
+        return "from-cpu-green to-emerald-600";
+      case "associatif":
+        return "from-cpu-orange to-orange-700";
+      case "institutionnel":
+        return "from-slate-600 to-slate-800";
+      case "entreprise":
+      default:
+        return "from-amber-500 to-amber-700";
+    }
+  };
+
   // Fonction pour obtenir l'icône SVG par secteur
   const getSectorIcon = (sector: string) => {
     const sectorIcons: { [key: string]: React.ReactNode } = {
@@ -2075,6 +2256,54 @@ const MembersContent = () => {
         <Building2 className="h-16 w-16 text-white opacity-90" />
       )
     );
+  };
+
+  const getMemberIcon = (member: Member) => {
+    const profile = (member.profileLabel || "").toLowerCase();
+
+    if (
+      profile.includes("étudiant") ||
+      profile.includes("etudiant") ||
+      profile.includes("jeune")
+    ) {
+      return <GraduationCap className="h-16 w-16 text-white opacity-90" />;
+    }
+    if (profile.includes("startup") || profile.includes("entrepreneur")) {
+      return <Laptop className="h-16 w-16 text-white opacity-90" />;
+    }
+    if (profile.includes("micro") || profile.includes("petite")) {
+      return <Store className="h-16 w-16 text-white opacity-90" />;
+    }
+    if (profile.includes("moyenne")) {
+      return <Factory className="h-16 w-16 text-white opacity-90" />;
+    }
+    if (profile.includes("banque") || profile.includes("assureur")) {
+      return <Wallet className="h-16 w-16 text-white opacity-90" />;
+    }
+    if (profile.includes("fédération") || profile.includes("federation")) {
+      return <Users className="h-16 w-16 text-white opacity-90" />;
+    }
+    if (profile.includes("coopérative") || profile.includes("cooperative")) {
+      return <Handshake className="h-16 w-16 text-white opacity-90" />;
+    }
+    if (profile.includes("association")) {
+      return <Briefcase className="h-16 w-16 text-white opacity-90" />;
+    }
+    if (profile.includes("groupement") || profile.includes("gie")) {
+      return <Users className="h-16 w-16 text-white opacity-90" />;
+    }
+
+    switch (member.memberType) {
+      case "individuel":
+        return <Users className="h-16 w-16 text-white opacity-90" />;
+      case "associatif":
+        return <Handshake className="h-16 w-16 text-white opacity-90" />;
+      case "institutionnel":
+        return <Building className="h-16 w-16 text-white opacity-90" />;
+      case "entreprise":
+      default:
+        return <Building2 className="h-16 w-16 text-white opacity-90" />;
+    }
   };
 
   // Fonction pour obtenir l'icône et la couleur du badge
@@ -2573,8 +2802,8 @@ const MembersContent = () => {
                             />
                           ) : (
                             <div
-                              className={`absolute inset-0 bg-gradient-to-br ${getSectorColor(
-                                recentMembers[featuredIndex].sector
+                              className={`absolute inset-0 bg-gradient-to-br ${getMemberProfileColor(
+                                recentMembers[featuredIndex]
                               )} flex items-center justify-center`}
                             >
                               <div className="text-center text-white px-4">
@@ -2755,7 +2984,7 @@ const MembersContent = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tous les secteurs</SelectItem>
-                      {sectors.map((sector) => (
+                      {directorySectors.map((sector) => (
                         <SelectItem key={sector} value={sector}>
                           {sector}
                         </SelectItem>
@@ -2771,7 +3000,7 @@ const MembersContent = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Toutes les régions</SelectItem>
-                      {regions.map((region) => (
+                      {directoryRegions.map((region) => (
                         <SelectItem key={region} value={region}>
                           {region}
                         </SelectItem>
@@ -2830,7 +3059,7 @@ const MembersContent = () => {
                               <SelectItem value="all">
                                 Tous les secteurs
                               </SelectItem>
-                              {sectors.map((sector) => (
+                              {directorySectors.map((sector) => (
                                 <SelectItem key={sector} value={sector}>
                                   {sector}
                                 </SelectItem>
@@ -2851,7 +3080,7 @@ const MembersContent = () => {
                               <SelectItem value="all">
                                 Toutes les régions
                               </SelectItem>
-                              {regions.map((region) => (
+                              {directoryRegions.map((region) => (
                                 <SelectItem key={region} value={region}>
                                   {region}
                                 </SelectItem>
@@ -3069,7 +3298,7 @@ const MembersContent = () => {
                 {/* Vue Grille */}
                 {viewMode === "grid" ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                    {isLoading
+                    {isLoadingMembers
                       ? // Skeleton Loading
                         Array.from({ length: membersPerPage }).map(
                           (_, index) => (
@@ -3098,11 +3327,11 @@ const MembersContent = () => {
                                 />
                               ) : (
                                 <div
-                                  className={`absolute inset-0 bg-gradient-to-br ${getSectorColor(
-                                    member.sector
+                                  className={`absolute inset-0 bg-gradient-to-br ${getMemberProfileColor(
+                                    member
                                   )} flex items-center justify-center p-4`}
                                 >
-                                  {getSectorIcon(member.sector)}
+                                  {getMemberIcon(member)}
                                 </div>
                               )}
                             </div>
@@ -3216,7 +3445,7 @@ const MembersContent = () => {
                 ) : (
                   /* Vue Liste */
                   <div className="space-y-4">
-                    {isLoading
+                    {isLoadingMembers
                       ? // Skeleton Loading pour liste
                         Array.from({ length: membersPerPage }).map(
                           (_, index) => (
@@ -3256,12 +3485,12 @@ const MembersContent = () => {
                                 />
                               ) : (
                                 <div
-                                  className={`absolute inset-0 bg-gradient-to-br ${getSectorColor(
-                                    member.sector
+                                  className={`absolute inset-0 bg-gradient-to-br ${getMemberProfileColor(
+                                    member
                                   )} flex items-center justify-center p-2`}
                                 >
                                   <div className="scale-75">
-                                    {getSectorIcon(member.sector)}
+                                    {getMemberIcon(member)}
                                   </div>
                                 </div>
                               )}
@@ -4656,13 +4885,24 @@ const MembersContent = () => {
                                           <SelectValue placeholder="Choisir la fédération" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          {organisationsByType[
-                                            "federation"
-                                          ]?.map((org) => (
-                                            <SelectItem key={org} value={org}>
-                                              {org}
-                                            </SelectItem>
-                                          ))}
+                                          {(() => {
+                                            const organisations =
+                                              getApprovedOrganisationsByType(
+                                                "federation"
+                                              );
+                                            if (organisations.length === 0) {
+                                              return (
+                                                <div className="px-2 py-1.5 text-sm text-gray-500">
+                                                  Aucune organisation disponible
+                                                </div>
+                                              );
+                                            }
+                                            return organisations.map((org) => (
+                                              <SelectItem key={org} value={org}>
+                                                {org}
+                                              </SelectItem>
+                                            ));
+                                          })()}
                                         </SelectContent>
                                       </Select>
                                       <p className="text-xs text-gray-500">
@@ -4728,16 +4968,27 @@ const MembersContent = () => {
                                               <SelectValue placeholder="Choisir l'organisation" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                              {organisationsByType[
-                                                selectedOrgType
-                                              ]?.map((org) => (
-                                                <SelectItem
-                                                  key={org}
-                                                  value={org}
-                                                >
-                                                  {org}
-                                                </SelectItem>
-                                              ))}
+                                              {(() => {
+                                                const organisations =
+                                                  getApprovedOrganisationsByType(
+                                                    selectedOrgType
+                                                  );
+                                                if (organisations.length === 0) {
+                                                  return (
+                                                    <div className="px-2 py-1.5 text-sm text-gray-500">
+                                                      Aucune organisation disponible
+                                                    </div>
+                                                  );
+                                                }
+                                                return organisations.map((org) => (
+                                                  <SelectItem
+                                                    key={org}
+                                                    value={org}
+                                                  >
+                                                    {org}
+                                                  </SelectItem>
+                                                ));
+                                              })()}
                                             </SelectContent>
                                           </Select>
                                           <p className="text-sm text-gray-600 flex items-center gap-2">
@@ -5233,6 +5484,8 @@ const MembersContent = () => {
                                 placeholder="Ex: Ma Société SARL"
                                 required
                                 className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900"
+                                value={orgName}
+                                onChange={(e) => setOrgName(e.target.value)}
                               />
                             </div>
                           </div>

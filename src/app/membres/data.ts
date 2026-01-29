@@ -54,6 +54,7 @@ export interface Member {
     // Champs pour la chaîne d'appartenance (relations)
     affiliatedTo?: string; // ID de l'organisation à laquelle le membre est affilié
     subProfile?: IndividualSubProfile | EnterpriseSubProfile | AssociativeSubProfile | InstitutionalSubProfile;
+    profileLabel?: string;
   }
   
   export const memberTypes: { value: MemberType; label: string }[] = [

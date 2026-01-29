@@ -5860,6 +5860,129 @@
         ]
       }
     },
+    "/api/adhesions/for-site-web": {
+      "get": {
+        "operationId": "findAllForSiteWeb",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Numéro de page (commence à 1)",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Nombre d'éléments par page",
+            "schema": {
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Terme de recherche (nom, email, téléphone)",
+            "schema": {
+              "example": "Jean Dupont",
+              "type": "string"
+            }
+          },
+          {
+            "name": "statut",
+            "required": false,
+            "in": "query",
+            "description": "Filtrer par statut",
+            "schema": {
+              "enum": [
+                "pending",
+                "in_review",
+                "approved",
+                "rejected",
+                "completed"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "typeMembreId",
+            "required": false,
+            "in": "query",
+            "description": "Filtrer par type de membre (ID)",
+            "schema": {
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          },
+          {
+            "name": "secteurPrincipalId",
+            "required": false,
+            "in": "query",
+            "description": "Filtrer par secteur principal (ID)",
+            "schema": {
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          },
+          {
+            "name": "siegeRegionId",
+            "required": false,
+            "in": "query",
+            "description": "Filtrer par région du siège (ID)",
+            "schema": {
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Champ de tri",
+            "schema": {
+              "enum": [
+                "created_at",
+                "updated_at",
+                "name",
+                "email",
+                "statut"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Ordre de tri",
+            "schema": {
+              "enum": [
+                "ASC",
+                "DESC"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste paginée des adhésions récupérée avec succès"
+          }
+        },
+        "summary": "Récupérer toutes les adhésions avec pagination, recherche et tri (Public)",
+        "tags": [
+          "Adhésions"
+        ]
+      }
+    },
     "/api/adhesions/{id}": {
       "get": {
         "operationId": "findOne",
@@ -6707,6 +6830,11 @@
                     "description": "Nom complet du membre",
                     "example": "Dr DIOMANDE Moussa Elias Farakhan"
                   },
+                  "ordre": {
+                    "type": "number",
+                    "description": "Ordre d'affichage (optionnel, auto-assigné si non fourni)",
+                    "example": 1
+                  },
                   "role": {
                     "type": "string",
                     "description": "Rôle/Fonction du membre",
@@ -6850,6 +6978,11 @@
                     "type": "string",
                     "description": "Nom complet du membre"
                   },
+                  "ordre": {
+                    "type": "number",
+                    "description": "Ordre d'affichage",
+                    "example": 1
+                  },
                   "role": {
                     "type": "string",
                     "description": "Rôle/Fonction du membre"
@@ -6954,6 +7087,46 @@
           }
         ],
         "summary": "Restaurer un membre de l'équipe supprimé (Admin)",
+        "tags": [
+          "siteequipe"
+        ]
+      }
+    },
+    "/api/siteequipe/reorder": {
+      "put": {
+        "operationId": "reorder",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Tableau des membres avec leur nouvel ordre",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderSiteequipeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ordre des membres réorganisé avec succès"
+          },
+          "400": {
+            "description": "Données invalides"
+          },
+          "401": {
+            "description": "Non autorisé"
+          },
+          "404": {
+            "description": "Un ou plusieurs membres introuvables"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Réorganiser l'ordre d'affichage des membres de l'équipe (Admin)",
         "tags": [
           "siteequipe"
         ]
@@ -11308,6 +11481,50 @@
             "example": true
           }
         }
+      },
+      "ReorderItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID du membre de l'équipe",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "ordre": {
+            "type": "number",
+            "description": "Nouvel ordre d'affichage",
+            "example": 1
+          }
+        },
+        "required": [
+          "id",
+          "ordre"
+        ]
+      },
+      "ReorderSiteequipeDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "Tableau des membres avec leur nouvel ordre",
+            "example": [
+              {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "ordre": 1
+              },
+              {
+                "id": "223e4567-e89b-12d3-a456-426614174001",
+                "ordre": 2
+              }
+            ],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReorderItemDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
       },
       "HeritageDto": {
         "type": "object",

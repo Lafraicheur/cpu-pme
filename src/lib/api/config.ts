@@ -49,6 +49,7 @@ export const API_ENDPOINTS = {
   // Adhésions
   ADHESIONS: {
     CREATE: isClient ? '/adhesions' : '/adhesions',
+    FOR_SITE_WEB: isClient ? '/adhesions/for-site-web' : '/adhesions/for-site-web',
   },
   // Actualités
   ACTUALITIES: {

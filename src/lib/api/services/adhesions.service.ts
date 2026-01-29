@@ -1,4 +1,5 @@
 import { proxyApiClient } from '../proxy-client';
+import { API_ENDPOINTS } from '../config';
 
 export interface CreateAdhesionDto {
   name: string;
@@ -32,10 +33,82 @@ export interface CreateAdhesionDto {
   hasFinancingProject?: boolean;
 }
 
+export interface AdhesionForSiteWeb {
+  id?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  hasAffiliation?: boolean;
+  statut?: string;
+  status?: string;
+  organisationType?: string;
+  organisationName?: string;
+  customOrganisationName?: string;
+  typeMembre?: {
+    name?: string;
+  };
+  profil?: {
+    name?: string;
+  };
+}
+
+export interface GetAdhesionsForSiteWebParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  statut?: string;
+  typeMembreId?: string;
+  secteurPrincipalId?: string;
+  siegeRegionId?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+const buildQuery = (params?: GetAdhesionsForSiteWebParams) => {
+  if (!params) return '';
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    searchParams.set(key, String(value));
+  });
+  const query = searchParams.toString();
+  return query ? `?${query}` : '';
+};
+
 export const adhesionsService = {
   create: async (data: CreateAdhesionDto) => {
     const response = await proxyApiClient.post<any>('/adhesions', data);
     return response.data;
+  },
+  getForSiteWeb: async (
+    params?: GetAdhesionsForSiteWebParams
+  ): Promise<AdhesionForSiteWeb[]> => {
+    const endpoint = `${API_ENDPOINTS.ADHESIONS.FOR_SITE_WEB}${buildQuery(params)}`;
+    const response = await proxyApiClient.get<any>(endpoint);
+    const responseData = response.data;
+
+    let data: AdhesionForSiteWeb[] = [];
+    if (responseData && typeof responseData === 'object') {
+      if ('data' in responseData && responseData.data) {
+        const innerData = responseData.data;
+        if (innerData && typeof innerData === 'object' && 'data' in innerData) {
+          const nestedData = innerData.data;
+          if (nestedData && typeof nestedData === 'object' && 'data' in nestedData) {
+            data = Array.isArray((nestedData as any).data)
+              ? (nestedData as any).data
+              : [];
+          } else {
+            data = Array.isArray(nestedData) ? nestedData : [];
+          }
+        } else if (Array.isArray(innerData)) {
+          data = innerData;
+        }
+      } else if (Array.isArray(responseData)) {
+        data = responseData;
+      }
+    }
+
+    return Array.isArray(data) ? data : [];
   },
 };
 
