@@ -11,6 +11,9 @@ export interface EquipeMembre {
   role: string;
   photo: string;
   bio: string;
+  // L'API peut fournir un ordre d'affichage (typo possible côté API).
+  ordre?: number;
+  odre?: number;
   reseauxSociaux?: {
     linkedin?: string;
     email?: string;
