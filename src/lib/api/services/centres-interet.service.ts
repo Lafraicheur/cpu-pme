@@ -2,7 +2,7 @@
  * Service API pour les centres d'intérêt
  */
 
-import { proxyApiClient } from '../proxy-client';
+import { apiClient } from '../client';
 import { API_ENDPOINTS } from '../config';
 
 export interface CentreInteret {
@@ -36,7 +36,7 @@ export const centresInteretService = {
         ? `${API_ENDPOINTS.CENTRES_INTERET.FOR_SITE_WEB}?${queryParams.toString()}`
         : API_ENDPOINTS.CENTRES_INTERET.FOR_SITE_WEB;
 
-      const response = await proxyApiClient.get<any>(endpoint);
+      const response = await apiClient.get<any>(endpoint);
 
       // La réponse a une structure imbriquée : { success: true, data: { success: true, data: CentreInteret[] } }
       let data: CentreInteret[] = [];

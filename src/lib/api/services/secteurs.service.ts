@@ -3,7 +3,6 @@
  */
 
 import { apiClient } from '../client';
-import { proxyApiClient } from '../proxy-client';
 import { API_ENDPOINTS } from '../config';
 
 export interface Activite {
@@ -41,7 +40,7 @@ export const secteursService = {
    */
   async getSecteursForSiteWeb(): Promise<Secteur[]> {
     try {
-      const response = await proxyApiClient.get<any>(API_ENDPOINTS.SECTEURS.FOR_SITE_WEB);
+      const response = await apiClient.get<any>(API_ENDPOINTS.SECTEURS.FOR_SITE_WEB);
       
       // La réponse a une structure imbriquée : { success: true, data: { success: true, data: Secteur[] } }
       let data: Secteur[] = [];

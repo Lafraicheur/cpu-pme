@@ -213,7 +213,7 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-[#F08223] shrink-0 mt-0.5" />
                 <span className="font-inter text-sm text-gray-300">
-                  Résidence Fougère, Boulevard Mitterrand, Abidjan
+                  937R+MCQ, Bingerville, Abidjan, Côte d'Ivoire
                 </span>
               </li>
               <li className="flex items-center gap-3">

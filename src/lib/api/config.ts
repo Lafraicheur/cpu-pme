@@ -2,80 +2,75 @@
  * Configuration de l'API
  */
 
-// Utiliser les routes proxy Next.js côté client pour éviter les problèmes CORS
-// En SSR (server-side), appeler directement l'API externe
-const API_BASE_URL = typeof window !== 'undefined'
-  ? '/api/proxy' // Côté client : utiliser les routes proxy
-  : (process.env.NEXT_PUBLIC_API_URL || 'https://api.cpupme.com/api'); // Côté serveur : API externe
+// Appeler directement l'API externe (CORS doit être configuré sur api.cpupme.com)
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.cpupme.com/api';
 
 // Debug: Log de l'URL de base
 if (typeof window !== 'undefined') {
-  console.log('🔧 API Base URL (client):', API_BASE_URL);
+  console.log('🔧 API Base URL:', API_BASE_URL);
 }
 
-// Les endpoints changent selon qu'on est côté client ou serveur
-const isClient = typeof window !== 'undefined';
-
+// Endpoints de l'API externe (appel direct)
 export const API_ENDPOINTS = {
   // Types de membres
   TYPE_MEMBRES: {
-    LIST: isClient ? '/type-membres' : '/type-membres',
-    FOR_SITE_WEB: isClient ? '/type-membres/for-site-web' : '/type-membres/for-site-web',
-    GET: (id: string) => isClient ? `/type-membres/${id}` : `/type-membres/${id}`,
+    LIST: '/type-membres',
+    FOR_SITE_WEB: '/type-membres/for-site-web',
+    GET: (id: string) => `/type-membres/${id}`,
   },
   // Profils
   PROFILS: {
-    LIST: isClient ? '/profils' : '/profils',
-    GET: (id: string) => isClient ? `/profils/${id}` : `/profils/${id}`,
+    LIST: '/profils',
+    GET: (id: string) => `/profils/${id}`,
   },
   // Régions
   REGIONS: {
-    LIST: isClient ? '/regions' : '/regions',
-    FOR_SITE_WEB: isClient ? '/regions/for-site-web' : '/regions/for-site-web',
-    GET: (id: string) => isClient ? `/regions/${id}` : `/regions/${id}`,
+    LIST: '/regions',
+    FOR_SITE_WEB: '/regions/for-site-web',
+    GET: (id: string) => `/regions/${id}`,
   },
   // Secteurs
   SECTEURS: {
-    LIST: isClient ? '/secteurs' : '/secteurs',
-    FOR_SITE_WEB: isClient ? '/secteurs/for-site-web' : '/secteurs/for-site-web',
-    GET: (id: string) => isClient ? `/secteurs/${id}` : `/secteurs/${id}`,
+    LIST: '/secteurs',
+    FOR_SITE_WEB: '/secteurs/for-site-web',
+    GET: (id: string) => `/secteurs/${id}`,
   },
   // Abonnements
   ABONNEMENTS: {
-    LIST: isClient ? '/abonnements' : '/abonnements',
-    FOR_SITE_WEB: isClient ? '/abonnements/for-site-web' : '/abonnements/for-site-web',
-    GET: (id: string) => isClient ? `/abonnements/${id}` : `/abonnements/${id}`,
+    LIST: '/abonnements',
+    FOR_SITE_WEB: '/abonnements/for-site-web',
+    GET: (id: string) => `/abonnements/${id}`,
   },
   // Adhésions
   ADHESIONS: {
-    CREATE: isClient ? '/adhesions' : '/adhesions',
-    FOR_SITE_WEB: isClient ? '/adhesions/for-site-web' : '/adhesions/for-site-web',
+    CREATE: '/adhesions',
+    FOR_SITE_WEB: '/adhesions/for-site-web',
   },
   // Actualités
   ACTUALITIES: {
-    LIST: isClient ? '/actualities' : '/actualities/for-site-web',
-    GET: (id: string) => isClient ? `/actualities/${id}` : `/actualities/${id}`,
+    LIST: '/actualities/for-site-web',
+    GET: (id: string) => `/actualities/${id}`,
   },
   // Publications
   PUBLICATIONS: {
-    LIST: isClient ? '/publications' : '/publications/for-site-web',
-    GET: (id: string) => isClient ? `/publications/${id}` : `/publications/${id}`,
+    LIST: '/publications/for-site-web',
+    GET: (id: string) => `/publications/${id}`,
   },
   // Banners
   BANNERS: {
-    FOR_SITE_WEB: isClient ? '/banners' : '/banners/for-site-web',
+    FOR_SITE_WEB: '/banners/for-site-web',
   },
   // Partenaires
   PARTENAIRES: {
-    FOR_SITE_WEB: isClient ? '/partenaire/for-site-web' : '/partenaire/for-site-web',
+    FOR_SITE_WEB: '/partenaire/for-site-web',
   },
   // Équipe
   EQUIPE: {
-    FOR_SITE_WEB: isClient ? '/siteequipe/for-site-web' : '/siteequipe/for-site-web',
+    FOR_SITE_WEB: '/siteequipe/for-site-web',
   },
   // Centres d'intérêt
   CENTRES_INTERET: {
-    FOR_SITE_WEB: isClient ? '/centreinteret/for-site-web' : '/centreinteret/for-site-web',
+    FOR_SITE_WEB: '/centreinteret/for-site-web',
   },
 };
 

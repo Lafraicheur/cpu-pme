@@ -2,7 +2,7 @@
  * Service API pour l'équipe
  */
 
-import { proxyApiClient } from '../proxy-client';
+import { apiClient } from '../client';
 import { API_ENDPOINTS } from '../config';
 
 export interface EquipeMembre {
@@ -23,7 +23,7 @@ export const equipeService = {
    */
   async getEquipeForSiteWeb(): Promise<EquipeMembre[]> {
     try {
-      const response = await proxyApiClient.get<any>(API_ENDPOINTS.EQUIPE.FOR_SITE_WEB);
+      const response = await apiClient.get<any>(API_ENDPOINTS.EQUIPE.FOR_SITE_WEB);
 
       // La réponse a une structure imbriquée : { success: true, data: { success: true, data: EquipeMembre[] } }
       let data: EquipeMembre[] = [];

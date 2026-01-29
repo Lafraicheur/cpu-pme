@@ -1,5 +1,6 @@
-import { proxyApiClient } from '../proxy-client';
+import { apiClient } from '../client';
 import { API_ENDPOINTS } from '../config';
+import { proxyApiClient } from '../proxy-client';
 
 export interface CreateAdhesionDto {
   name: string;
@@ -77,7 +78,7 @@ const buildQuery = (params?: GetAdhesionsForSiteWebParams) => {
 
 export const adhesionsService = {
   create: async (data: CreateAdhesionDto) => {
-    const response = await proxyApiClient.post<any>('/adhesions', data);
+    const response = await apiClient.post<any>('/adhesions', data);
     return response.data;
   },
   getForSiteWeb: async (
