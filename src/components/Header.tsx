@@ -404,7 +404,7 @@ function HeaderContent() {
                 {/* Sous-menu Services mobile */}
                 {isMobileServicesOpen && (
                   <div className="ml-4 mt-1 space-y-1">
-                    <Link
+                    {/* <Link
                       href="#"
                       className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
                       onClick={() => setIsDrawerOpen(false)}
@@ -419,7 +419,7 @@ function HeaderContent() {
                     >
                       <FileText className="w-4 h-4" />
                       <span>Appels d&apos;offres & Opportunités</span>
-                    </Link>
+                    </Link> */}
                     <Link
                       href="#"
                       className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
@@ -428,7 +428,7 @@ function HeaderContent() {
                       <Building2 className="w-4 h-4" />
                       <span>Formation / CPU-Académie</span>
                     </Link>
-                    <Link
+                    {/* <Link
                       href="#"
                       className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
                       onClick={() => setIsDrawerOpen(false)}
@@ -451,7 +451,7 @@ function HeaderContent() {
                     >
                       <Network className="w-4 h-4" />
                       <span>Réseautage & Événements</span>
-                    </Link>
+                    </Link> */}
                   </div>
                 )}
               </div>

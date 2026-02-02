@@ -415,7 +415,7 @@ const SecteursContent = () => {
             src="/logo.png"
             alt="CPU-PME"
             className="w-full h-full object-cover min-h-full"
-            style={{ minHeight: '100%' }}
+            style={{ minHeight: "100%" }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
         </div>

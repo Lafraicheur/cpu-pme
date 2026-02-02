@@ -48,7 +48,7 @@ function AProposContent() {
             src="/logo.png"
             alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
             className="w-full h-full object-cover min-h-full"
-            style={{ minHeight: '100%' }}
+            style={{ minHeight: "100%" }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
         </div>
@@ -96,6 +96,7 @@ function AProposContent() {
             <TabsContent value="mission" className="mt-8 sm:mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div>
+                  <br />
                   <div className="flex items-center mb-4">
                     <div
                       className="p-3 rounded-full mr-4"
@@ -688,6 +689,7 @@ function AProposContent() {
                             }}
                           />
                         </div>
+
                         <CardContent className="pt-6 pb-6">
                           <h3 className="text-lg font-bold mb-2 text-gray-900">
                             {membre.nom}

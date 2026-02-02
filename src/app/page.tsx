@@ -25,8 +25,14 @@ import { useEffect, useRef, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import Link from "next/link";
 import { bannersService, Banner } from "@/lib/api/services/banners.service";
-import { partenairesService, Partenaire } from "@/lib/api/services/partenaires.service";
-import { actualitiesService, Actuality } from "@/lib/api/services/actualities.service";
+import {
+  partenairesService,
+  Partenaire,
+} from "@/lib/api/services/partenaires.service";
+import {
+  actualitiesService,
+  Actuality,
+} from "@/lib/api/services/actualities.service";
 
 // Composant de décompte animé
 function CountUp({
@@ -49,7 +55,7 @@ function CountUp({
           setIsVisible(true);
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.3 },
     );
 
     if (countRef.current) {
@@ -172,100 +178,109 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section
-        className="relative flex items-center justify-center overflow-hidden min-h-[80vh] h-[400px] md:h-[500px] lg:h-[550px]"
-      >
+      <section className="relative h-[33vh] sm:h-[65vh] md:h-[70vh] lg:h-150 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#929292] via-[#e1dede] to-[#929292]">
         {/* BACKGROUND IMAGE / CAROUSEL */}
-      <div className="absolute inset-0 w-full h-full">
-        {isLoadingBanners ? (
-          // Image par défaut pendant le chargement
-          <>
-            <img
-              src="/logo.png"
-              alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-              className="w-full h-full object-cover min-h-full"
-              style={{ minHeight: '100%' }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
-          </>
-        ) : (
-          // Carousel incluant le banner par défaut ET les banners dynamiques
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            plugins={[
-              Autoplay({
-                delay: 5000,
-              }),
-            ]}
-            className="w-full h-full"
-          >
-            <CarouselContent className="h-full min-h-[80vh]">
-              {/* Banner par défaut (toujours inclus) */}
-              <CarouselItem className="h-full min-h-[80vh]">
-                <div className="relative h-full w-full min-h-[80vh]">
-                  <img
-                    src="/logo.png"
-                    alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-                    className="w-full h-full object-cover min-h-full"
-                    style={{ minHeight: '100%' }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
-                </div>
-              </CarouselItem>
-              {/* Banners dynamiques */}
-              {banners.map((banner) => (
-                <CarouselItem key={banner.id} className="h-full min-h-[80vh]">
-                  <div
-                    className="relative h-full w-full min-h-[80vh]"
-                    style={{ minHeight: '80vh', height: '100%' }}
-                  >
+        <div className="absolute inset-0">
+          {isLoadingBanners ? (
+            // Image par défaut pendant le chargement
+            <>
+              <img
+                src="/logo.png"
+                alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
+                className="w-full h-full object-cover min-h-full"
+                style={{ minHeight: "100%" }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+            </>
+          ) : (
+            // Carousel incluant le banner par défaut ET les banners dynamiques
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              plugins={[
+                Autoplay({
+                  delay: 5000,
+                }),
+              ]}
+              className="w-full h-full"
+            >
+              <CarouselContent className="h-full">
+                {/* Banner par défaut (toujours inclus) */}
+                <CarouselItem className="h-full">
+                  <div className="relative h-full w-full">
                     <img
-                      src={banner.image_url || "/logo.png"}
-                      alt={banner.title}
+                      src="/logo.png"
+                      alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
                       className="w-full h-full object-cover"
-                      style={{ minHeight: '100%', height: '100%', width: '100%' }}
+                      style={{ minHeight: "100%" }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
                   </div>
                 </CarouselItem>
-              ))}
-            </CarouselContent>
-            {/* Afficher les boutons de navigation seulement s'il y a plus d'1 slide */}
-            {(banners.length + 1) > 1 && (
-              <>
-                <CarouselPrevious className="left-2 sm:left-4 bg-[#F17C21] border-amber-50 text-white z-20 top-1/2 -translate-y-1/2" />
-                <CarouselNext className="right-2 sm:right-4 bg-[#F17C21] border-amber-50 text-white z-20 top-1/2 -translate-y-1/2" />
-              </>
-            )}
-          </Carousel>
-        )}
-      </div>
+                {/* Banners dynamiques */}
+                {banners.map((banner) => (
+                  <CarouselItem key={banner.id} className="h-full min-h-full">
+                    <div className="relative w-full h-full min-h-full">
+                      <img
+                        src={banner.image_url || "/logo.png"}
+                        alt={banner.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {/* Afficher les boutons de navigation seulement s'il y a plus d'1 slide */}
+              {banners.length + 1 > 1 && (
+                <>
+                  <CarouselPrevious className="left-2 sm:left-4 bg-[#F17C21] border-amber-50 text-white z-20 top-1/2 -translate-y-1/2" />
+                  <CarouselNext className="right-2 sm:right-4 bg-[#F17C21] border-amber-50 text-white z-20 top-1/2 -translate-y-1/2" />
+                </>
+              )}
+            </Carousel>
+          )}
+        </div>
 
         {/* CONTENU */}
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center w-full h-full px-4 text-center text-white bg-transparent">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in drop-shadow-md">
+        <div
+          className="
+  relative z-10 flex flex-col items-center justify-center
+  w-full h-full px-4 text-center text-white
+"
+        >
+          <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 tracking-tight">
             Confédération Patronale Unique des PME de Côte d'Ivoire
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in drop-shadow">
+
+          <p className="hidden md:flex text-sm sm:text-base md:text-lg mb-6 max-w-2xl mx-auto text-white/80 font-light">
             Votre partenaire pour le développement et la croissance des
             entreprises ivoiriennes
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in">
+          <div className="flex-row gap-4 md:gap-6 justify-center mt-6 md:mt-8">
             <a
               href="#services"
-              className="bg-white text-black hover:bg-white/90 px-6 py-3 rounded-lg font-semibold cursor-pointer"
-              style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }}
+              className="
+      bg-white text-black hover:bg-white/90
+      px-4 py-2 text-sm
+      md:px-6 md:py-3 md:text-base
+      rounded-sm font-semibold
+    "
             >
               Découvrir nos services
             </a>
+            &nbsp;
             <Link
               href="/membres?tab=adhesion"
-              className="border border-white text-white hover:bg-white/10 px-6 py-3 rounded-lg font-semibold cursor-pointer"
-              style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }}
+              className="
+      border border-white text-white hover:bg-white/10
+      px-4 py-2 text-sm
+      md:px-6 md:py-3 md:text-base
+      rounded-sm font-semibold
+    "
             >
               Devenir membre
             </Link>
@@ -615,7 +630,10 @@ export default function Home() {
           ) : actualities.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {actualities.map((actuality, index) => (
-                <Card key={actuality.id} className="overflow-hidden shadow-sm transition-shadow border-gray-200">
+                <Card
+                  key={actuality.id}
+                  className="overflow-hidden shadow-sm transition-shadow border-gray-200"
+                >
                   <div
                     className="h-48 bg-gradient-to-br from-orange-100 to-orange-200"
                     style={{
@@ -629,19 +647,29 @@ export default function Home() {
                   <CardContent className="pt-6">
                     <p
                       className="text-sm font-medium mb-2"
-                      style={{ color: index % 2 === 0 ? "var(--color-primary)" : "var(--color-success)" }}
+                      style={{
+                        color:
+                          index % 2 === 0
+                            ? "var(--color-primary)"
+                            : "var(--color-success)",
+                      }}
                     >
                       {actuality.publicationDate
-                        ? new Date(actuality.publicationDate).toLocaleDateString("fr-FR", {
+                        ? new Date(
+                            actuality.publicationDate,
+                          ).toLocaleDateString("fr-FR", {
                             day: "numeric",
                             month: "long",
                             year: "numeric",
                           })
-                        : new Date(actuality.createdAt).toLocaleDateString("fr-FR", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })}
+                        : new Date(actuality.createdAt).toLocaleDateString(
+                            "fr-FR",
+                            {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                            },
+                          )}
                     </p>
                     <h3 className="text-xl font-semibold mb-2 text-[var(--color-neutral-dark)]">
                       {actuality.title}
@@ -651,13 +679,20 @@ export default function Home() {
                       style={{ color: "var(--color-text-secondary)" }}
                     >
                       {actuality.content
-                        ? actuality.content.replace(/<[^>]*>/g, "").substring(0, 150) + "..."
+                        ? actuality.content
+                            .replace(/<[^>]*>/g, "")
+                            .substring(0, 150) + "..."
                         : "Aucune description disponible"}
                     </p>
                     <a
                       href={`/actualites/${actuality.id}`}
                       className="flex items-center hover:underline font-medium"
-                      style={{ color: index % 2 === 0 ? "var(--color-primary)" : "var(--color-success)" }}
+                      style={{
+                        color:
+                          index % 2 === 0
+                            ? "var(--color-primary)"
+                            : "var(--color-success)",
+                      }}
                     >
                       Lire la suite <ChevronRight className="h-4 w-4 ml-1" />
                     </a>

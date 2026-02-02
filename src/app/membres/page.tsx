@@ -2984,7 +2984,7 @@ const MembersContent = () => {
             src="/logo.png"
             alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
             className="w-full h-full object-cover min-h-full"
-            style={{ minHeight: '100%' }}
+            style={{ minHeight: "100%" }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
         </div>
@@ -2998,7 +2998,7 @@ const MembersContent = () => {
             {activeTab !== "annuaire" && (
               <>
                 <span className="mx-2 text-white/60">/</span>
-                <span className="text-lg md:text-xl font-semibold text-white">
+                <span className="text-sm md:text-xl font-semibold text-white">
                   {activeTab === "avantages"
                     ? "Avantages"
                     : activeTab === "pass-pme"
