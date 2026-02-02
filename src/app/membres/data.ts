@@ -40,22 +40,34 @@ export type MemberBadge =
   | "Institutionnel";
 
 export interface Member {
-    id: string;
-    name: string;
-    logo?: string;
-    logoUrl?: string;
-    sector: string; // Chaque membre appartient à UN SEUL secteur
-    region: string;
-    description: string;
-    website?: string;
-    featured?: boolean;
-    memberType: MemberType; // Chaque membre a UN SEUL type de membre (individuel, entreprise, associatif, ou institutionnel)
-    badge?: MemberBadge;
-    // Champs pour la chaîne d'appartenance (relations)
-    affiliatedTo?: string; // ID de l'organisation à laquelle le membre est affilié
-    subProfile?: IndividualSubProfile | EnterpriseSubProfile | AssociativeSubProfile | InstitutionalSubProfile;
-    profileLabel?: string;
-  }
+  id: string;
+  name: string;
+  logo?: string;
+  logoUrl?: string;
+  sector: string; // Chaque membre appartient à UN SEUL secteur
+  region: string;
+  description: string;
+  website?: string;
+  featured?: boolean;
+  memberType: MemberType; // Chaque membre a UN SEUL type de membre (individuel, entreprise, associatif, ou institutionnel)
+  badge?: MemberBadge;
+  // Champs pour la chaîne d'appartenance (relations)
+  affiliatedTo?: string; // ID de l'organisation à laquelle le membre est affilié
+  subProfile?: IndividualSubProfile | EnterpriseSubProfile | AssociativeSubProfile | InstitutionalSubProfile;
+  profileLabel?: string;
+  // Ajout pour affichage annuaire
+  filiereId?: string;
+  sousFiliereId?: string;
+  activitesIds?: string[];
+  // Données de contact
+  email?: string;
+  phone?: string;
+  position?: string;
+  // Informations complémentaires
+  interventionScope?: 'national' | 'regions_specifiques' | 'locale';
+  fullAddress?: string;
+  createdAt?: string;
+}
   
   export const memberTypes: { value: MemberType; label: string }[] = [
     { value: "individuel", label: "Membre Individuel" },
