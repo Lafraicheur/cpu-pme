@@ -178,7 +178,7 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative h-[33vh] sm:h-[65vh] md:h-[70vh] lg:h-[75vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#929292] via-[#e1dede] to-[#929292]">
+      <section className="relative h-[33vh] sm:h-[65vh] md:h-[70vh] lg:h-150 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#929292] via-[#e1dede] to-[#929292]">
         {/* BACKGROUND IMAGE / CAROUSEL */}
         <div className="absolute inset-0">
           {isLoadingBanners ? (
