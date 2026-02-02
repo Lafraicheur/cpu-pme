@@ -3064,13 +3064,13 @@ const MembersContent = () => {
         </DialogContent>
       </Dialog>
       {/* Hero Section */}
-      <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
+      <section className="relative h-64 sm:h-72 md:h-80 lg:h-200 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#1a1a1a]">
         {/* BACKGROUND IMAGE */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 opacity-30">
           <img
             src="/logo.png"
             alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-            className="w-full h-full object-cover"
+            className="w-full h-full"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
         </div>
@@ -3084,7 +3084,7 @@ const MembersContent = () => {
             {activeTab !== "annuaire" && (
               <>
                 <span className="mx-2 text-white/60">/</span>
-                <span className="text-lg md:text-xl font-semibold text-white">
+                <span className="text-sm md:text-xl font-semibold text-white">
                   {activeTab === "avantages"
                     ? "Avantages"
                     : activeTab === "pass-pme"
@@ -3096,10 +3096,10 @@ const MembersContent = () => {
               </>
             )}
           </div>
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 tracking-tight">
             {getPageTitle()}
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in">
+          <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 max-w-2xl mx-auto text-white/80 font-light px-4">
             {getPageDescription()}
           </p>
         </div>

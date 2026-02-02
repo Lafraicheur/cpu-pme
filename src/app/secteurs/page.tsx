@@ -409,12 +409,12 @@ const SecteursContent = () => {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative h-64 sm:h-72 md:h-80 lg:h-96 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#1a1a1a]">
-        <div className="absolute inset-0 opacity-10">
+      <section className="relative h-64 sm:h-72 md:h-80 lg:h-200 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#1a1a1a]">
+        <div className="absolute inset-0 opacity-30">
           <img
             src="/logo.png"
             alt="CPU-PME"
-            className="w-full h-full object-cover"
+            className="w-full h-full"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/40" />

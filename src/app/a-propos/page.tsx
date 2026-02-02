@@ -41,23 +41,23 @@ function AProposContent() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
+      <section className="relative h-64 sm:h-72 md:h-80 lg:h-200 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#1a1a1a]">
         {/* BACKGROUND IMAGE */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 opacity-30">
           <img
             src="/logo.png"
             alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-            className="w-full h-full object-cover"
+            className="w-full h-full"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
         </div>
 
         {/* CONTENU */}
         <div className="relative z-10 container mx-auto px-4 text-center text-white">
-          <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold mb-6 animate-fade-in">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 tracking-tight">
             À Propos de CPU-PME.CI
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in">
+          <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 max-w-2xl mx-auto text-white/80 font-light px-4">
             Découvrez l'histoire, la mission et la vision de la Confédération
             Patronale Unique des PME de Côte d'Ivoire
           </p>
@@ -95,6 +95,7 @@ function AProposContent() {
             <TabsContent value="mission" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div>
+                  <br />
                   <div className="flex items-center mb-4">
                     <div
                       className="p-3 rounded-full mr-4"
@@ -379,7 +380,8 @@ function AProposContent() {
 
             {/* Histoire Content */}
             <TabsContent value="histoire" className="mt-0">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-1">
+                <br />
                 <div className="lg:col-span-1">
                   <div className="sticky top-24">
                     <div className="flex items-center mb-4">
@@ -651,6 +653,7 @@ function AProposContent() {
             <TabsContent value="equipe" className="mt-0">
               {/* Direction */}
               <div>
+                <br />
                 <div className="flex items-center mb-6">
                   <div
                     className="p-3 rounded-full mr-4"
@@ -761,8 +764,9 @@ function AProposContent() {
 
             {/* Partenaires Content */}
             <TabsContent value="partenaires" className="mt-0">
-              <div className="grid grid-cols-1 gap-12">
+              <div className="grid grid-cols-1 gap-1">
                 {/* Partenaires */}
+                <br />
                 <div>
                   <div className="flex items-center mb-6">
                     <div
