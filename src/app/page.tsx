@@ -151,8 +151,14 @@ export default function Home() {
       try {
         setIsLoadingActualities(true);
         const data = await actualitiesService.getActualities();
+        // Trier par date du plus récent au plus ancien
+        const sortedData = [...data].sort((a, b) => {
+          const dateA = new Date(a.publicationDate || a.createdAt).getTime();
+          const dateB = new Date(b.publicationDate || b.createdAt).getTime();
+          return dateB - dateA;
+        });
         // Limiter aux 3 dernières actualités
-        setActualities(data.slice(0, 3));
+        setActualities(sortedData.slice(0, 3));
       } catch (error) {
         console.error("Erreur lors du chargement des actualités:", error);
       } finally {
@@ -166,73 +172,84 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
+      <section
+        className="relative flex items-center justify-center overflow-hidden min-h-[80vh] h-[400px] md:h-[500px] lg:h-[550px]"
+      >
         {/* BACKGROUND IMAGE / CAROUSEL */}
-        <div className="absolute inset-0">
-          {isLoadingBanners ? (
-            // Image par défaut pendant le chargement
-            <>
-              <img
-                src="/logo.png"
-                alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
-            </>
-          ) : banners.length > 0 ? (
-            // Carousel des banners si disponibles
-            <Carousel
-              opts={{
-                align: "start",
-                loop: true,
-              }}
-              plugins={[
-                Autoplay({
-                  delay: 5000,
-                }),
-              ]}
-              className="w-full h-full"
-            >
-              <CarouselContent className="h-full">
-                {banners.map((banner) => (
-                  <CarouselItem key={banner.id} className="h-full">
-                    <div className="relative h-full w-full">
-                      <img
-                        src={banner.image_url || "/logo.png"}
-                        alt={banner.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              {banners.length > 1 && (
-                <>
-                  <CarouselPrevious className="left-4 bg-[#F17C21] border-amber-50 text-white" />
-                  <CarouselNext className="right-4 bg-[#F17C21] border-amber-50 text-white" />
-                </>
-              )}
-            </Carousel>
-          ) : (
-            // Image par défaut si aucun banner
-            <>
-              <img
-                src="/logo.png"
-                alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
-            </>
-          )}
-        </div>
+      <div className="absolute inset-0 w-full h-full">
+        {isLoadingBanners ? (
+          // Image par défaut pendant le chargement
+          <>
+            <img
+              src="/logo.png"
+              alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
+              className="w-full h-full object-cover min-h-full"
+              style={{ minHeight: '100%' }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+          </>
+        ) : (
+          // Carousel incluant le banner par défaut ET les banners dynamiques
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            plugins={[
+              Autoplay({
+                delay: 5000,
+              }),
+            ]}
+            className="w-full h-full"
+          >
+            <CarouselContent className="h-full min-h-[80vh]">
+              {/* Banner par défaut (toujours inclus) */}
+              <CarouselItem className="h-full min-h-[80vh]">
+                <div className="relative h-full w-full min-h-[80vh]">
+                  <img
+                    src="/logo.png"
+                    alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
+                    className="w-full h-full object-cover min-h-full"
+                    style={{ minHeight: '100%' }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+                </div>
+              </CarouselItem>
+              {/* Banners dynamiques */}
+              {banners.map((banner) => (
+                <CarouselItem key={banner.id} className="h-full min-h-[80vh]">
+                  <div
+                    className="relative h-full w-full min-h-[80vh]"
+                    style={{ minHeight: '80vh', height: '100%' }}
+                  >
+                    <img
+                      src={banner.image_url || "/logo.png"}
+                      alt={banner.title}
+                      className="w-full h-full object-cover"
+                      style={{ minHeight: '100%', height: '100%', width: '100%' }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            {/* Afficher les boutons de navigation seulement s'il y a plus d'1 slide */}
+            {(banners.length + 1) > 1 && (
+              <>
+                <CarouselPrevious className="left-2 sm:left-4 bg-[#F17C21] border-amber-50 text-white z-20 top-1/2 -translate-y-1/2" />
+                <CarouselNext className="right-2 sm:right-4 bg-[#F17C21] border-amber-50 text-white z-20 top-1/2 -translate-y-1/2" />
+              </>
+            )}
+          </Carousel>
+        )}
+      </div>
 
         {/* CONTENU */}
-        <div className="relative z-10 container mx-auto px-4 text-center text-white">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center w-full h-full px-4 text-center text-white bg-transparent">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in drop-shadow-md">
             Confédération Patronale Unique des PME de Côte d'Ivoire
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in">
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in drop-shadow">
             Votre partenaire pour le développement et la croissance des
             entreprises ivoiriennes
           </p>
@@ -241,12 +258,14 @@ export default function Home() {
             <a
               href="#services"
               className="bg-white text-black hover:bg-white/90 px-6 py-3 rounded-lg font-semibold cursor-pointer"
+              style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }}
             >
               Découvrir nos services
             </a>
             <Link
               href="/membres?tab=adhesion"
               className="border border-white text-white hover:bg-white/10 px-6 py-3 rounded-lg font-semibold cursor-pointer"
+              style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }}
             >
               Devenir membre
             </Link>

@@ -12,6 +12,7 @@ import { abonnementsService, Abonnement } from '@/lib/api/services/abonnements.s
 import { partenairesService, Partenaire, GetPartenairesParams } from '@/lib/api/services/partenaires.service';
 import { equipeService, EquipeMembre } from '@/lib/api/services/equipe.service';
 import { centresInteretService, CentreInteret, GetCentresInteretParams } from '@/lib/api/services/centres-interet.service';
+import { adhesionsService, AdhesionForSiteWeb, GetAdhesionsForSiteWebParams } from '@/lib/api/services/adhesions.service';
 
 /**
  * Hook pour récupérer tous les types de membres pour le site web
@@ -191,6 +192,18 @@ export function useCentresInteretForSiteWeb(params?: GetCentresInteretParams) {
   });
 }
 
+/**
+ * Hook pour récupérer les adhésions pour le site web
+ */
+export function useAdhesionsForSiteWeb(params?: GetAdhesionsForSiteWebParams) {
+  return useQuery<AdhesionForSiteWeb[], Error>({
+    queryKey: ['adhesions', 'for-site-web', params],
+    queryFn: () => adhesionsService.getForSiteWeb(params),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+}
+
 // Export des types pour utilisation dans les composants
-export type { TypeMembre, Profil, Region, Secteur, Filiere, SousFiliere, Activite, Actuality, Publication, Abonnement, Partenaire, EquipeMembre, CentreInteret };
+export type { TypeMembre, Profil, Region, Secteur, Filiere, SousFiliere, Activite, Actuality, Publication, Abonnement, Partenaire, EquipeMembre, CentreInteret, AdhesionForSiteWeb };
 

@@ -21,8 +21,22 @@ function AProposContent() {
   const [activeTab, setActiveTab] = useState(initialTab);
 
   // Utiliser les hooks pour récupérer les données
-  const { data: partenaires = [], isLoading: isLoadingPartenaires } = usePartenairesForSiteWeb({ type: 'strategique' });
-  const { data: equipe = [], isLoading: isLoadingEquipe } = useEquipeForSiteWeb();
+  const { data: partenaires = [], isLoading: isLoadingPartenaires } =
+    usePartenairesForSiteWeb({ type: "strategique" });
+  const { data: equipe = [], isLoading: isLoadingEquipe } =
+    useEquipeForSiteWeb();
+  const orderedEquipe = [...equipe]
+    .map((membre, index) => ({ membre, index }))
+    .sort((a, b) => {
+      const aOrder = a.membre.odre ?? a.membre.ordre;
+      const bOrder = b.membre.odre ?? b.membre.ordre;
+
+      if (aOrder == null && bOrder == null) return a.index - b.index;
+      if (aOrder == null) return 1;
+      if (bOrder == null) return -1;
+      return aOrder - bOrder;
+    })
+    .map(({ membre }) => membre);
 
   return (
     <>
@@ -349,9 +363,14 @@ function AProposContent() {
                       Notre engagement
                     </p>
                     <p className="italic">
-                      "Nous nous engageons à être la voix des PME ivoiriennes et
-                      à créer les conditions nécessaires à leur épanouissement
-                      dans un environnement économique en constante évolution."
+                      "Nous nous engageons à porter la voix des PME ivoiriennes
+                      et à créer les conditions durables de leur épanouissement
+                      dans un environnement économique en constante mutation, au
+                      service de la compétitivité nationale et internationale. "
+                    </p>
+                    <p className="mt-4 font-semibold">
+                      Dr. Moussa Élias Farakhan Diomandé Président Confédération
+                      Patronale Unique des PME de Côte d’Ivoire (CPU-PME CI)
                     </p>
                   </div>
                 </div>
@@ -651,9 +670,9 @@ function AProposContent() {
                   <div className="flex justify-center items-center py-12">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                   </div>
-                ) : equipe.length > 0 ? (
+                ) : orderedEquipe.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {equipe.map((membre) => (
+                    {orderedEquipe.map((membre) => (
                       <Card
                         key={membre.id}
                         className="overflow-hidden border-0 transition-all duration-300 bg-white hover:shadow-lg"

@@ -1,9 +1,10 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { notFound } from "next/navigation";
+import { useRouter } from "next/navigation";
 import NewsDetailClient from "./NewsDetailClient";
 import { useActuality, useActualities, usePublication, usePublications } from "@/hooks/use-api";
+import { useEffect } from "react";
 
 // Catégories des actualités (correspondant aux catégories de l'API)
 const categoriesActualites = [
@@ -27,6 +28,7 @@ const categoriesPublications = [
 
 export default function NewsDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
 
   // Essayer de charger à la fois comme actualité ET comme publication
@@ -36,6 +38,17 @@ export default function NewsDetailPage() {
   // Récupérer toutes les actualités et publications pour les suggestions
   const { data: allActualities } = useActualities();
   const { data: allPublications } = usePublications();
+
+  // Déterminer si c'est une actualité ou une publication
+  const isActuality = actualityData && !errorActuality;
+  const isPublication = publicationData && !errorPublication;
+
+  // Rediriger vers 404 si aucun des deux n'existe (après le chargement)
+  useEffect(() => {
+    if (!loadingActuality && !loadingPublication && !isActuality && !isPublication) {
+      router.push('/404');
+    }
+  }, [loadingActuality, loadingPublication, isActuality, isPublication, router]);
 
   // État de chargement - attendre que les deux requêtes soient terminées
   if (loadingActuality || loadingPublication) {
@@ -49,13 +62,16 @@ export default function NewsDetailPage() {
     );
   }
 
-  // Déterminer si c'est une actualité ou une publication
-  const isActuality = actualityData && !errorActuality;
-  const isPublication = publicationData && !errorPublication;
-
-  // Si aucun des deux n'existe, 404
+  // Si aucun des deux n'existe, afficher un message en attendant la redirection
   if (!isActuality && !isPublication) {
-    return notFound();
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-slate-800 mb-4">Contenu non trouvé</h1>
+          <p className="text-slate-600">Cette actualité ou publication n&apos;existe pas.</p>
+        </div>
+      </div>
+    );
   }
 
   // CAS 1: C'est une actualité
@@ -150,7 +166,7 @@ export default function NewsDetailPage() {
     );
   }
 
-  return notFound();
+  return null;
 }
 
 // Fonction pour obtenir une image par défaut selon la catégorie (pour les publications)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -80,11 +80,13 @@ import {
   Menu,
   Info,
   Target,
+  AlertCircle,
+  CheckCircle,
+  HelpCircle,
+  Lightbulb,
+  Save,
 } from "lucide-react";
 import {
-  membersData,
-  sectors,
-  regions,
   membershipBenefits,
   membershipPlans,
   Member,
@@ -102,6 +104,7 @@ import {
   useAbonnementsForSiteWeb,
   usePartenairesForSiteWeb,
   useCentresInteretForSiteWeb,
+  useAdhesionsForSiteWeb,
 } from "@/hooks/use-api";
 import { adhesionsService } from "@/lib/api/services/adhesions.service";
 import {
@@ -116,6 +119,14 @@ import {
   IconEnergie,
   IconAgriculture,
 } from "@/components/icons/Sectoricons";
+import { Combobox, ComboboxOption } from "@/components/ui/combobox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import "./member-cards.css";
 
 // Composant Skeleton pour les cartes
 const MemberCardSkeleton = () => (
@@ -734,6 +745,7 @@ const MembersContent = () => {
   const [siegeVillage, setSiegeVillage] = useState<string>("");
   const [selectedBadge, setSelectedBadge] = useState<string>("");
   // États pour les champs du formulaire d'adhésion
+  const [orgName, setOrgName] = useState<string>("");
   const [formName, setFormName] = useState<string>("");
   const [formPosition, setFormPosition] = useState<string>("");
   const [formEmail, setFormEmail] = useState<string>("");
@@ -750,6 +762,17 @@ const MembersContent = () => {
   const [selectedFilieresPrioritaires, setSelectedFilieresPrioritaires] =
     useState<string[]>([]);
   const [hasBureauCI, setHasBureauCI] = useState<boolean>(false);
+
+  // États pour validation temps réel
+  const [emailError, setEmailError] = useState<string>("");
+  const [phoneError, setPhoneError] = useState<string>("");
+  const [emailValid, setEmailValid] = useState<boolean>(false);
+  const [phoneValid, setPhoneValid] = useState<boolean>(false);
+
+  // États pour sauvegarde automatique
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isDraftRestored, setIsDraftRestored] = useState<boolean>(false);
+
   const { toast } = useToast();
 
   // Récupérer les partenaires Pass PME depuis l'API
@@ -835,7 +858,112 @@ const MembersContent = () => {
   const {
     data: centresInteretApi = [],
     isLoading: isLoadingCentresInteret,
+    error: errorCentresInteret,
   } = useCentresInteretForSiteWeb({ activeOnly: true });
+
+  // Récupérer les adhésions approuvées pour alimenter les listes d'organisations
+  const adhesionsParams = useMemo(
+    () => ({ statut: "approved", limit: 1000 }),
+    []
+  );
+  const { data: adhesionsApi = [], isLoading: isLoadingAdhesions } =
+    useAdhesionsForSiteWeb(adhesionsParams);
+
+  const membersFromApi = useMemo<Member[]>(() => {
+    const mapTypeMembreName = (name?: string): MemberType => {
+      const lowerName = (name || "").toLowerCase();
+      if (lowerName.includes("individuel")) return "individuel";
+      if (
+        lowerName.includes("associatif") ||
+        lowerName.includes("organisation")
+      ) {
+        return "associatif";
+      }
+      if (lowerName.includes("institutionnel")) return "institutionnel";
+      if (lowerName.includes("entreprise")) return "entreprise";
+      return "entreprise";
+    };
+
+    const mapBadge = (
+      plan?: string,
+      libelle?: string,
+      memberType?: MemberType
+    ) => {
+      if (memberType === "institutionnel") return "Institutionnel";
+      const source = `${plan || ""} ${libelle || ""}`.toLowerCase();
+      if (source.includes("gold") || source.includes("or")) return "Or";
+      if (source.includes("silver") || source.includes("argent")) return "Argent";
+      if (source.includes("basic")) return "Basic";
+      return undefined;
+    };
+
+    return adhesionsApi.map((adhesion: any) => {
+      const memberType = mapTypeMembreName(adhesion?.typeMembre?.name);
+      // IDs pour mapping
+      const filiereId = adhesion?.filiereId || null;
+      const sousFiliereId = adhesion?.sousFiliereId || null;
+      const activitesIds = Array.isArray(adhesion?.activitesIds) ? adhesion.activitesIds : [];
+      
+      // Construire l'adresse complète
+      const addressParts = [
+        adhesion?.siegeVillage,
+        adhesion?.siegeCommune?.name,
+        adhesion?.siegeRegion?.name
+      ].filter(Boolean);
+      
+      return {
+        id: adhesion?.id || `${adhesion?.email || adhesion?.phone || Math.random()}`,
+        name:
+          adhesion?.customOrganisationName ||
+          adhesion?.name ||
+          "Membre CPU-PME",
+        logoUrl: undefined,
+        filiereId,
+        sousFiliereId,
+        activitesIds,
+        sector: adhesion?.secteurPrincipal?.name || "Non renseigné",
+        region: [
+          adhesion?.siegeCommune?.name,
+          adhesion?.siegeRegion?.name
+        ].filter(Boolean).join(", ") || "Non renseignée",
+        description: adhesion?.message || "Membre CPU-PME",
+        website: undefined,
+        featured: false,
+        memberType,
+        badge: mapBadge(adhesion?.abonnement?.plan, adhesion?.abonnement?.libelle, memberType),
+        subProfile: undefined,
+        profileLabel: adhesion?.profil?.name || undefined,
+        // Données de contact
+        email: adhesion?.email || undefined,
+        phone: adhesion?.phone || undefined,
+        position: adhesion?.position || undefined,
+        // Informations complémentaires
+        interventionScope: adhesion?.interventionScope || undefined,
+        fullAddress: addressParts.join(", ") || undefined,
+        createdAt: adhesion?.created_at || undefined,
+      };
+    });
+  }, [adhesionsApi]);
+
+  const membersSignature = useMemo(
+    () => membersFromApi.map((member) => member.id).join("|"),
+    [membersFromApi]
+  );
+  const shuffledSignatureRef = useRef<string>("");
+
+  const directorySectors = useMemo(
+    () =>
+      Array.from(new Set(membersFromApi.map((member) => member.sector))).sort(),
+    [membersFromApi]
+  );
+
+  const directoryRegions = useMemo(
+    () =>
+      Array.from(new Set(membersFromApi.map((member) => member.region))).sort(),
+    [membersFromApi]
+  );
+
+  const isLoadingMembers = isLoading || isLoadingAdhesions;
 
   // Debug: Log des secteurs récupérés
   useEffect(() => {
@@ -846,18 +974,39 @@ const MembersContent = () => {
   // Obtenir la liste des régions (depuis l'API ou données statiques)
   const getAvailableRegions = (): string[] => {
     if (
-      interventionScope === "regions_specifiques" &&
       Array.isArray(regionsApi) &&
       regionsApi.length > 0
     ) {
-      // Utiliser les régions de l'API
+      // Utiliser les régions de l'API uniquement
       return regionsApi
         .filter((r) => r.isActive !== false)
         .map((r) => r.name)
         .sort();
     }
-    // Fallback vers les données statiques
-    return Object.keys(regionsData).sort();
+    // Aucun fallback - retourner tableau vide si API ne répond pas
+    return [];
+  };
+
+  // Extraire toutes les filières depuis l'API secteurs
+  const getAvailableFilieres = (): string[] => {
+    if (
+      Array.isArray(secteursApi) &&
+      secteursApi.length > 0
+    ) {
+      const allFilieres = new Set<string>();
+      secteursApi.forEach((secteur) => {
+        if (secteur.filieres && Array.isArray(secteur.filieres)) {
+          secteur.filieres
+            .filter((f) => f.isActive !== false)
+            .forEach((filiere) => {
+              allFilieres.add(filiere.name);
+            });
+        }
+      });
+      return Array.from(allFilieres).sort();
+    }
+    // Aucun fallback - retourner tableau vide si API ne répond pas
+    return [];
   };
 
   // Simuler le chargement initial
@@ -956,6 +1105,41 @@ const MembersContent = () => {
       setCustomOrganisationName("");
     }
   }, [hasAffiliation]);
+
+  const getApprovedOrganisationsByType = (orgType?: string) => {
+    if (!orgType) return [];
+
+    const normalizedType = orgType.toLowerCase();
+    const orgTypeKeywords: Record<string, string[]> = {
+      federation: ["fédération", "federation"],
+      cooperative: ["coopérative", "cooperative"],
+      association: ["association"],
+      groupement: ["groupement", "gie"],
+    };
+    const typeKeywords = orgTypeKeywords[normalizedType] || [];
+    const namesFromApi = adhesionsApi
+      .filter((adhesion) => {
+        const status = String(adhesion.statut || adhesion.status || "").toLowerCase();
+        const typeMembreName = String(adhesion.typeMembre?.name || "").toLowerCase();
+        const profilName = String(adhesion.profil?.name || "").toLowerCase();
+        const isAssociatif = typeMembreName.includes("associatif");
+        const matchesProfil =
+          typeKeywords.length === 0
+            ? false
+            : typeKeywords.some((keyword) => profilName.includes(keyword));
+        return status === "approved" && isAssociatif && matchesProfil;
+      })
+      .map((adhesion) => {
+        return (
+          adhesion.customOrganisationName ||
+          adhesion.organisationName ||
+          ""
+        );
+      })
+      .filter((name) => Boolean(name));
+
+    return Array.from(new Set(namesFromApi));
+  };
 
   // Obtenir toutes les filières de tous les secteurs (depuis l'API ou données statiques)
   const getAllFilieres = () => {
@@ -1135,6 +1319,274 @@ const MembersContent = () => {
     return allTags;
   };
 
+  // Fonctions de validation temps réel
+  const validateEmail = (email: string) => {
+    if (!email) {
+      setEmailError("");
+      setEmailValid(false);
+      return;
+    }
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!regex.test(email)) {
+      setEmailError("Format d'email invalide");
+      setEmailValid(false);
+    } else {
+      setEmailError("");
+      setEmailValid(true);
+    }
+  };
+
+  const validatePhone = (phone: string) => {
+    if (!phone) {
+      setPhoneError("");
+      setPhoneValid(false);
+      return;
+    }
+    // Validation pour format ivoirien: +225 XX XX XX XX XX ou variantes
+    const regex = /^(\+225|00225|225)?\s*\d{2}\s*\d{2}\s*\d{2}\s*\d{2}\s*\d{2}$/;
+    if (!regex.test(phone.replace(/\s/g, ''))) {
+      setPhoneError("Format invalide (ex: +225 XX XX XX XX XX)");
+      setPhoneValid(false);
+    } else {
+      setPhoneError("");
+      setPhoneValid(true);
+    }
+  };
+
+  // Calculer la progression du formulaire
+  const calculateProgress = () => {
+    let completed = 0;
+    let total = 0;
+
+    // Type de membre
+    if (selectedAdhesionType) {
+      completed++;
+    }
+    total++;
+
+    // Organisation
+    if (selectedAdhesionType) {
+      if (orgName) completed++;
+      if (formEmail && emailValid) completed++;
+      total += 2;
+    }
+
+    // Secteur d'activité (sauf institutionnel)
+    if (selectedAdhesionType && selectedAdhesionType !== "institutionnel") {
+      if (selectedFiliere || selectedMainSector) completed++;
+      total++;
+    }
+
+    // Sections spécifiques Institutionnel
+    if (selectedAdhesionType === "institutionnel") {
+      // Axes d'intérêt
+      if (selectedAxesInteret.length > 0) completed++;
+      total++;
+      
+      // Zones d'intervention
+      if (selectedRegions.length > 0) completed++;
+      total++;
+      
+      // Filières prioritaires (optionnel, pas compté dans total mais bonus si rempli)
+      if (selectedFilieresPrioritaires.length > 0) completed++;
+    }
+
+    // Localisation
+    if (selectedAdhesionType) {
+      if (selectedAdhesionType === "institutionnel") {
+        // Pour institutionnel, moins de détails requis
+        if (siegeCommune || siegeRegion) completed++;
+        total++;
+      } else {
+        // Pour autres types
+        if (siegeCommune) completed++;
+        if (siegeRegion) completed++;
+        total += 2;
+      }
+    }
+
+    // Zones d'intervention (pour non-institutionnel)
+    if (selectedAdhesionType && selectedAdhesionType !== "institutionnel") {
+      if (interventionScope === "national" || selectedRegions.length > 0) completed++;
+      total++;
+    }
+
+    // Contact
+    if (selectedAdhesionType) {
+      if (formName) completed++;
+      if (formPhone && phoneValid) completed++;
+      total += 2;
+    }
+
+    // Formule
+    if (selectedBadge) completed++;
+    total++;
+
+    return { completed, total, percentage: Math.round((completed / total) * 100) };
+  };
+
+  // Sauvegarde automatique du brouillon
+  useEffect(() => {
+    if (!isDraftRestored || !isMounted) return;
+
+    const saveTimer = setTimeout(() => {
+      const draft = {
+        selectedAdhesionType,
+        orgName,
+        formEmail,
+        formName,
+        formPosition,
+        formPhone,
+        formMessage,
+        selectedFiliere,
+        selectedSubCategory,
+        selectedActivities,
+        selectedMainSector,
+        siegeCommune,
+        siegeRegion,
+        siegeVille,
+        siegeVillage,
+        interventionScope,
+        selectedRegions,
+        selectedBadge,
+        selectedAxesInteret,
+        hasBureauCI,
+        timestamp: new Date().toISOString(),
+      };
+      
+      try {
+        localStorage.setItem('adhesion-draft', JSON.stringify(draft));
+        setLastSaved(new Date());
+      } catch (error) {
+        console.error('Erreur de sauvegarde:', error);
+      }
+    }, 2000); // Sauvegarde après 2 secondes d'inactivité
+
+    return () => clearTimeout(saveTimer);
+  }, [
+    isDraftRestored,
+    isMounted,
+    selectedAdhesionType,
+    orgName,
+    formEmail,
+    formName,
+    formPosition,
+    formPhone,
+    formMessage,
+    selectedFiliere,
+    selectedSubCategory,
+    selectedActivities,
+    selectedMainSector,
+    siegeCommune,
+    siegeRegion,
+    siegeVille,
+    siegeVillage,
+    interventionScope,
+    selectedRegions,
+    selectedBadge,
+    selectedAxesInteret,
+    hasBureauCI,
+  ]);
+
+  // Restauration du brouillon au chargement
+  useEffect(() => {
+    if (!isMounted) return;
+
+    const draft = localStorage.getItem('adhesion-draft');
+    if (draft && !isDraftRestored) {
+      try {
+        const parsed = JSON.parse(draft);
+        const savedTime = new Date(parsed.timestamp);
+        const hoursSince = (Date.now() - savedTime.getTime()) / (1000 * 60 * 60);
+
+        // Proposer la restauration si moins de 7 jours
+        if (hoursSince < 168) {
+          toast({
+            title: "Brouillon trouvé",
+            description: `Sauvegardé ${hoursSince < 1 ? 'il y a moins d\'une heure' : `il y a ${Math.round(hoursSince)} heure(s)`}`,
+            action: (
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  onClick={() => {
+                    setSelectedAdhesionType(parsed.selectedAdhesionType || "");
+                    setOrgName(parsed.orgName || "");
+                    setFormEmail(parsed.formEmail || "");
+                    setFormName(parsed.formName || "");
+                    setFormPosition(parsed.formPosition || "");
+                    setFormPhone(parsed.formPhone || "");
+                    setFormMessage(parsed.formMessage || "");
+                    setSelectedFiliere(parsed.selectedFiliere || "");
+                    setSelectedSubCategory(parsed.selectedSubCategory || "");
+                    setSelectedActivities(parsed.selectedActivities || []);
+                    setSelectedMainSector(parsed.selectedMainSector || "");
+                    setSiegeCommune(parsed.siegeCommune || "");
+                    setSiegeRegion(parsed.siegeRegion || "");
+                    setSiegeVille(parsed.siegeVille || "");
+                    setSiegeVillage(parsed.siegeVillage || "");
+                    setInterventionScope(parsed.interventionScope || "");
+                    setSelectedRegions(parsed.selectedRegions || []);
+                    setSelectedBadge(parsed.selectedBadge || "");
+                    setSelectedAxesInteret(parsed.selectedAxesInteret || []);
+                    setHasBureauCI(parsed.hasBureauCI || false);
+                    setIsDraftRestored(true);
+                    toast({
+                      title: "Brouillon restauré",
+                      description: "Vous pouvez continuer où vous en étiez",
+                    });
+                  }}
+                >
+                  <Save className="h-4 w-4 mr-1" />
+                  Restaurer
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => {
+                    localStorage.removeItem('adhesion-draft');
+                    setIsDraftRestored(true);
+                  }}
+                >
+                  Ignorer
+                </Button>
+              </div>
+            ),
+            duration: 10000,
+          });
+        } else {
+          // Supprimer les brouillons trop anciens
+          localStorage.removeItem('adhesion-draft');
+        }
+        setIsDraftRestored(true);
+      } catch (error) {
+        console.error('Erreur de restauration:', error);
+        setIsDraftRestored(true);
+      }
+    } else if (!draft) {
+      setIsDraftRestored(true);
+    }
+  }, [isMounted, isDraftRestored, toast]);
+
+  // Smooth scroll vers les sections qui apparaissent
+  // Ne scroller que lorsque le type de membre ET le profil sont sélectionnés
+  useEffect(() => {
+    if (selectedAdhesionType && selectedSubProfile && isMounted) {
+      setTimeout(() => {
+        // Pour les membres institutionnels, scroller vers la section Coordonnées (première section)
+        // Pour les autres types (individuel, entreprise, associatif), scroller vers Zones d'intervention
+        const targetSection = selectedAdhesionType === 'institutionnel' 
+          ? 'coordonnees-section'
+          : 'zones-section';
+        
+        document.getElementById(targetSection)?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      }, 100);
+    }
+  }, [selectedAdhesionType, selectedSubProfile ?? "", isMounted]);
+
   // Gérer la sélection/désélection d'une activité
   const toggleActivity = (activity: string) => {
     if (selectedActivities.includes(activity)) {
@@ -1162,6 +1614,31 @@ const MembersContent = () => {
     } else {
       // Sinon, tout sélectionner
       setSelectedRegions([...allRegions]);
+    }
+  };
+
+  // Tout sélectionner ou tout désélectionner les axes d'intérêt
+  const toggleAllAxes = () => {
+    if (centresInteretApi.length === 0) return;
+    
+    const allAxes = centresInteretApi.map((ci) => ci.name);
+    
+    if (selectedAxesInteret.length === allAxes.length) {
+      setSelectedAxesInteret([]);
+    } else {
+      setSelectedAxesInteret([...allAxes]);
+    }
+  };
+
+  // Tout sélectionner ou tout désélectionner les filières prioritaires
+  const toggleAllFilieres = () => {
+    const availableFilieres = getAvailableFilieres();
+    if (availableFilieres.length === 0) return;
+    
+    if (selectedFilieresPrioritaires.length === availableFilieres.length) {
+      setSelectedFilieresPrioritaires([]);
+    } else {
+      setSelectedFilieresPrioritaires([...availableFilieres]);
     }
   };
 
@@ -1576,10 +2053,11 @@ const MembersContent = () => {
 
   // Initialiser le mélange aléatoire au chargement
   useEffect(() => {
-    if (shuffledMembers.length === 0) {
-      setShuffledMembers(shuffleArray(membersData));
+    if (membersSignature !== shuffledSignatureRef.current) {
+      setShuffledMembers(shuffleArray(membersFromApi));
+      shuffledSignatureRef.current = membersSignature;
     }
-  }, []);
+  }, [membersFromApi, membersSignature]);
 
   // Mélanger les membres toutes les 3 minutes quand le tri est aléatoire
   useEffect(() => {
@@ -1587,13 +2065,13 @@ const MembersContent = () => {
 
     // Mélanger toutes les 3 minutes si le tri est aléatoire
     const interval = setInterval(() => {
-      setShuffledMembers(shuffleArray(membersData));
+      setShuffledMembers(shuffleArray(membersFromApi));
     }, 3 * 60 * 1000); // 3 minutes
 
     return () => clearInterval(interval);
-  }, [sortOrder]);
+  }, [sortOrder, membersFromApi, membersSignature]);
 
-  const filteredMembers = membersData.filter((member) => {
+  const filteredMembers = membersFromApi.filter((member) => {
     // Recherche insensible à la casse
     const searchLower = searchTerm.toLowerCase().trim();
     const matchesSearch =
@@ -1647,7 +2125,7 @@ const MembersContent = () => {
   const paginatedMembers = filteredMembers.slice(startIndex, endIndex);
 
   // Membres récemment inscrits (les 5 derniers de la liste)
-  const recentMembers = [...membersData].slice(-5).reverse();
+  const recentMembers = [...membersFromApi].slice(-5).reverse();
 
   useEffect(() => {
     if (recentMembers.length === 0) return;
@@ -1800,15 +2278,15 @@ const MembersContent = () => {
       return undefined;
     }
 
-    for (const region of regionsApi) {
+        for (const region of regionsApi) {
       if (!region.villes) continue;
-      for (const ville of region.villes) {
+            for (const ville of region.villes) {
         const commune = ville.communes?.find((c) => c.name === communeName);
         if (commune?.id && isUuid(commune.id)) {
           return commune.id;
-        }
-      }
-    }
+              }
+            }
+          }
 
     return undefined;
   };
@@ -1918,13 +2396,23 @@ const MembersContent = () => {
       const centresInteretIds = resolveCentresInteretIds();
       const filieresPrioritairesIds = resolveFilieresPrioritairesIds();
       const regionsInterventionIds = resolveRegionIds(selectedRegions);
+      const adhesionName =
+        selectedAdhesionType === "individuel"
+          ? formName
+          : orgName || formName;
+      const messageWithRepresentative =
+        selectedAdhesionType === "individuel" || !formName
+          ? formMessage || undefined
+          : `${formMessage ? `${formMessage}\n\n` : ""}Représentant: ${formName}`;
+      const companyName =
+        selectedAdhesionType === "individuel" ? undefined : orgName || undefined;
 
       const adhesionPayload = {
-        name: formName,
+        name: adhesionName,
         position: formPosition || undefined,
         email: formEmail,
         phone: formPhone,
-        message: formMessage || undefined,
+        message: messageWithRepresentative,
         typeMembreId: selectedTypeMembre.id,
         profilId: resolveProfilId(),
         abonnementId: resolveAbonnementId(),
@@ -1953,9 +2441,7 @@ const MembersContent = () => {
         organisationName: hasAffiliation
           ? selectedOrganisation || undefined
           : undefined,
-        customOrganisationName: hasAffiliation
-          ? customOrganisationName || undefined
-          : undefined,
+        customOrganisationName: companyName,
         isCompetitionSubcontractor:
           isCompetitionSubcontractor ?? undefined,
         hasFinancingProject: hasFinancingProject ?? undefined,
@@ -1974,6 +2460,7 @@ const MembersContent = () => {
       setSelectedBadge("");
       setSelectedMainSector("");
       setSelectedFiliere("");
+      setOrgName("");
       setFormName("");
       setFormPosition("");
       setFormEmail("");
@@ -2036,6 +2523,54 @@ const MembersContent = () => {
     return sectorColors[sector] || "from-gray-500 to-gray-700";
   };
 
+  const getMemberProfileColor = (member: Member) => {
+    const profile = (member.profileLabel || "").toLowerCase();
+
+    if (
+      profile.includes("étudiant") ||
+      profile.includes("etudiant") ||
+      profile.includes("jeune")
+    ) {
+      return "from-cpu-green to-emerald-600";
+    }
+    if (profile.includes("startup") || profile.includes("entrepreneur")) {
+      return "from-cpu-orange to-orange-600";
+    }
+    if (profile.includes("micro") || profile.includes("petite")) {
+      return "from-amber-500 to-amber-700";
+    }
+    if (profile.includes("moyenne")) {
+      return "from-slate-600 to-slate-800";
+    }
+    if (profile.includes("banque") || profile.includes("assureur")) {
+      return "from-indigo-500 to-indigo-700";
+    }
+    if (profile.includes("fédération") || profile.includes("federation")) {
+      return "from-cpu-green to-emerald-700";
+    }
+    if (profile.includes("coopérative") || profile.includes("cooperative")) {
+      return "from-cpu-orange to-orange-700";
+    }
+    if (profile.includes("association")) {
+      return "from-teal-500 to-teal-700";
+    }
+    if (profile.includes("groupement") || profile.includes("gie")) {
+      return "from-purple-500 to-purple-700";
+    }
+
+    switch (member.memberType) {
+      case "individuel":
+        return "from-cpu-green to-emerald-600";
+      case "associatif":
+        return "from-cpu-orange to-orange-700";
+      case "institutionnel":
+        return "from-slate-600 to-slate-800";
+      case "entreprise":
+      default:
+        return "from-amber-500 to-amber-700";
+    }
+  };
+
   // Fonction pour obtenir l'icône SVG par secteur
   const getSectorIcon = (sector: string) => {
     const sectorIcons: { [key: string]: React.ReactNode } = {
@@ -2075,6 +2610,99 @@ const MembersContent = () => {
         <Building2 className="h-16 w-16 text-white opacity-90" />
       )
     );
+  };
+
+  const getMemberIcon = (member: Member) => {
+    // Récupérer le nom de la filière depuis l'API
+    let filiereName = '';
+    if (member.filiereId && secteursApi && Array.isArray(secteursApi)) {
+      for (const secteur of secteursApi) {
+        if (secteur.filieres && Array.isArray(secteur.filieres)) {
+          const filiere = secteur.filieres.find((f: any) => f.id === member.filiereId);
+          if (filiere) {
+            filiereName = filiere.name.toLowerCase();
+            break;
+          }
+        }
+      }
+    }
+
+    // Mapper les filières aux icônes sectorielles
+    if (filiereName) {
+      // BTP & Construction
+      if (filiereName.includes('btp') || filiereName.includes('construction') || 
+          filiereName.includes('bâtiment') || filiereName.includes('batiment') ||
+          filiereName.includes('génie civil') || filiereName.includes('genie civil')) {
+        return <IconBTP className="h-10 w-10 text-cpu-green" />;
+      }
+      // Commerce
+      if (filiereName.includes('commerce') || filiereName.includes('distribution') ||
+          filiereName.includes('vente') || filiereName.includes('négoce') || 
+          filiereName.includes('negoce')) {
+        return <IconCommerce className="h-10 w-10 text-cpu-green" />;
+      }
+      // Industrie
+      if (filiereName.includes('industrie') || filiereName.includes('industriel') ||
+          filiereName.includes('manufacture') || filiereName.includes('production') ||
+          filiereName.includes('fabrication')) {
+        return <IconIndustrie className="h-10 w-10 text-cpu-green" />;
+      }
+      // Services
+      if (filiereName.includes('service') || filiereName.includes('conseil') ||
+          filiereName.includes('consulting') || filiereName.includes('assistance')) {
+        return <IconServices className="h-10 w-10 text-cpu-green" />;
+      }
+      // Technologie & Digital
+      if (filiereName.includes('technologie') || filiereName.includes('digital') ||
+          filiereName.includes('numérique') || filiereName.includes('numerique') ||
+          filiereName.includes('informatique') || filiereName.includes('tech') ||
+          filiereName.includes('logiciel') || filiereName.includes('software')) {
+        return <IconTechnologie className="h-10 w-10 text-cpu-green" />;
+      }
+      // Transport & Logistique
+      if (filiereName.includes('transport') || filiereName.includes('logistique') ||
+          filiereName.includes('livraison') || filiereName.includes('fret')) {
+        return <IconTransport className="h-10 w-10 text-cpu-green" />;
+      }
+      // Tourisme & Hôtellerie
+      if (filiereName.includes('tourisme') || filiereName.includes('hôtel') ||
+          filiereName.includes('hotel') || filiereName.includes('hospitalité') ||
+          filiereName.includes('hospitalite') || filiereName.includes('voyage')) {
+        return <IconTourisme className="h-10 w-10 text-cpu-green" />;
+      }
+      // Santé
+      if (filiereName.includes('santé') || filiereName.includes('sante') ||
+          filiereName.includes('médical') || filiereName.includes('medical') ||
+          filiereName.includes('pharmaceutique') || filiereName.includes('clinique')) {
+        return <IconSante className="h-10 w-10 text-cpu-green" />;
+      }
+      // Énergie
+      if (filiereName.includes('énergie') || filiereName.includes('energie') ||
+          filiereName.includes('électrique') || filiereName.includes('electrique') ||
+          filiereName.includes('solaire') || filiereName.includes('renouvelable')) {
+        return <IconEnergie className="h-10 w-10 text-cpu-green" />;
+      }
+      // Agriculture
+      if (filiereName.includes('agriculture') || filiereName.includes('agricole') ||
+          filiereName.includes('agro') || filiereName.includes('agroalimentaire') ||
+          filiereName.includes('élevage') || filiereName.includes('elevage') ||
+          filiereName.includes('culture') || filiereName.includes('plantation')) {
+        return <IconAgriculture className="h-10 w-10 text-cpu-green" />;
+      }
+    }
+
+    // Fallback selon le type de membre si pas de filière
+    switch (member.memberType) {
+      case "individuel":
+        return <Users className="h-10 w-10 text-cpu-green" />;
+      case "associatif":
+        return <Handshake className="h-10 w-10 text-cpu-green" />;
+      case "institutionnel":
+        return <Building className="h-10 w-10 text-cpu-green" />;
+      case "entreprise":
+      default:
+        return <Building2 className="h-10 w-10 text-cpu-green" />;
+    }
   };
 
   // Fonction pour obtenir l'icône et la couleur du badge
@@ -2550,134 +3178,207 @@ const MembersContent = () => {
                 </div>
                 {recentMembers.length > 0 ? (
                   <div className="relative">
-                    <div className="border border-gray-200 rounded-lg p-6 md:p-8 md:pl-16 md:pr-16 transition-all overflow-hidden bg-white">
-                      <div
-                        className={`flex flex-col md:flex-row gap-6 md:gap-8 ${
-                          featuredIndex % 2 === 1 ? "md:flex-row-reverse" : ""
-                        }`}
-                      >
-                        <div className="flex-shrink-0 bg-[#f0f4f8] rounded-lg w-full md:w-64 h-40 md:h-48 flex items-center justify-center overflow-hidden relative">
-                          {shouldShowImage(recentMembers[featuredIndex].id) &&
-                          recentMembers[featuredIndex].logoUrl ? (
-                            <Image
-                              src={recentMembers[featuredIndex].logoUrl!}
-                              alt={recentMembers[featuredIndex].name}
-                              fill
-                              className="object-cover"
-                              sizes="(max-width: 768px) 100vw, 256px"
-                              onError={() =>
-                                handleImageError(
-                                  recentMembers[featuredIndex].id
-                                )
-                              }
-                            />
-                          ) : (
-                            <div
-                              className={`absolute inset-0 bg-gradient-to-br ${getSectorColor(
-                                recentMembers[featuredIndex].sector
-                              )} flex items-center justify-center`}
-                            >
-                              <div className="text-center text-white px-4">
-                                <p className="text-sm font-semibold line-clamp-2">
-                                  {recentMembers[featuredIndex].name}
-                                </p>
-                              </div>
+                    <div className="border-2 border-gray-200 rounded-xl transition-all duration-300 bg-white flex flex-col md:flex-row hover:shadow-2xl hover:scale-[1.01] hover:border-cpu-orange cursor-pointer relative overflow-hidden">
+                      {/* Barre latérale orange */}
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-cpu-orange hover:w-2 transition-all duration-300"></div>
+
+                      {/* Image avec icône */}
+                      <div className="member-image bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 w-full md:w-48 h-48 md:h-auto flex-shrink-0 flex items-center justify-center overflow-hidden relative group/image">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-[85%] h-[85%] rounded-2xl bg-cpu-orange/10 flex items-center justify-center group-hover/image:bg-cpu-orange/20 transition-all duration-300 group-hover/image:scale-105 group-hover/image:rotate-6">
+                            <div className="scale-90 text-cpu-orange">
+                              {getMemberIcon(recentMembers[featuredIndex])}
                             </div>
-                          )}
+                          </div>
                         </div>
-                        <div className="flex-1 flex flex-col justify-between">
-                          <div>
-                            <div className="flex items-center flex-wrap gap-2 mb-4">
-                              <Badge className="bg-green-600 text-white text-xs transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in">
-                                Nouveau
-                              </Badge>
-                              {/* Badge secteur principal */}
-                              <Badge className="text-xs bg-white text-gray-700 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in">
-                                {recentMembers[featuredIndex].sector}
-                              </Badge>
-                              {/* Badges sous-secteurs */}
-                              {(() => {
-                                try {
-                                  if (!recentMembers[featuredIndex]?.sector)
-                                    return null;
-                                  const subSectors =
-                                    getSubSectorsForMemberSector(
-                                      recentMembers[featuredIndex].sector
-                                    );
-                                  if (!subSectors || subSectors.length === 0)
-                                    return null;
+                      </div>
 
-                                  const visibleSubSectors = subSectors.slice(
-                                    0,
-                                    2
-                                  );
-                                  const remainingCount =
-                                    subSectors.length -
-                                    visibleSubSectors.length;
-
-                                  return (
-                                    <>
-                                      {visibleSubSectors.map(
-                                        (subSector, subIndex) => {
-                                          // Alternance orange/vert basée sur l'index
-                                          const isOrange = subIndex % 2 === 0;
-                                          const badgeClass = isOrange
-                                            ? "text-xs bg-cpu-orange/10 text-cpu-orange border-cpu-orange/30 transition-all duration-300 hover:scale-105 hover:shadow-md hover:bg-cpu-orange/20 animate-fade-in"
-                                            : "text-xs bg-cpu-green/10 text-cpu-green border-cpu-green/30 transition-all duration-300 hover:scale-105 hover:shadow-md hover:bg-cpu-green/20 animate-fade-in";
-
-                                          return (
-                                            <Badge
-                                              key={`recent-${featuredIndex}-sub-${subIndex}`}
-                                              className={badgeClass}
-                                              style={{
-                                                animationDelay: `${
-                                                  (subIndex + 1) * 0.02
-                                                }s`,
-                                              }}
-                                            >
-                                              {subSector}
-                                            </Badge>
-                                          );
-                                        }
-                                      )}
-                                      {remainingCount > 0 && (
-                                        <Badge
-                                          className="text-xs bg-cpu-green text-white border-cpu-green transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in"
-                                          style={{ animationDelay: `0.06s` }}
-                                        >
-                                          +{remainingCount}
-                                        </Badge>
-                                      )}
-                                    </>
-                                  );
-                                } catch (error) {
-                                  console.warn(
-                                    "Erreur lors de l'affichage des sous-secteurs:",
-                                    error
-                                  );
-                                  return null;
-                                }
-                              })()}
-                            </div>
-                            <h3 className="text-2xl font-bold text-[#221F1F] mb-4">
+                      {/* Contenu principal */}
+                      <div className="flex-1 p-5 md:p-6 flex flex-col min-w-0">
+                        {/* Header avec nom et badge */}
+                        <div className="mb-4">
+                          <div className="flex items-start justify-between gap-3 mb-3">
+                            <h3 className="text-xl md:text-2xl font-bold text-[#221F1F] hover:text-cpu-orange transition-colors line-clamp-2">
                               {recentMembers[featuredIndex].name}
                             </h3>
-                            <p className="text-[#6F6F6F] text-base leading-relaxed mb-6">
-                              {recentMembers[featuredIndex].description}
-                            </p>
+                            <Badge className="bg-green-600 text-white text-xs whitespace-nowrap px-2.5 py-1">
+                              Nouveau
+                            </Badge>
                           </div>
-                          <div className="flex items-center gap-6">
-                            <span className="flex items-center text-sm text-[#6F6F6F]">
-                              <MapPin className="h-4 w-4 mr-2" />
-                              {recentMembers[featuredIndex].region}
-                            </span>
-                            {recentMembers[featuredIndex].website && (
+
+                          {/* Localisation */}
+                          <div className="flex items-start text-sm text-[#6F6F6F] mb-3">
+                            <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-cpu-orange mt-0.5" />
+                            <span className="break-words">{recentMembers[featuredIndex].fullAddress || recentMembers[featuredIndex].region}</span>
+                          </div>
+
+                          {/* Filière et Sous-filière */}
+                          <div className="grid grid-cols-2 gap-3 mb-3">
+                            <div className="rounded-lg p-2.5 bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 transition-all">
+                              <div className="text-xs text-cpu-orange font-medium mb-1">Filière</div>
+                              {(() => {
+                                let filiereName = '';
+                                if (recentMembers[featuredIndex].filiereId && secteursApi && Array.isArray(secteursApi)) {
+                                  for (const secteur of secteursApi) {
+                                    if (secteur.filieres && Array.isArray(secteur.filieres)) {
+                                      const filiere = secteur.filieres.find((f: any) => f.id === recentMembers[featuredIndex].filiereId);
+                                      if (filiere) {
+                                        filiereName = filiere.name;
+                                        break;
+                                      }
+                                    }
+                                  }
+                                }
+                                return (
+                                  <div className="text-sm font-semibold text-[#221F1F] line-clamp-1">
+                                    {filiereName || recentMembers[featuredIndex].sector}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+
+                            <div className="rounded-lg p-2.5 bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 transition-all">
+                              <div className="text-xs text-cpu-orange font-medium mb-1">Sous Filière</div>
+                              {(() => {
+                                let sousFiliereName = '';
+                                if (recentMembers[featuredIndex].sousFiliereId && secteursApi && Array.isArray(secteursApi)) {
+                                  for (const secteur of secteursApi) {
+                                    if (secteur.filieres && Array.isArray(secteur.filieres)) {
+                                      for (const filiere of secteur.filieres) {
+                                        if (filiere.sousFiliere && Array.isArray(filiere.sousFiliere)) {
+                                          const sf = filiere.sousFiliere.find((sf: any) => sf.id === recentMembers[featuredIndex].sousFiliereId);
+                                          if (sf) {
+                                            sousFiliereName = sf.name;
+                                            break;
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                                return (
+                                  <div className="text-sm font-semibold text-[#221F1F] line-clamp-1">
+                                    {sousFiliereName || '-'}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          </div>
+
+                          {/* Activités */}
+                          <div className="mb-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Briefcase className="h-3.5 w-3.5 text-cpu-orange" />
+                              <span className="text-xs text-cpu-orange font-semibold">Activités</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {(() => {
+                                let activitesNames: string[] = [];
+                                if (recentMembers[featuredIndex].activitesIds && recentMembers[featuredIndex].activitesIds.length > 0 && secteursApi && Array.isArray(secteursApi)) {
+                                  for (const secteur of secteursApi) {
+                                    if (secteur.filieres && Array.isArray(secteur.filieres)) {
+                                      for (const filiere of secteur.filieres) {
+                                        if (filiere.sousFiliere && Array.isArray(filiere.sousFiliere)) {
+                                          for (const sf of filiere.sousFiliere) {
+                                            if (sf.activites && Array.isArray(sf.activites)) {
+                                              for (const act of sf.activites) {
+                                                if (recentMembers[featuredIndex].activitesIds.includes(act.id)) {
+                                                  activitesNames.push(act.name);
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                                
+                                const visibleActivites = activitesNames.slice(0, 4);
+                                const remainingCount = activitesNames.length - visibleActivites.length;
+                                
+                                return activitesNames.length > 0 ? (
+                                  <>
+                                    {visibleActivites.map((activite, idx) => (
+                                      <Badge 
+                                        key={idx} 
+                                        className="text-xs bg-cpu-orange text-white font-medium px-2.5 py-1 rounded-md hover:bg-white hover:text-cpu-orange hover:border-cpu-orange border-2 border-cpu-orange transition-all hover:scale-105"
+                                      >
+                                        {activite}
+                                      </Badge>
+                                    ))}
+                                    {remainingCount > 0 && (
+                                      <Badge className="text-xs bg-cpu-orange text-white font-medium px-2.5 py-1 rounded-md hover:bg-white hover:text-cpu-orange hover:border-cpu-orange border-2 border-cpu-orange transition-all hover:scale-105">
+                                        +{remainingCount}
+                                      </Badge>
+                                    )}
+                                  </>
+                                ) : (
+                                  <span className="text-xs text-gray-400">Aucune activité</span>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Description */}
+                        <div className="mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Users className="h-3.5 w-3.5 text-cpu-orange" />
+                            <span className="text-xs text-cpu-orange font-semibold">À propos</span>
+                          </div>
+                          <p className="text-sm text-[#6F6F6F] leading-relaxed line-clamp-2">
+                            {recentMembers[featuredIndex].description}
+                          </p>
+                        </div>
+
+                        {/* Boutons d'action */}
+                        <div className="mt-auto">
+                          <div className="grid grid-cols-2 gap-3">
+                            {recentMembers[featuredIndex].email ? (
+                              <a
+                                href={`mailto:${recentMembers[featuredIndex].email}`}
+                                className="w-full"
+                              >
+                                <Button
+                                  className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-lg"
+                                >
+                                  <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
+                                  <Globe className="h-4 w-4 mr-2" />
+                                  Contacter
+                                </Button>
+                              </a>
+                            ) : (
+                              <Button
+                                disabled
+                                className="w-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed"
+                              >
+                                <Globe className="h-4 w-4 mr-2" />
+                                Contacter
+                              </Button>
+                            )}
+                            
+                            {recentMembers[featuredIndex].phone ? (
+                              <a
+                                href={`tel:${recentMembers[featuredIndex].phone}`}
+                                className="w-full"
+                              >
+                                <Button
+                                  variant="outline"
+                                  className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                                >
+                                  <span className="mr-2">📞</span>
+                                  Appeler
+                                </Button>
+                              </a>
+                            ) : (
                               <Button
                                 variant="outline"
-                                size="sm"
-                                className="text-cpu-orange border-cpu-orange hover:border-cpu-orange hover:bg-cpu-orange hover:text-white active:bg-cpu-orange active:text-white transition-all"
+                                disabled
+                                className="w-full border-gray-300 text-gray-400 font-semibold cursor-not-allowed"
                               >
-                                Voir le site
+                                <span className="mr-2">📞</span>
+                                Appeler
                               </Button>
                             )}
                           </div>
@@ -2755,7 +3456,7 @@ const MembersContent = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tous les secteurs</SelectItem>
-                      {sectors.map((sector) => (
+                      {directorySectors.map((sector) => (
                         <SelectItem key={sector} value={sector}>
                           {sector}
                         </SelectItem>
@@ -2771,7 +3472,7 @@ const MembersContent = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Toutes les régions</SelectItem>
-                      {regions.map((region) => (
+                      {directoryRegions.map((region) => (
                         <SelectItem key={region} value={region}>
                           {region}
                         </SelectItem>
@@ -2830,7 +3531,7 @@ const MembersContent = () => {
                               <SelectItem value="all">
                                 Tous les secteurs
                               </SelectItem>
-                              {sectors.map((sector) => (
+                              {directorySectors.map((sector) => (
                                 <SelectItem key={sector} value={sector}>
                                   {sector}
                                 </SelectItem>
@@ -2851,7 +3552,7 @@ const MembersContent = () => {
                               <SelectItem value="all">
                                 Toutes les régions
                               </SelectItem>
-                              {regions.map((region) => (
+                              {directoryRegions.map((region) => (
                                 <SelectItem key={region} value={region}>
                                   {region}
                                 </SelectItem>
@@ -3069,157 +3770,231 @@ const MembersContent = () => {
                 {/* Vue Grille */}
                 {viewMode === "grid" ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                    {isLoading
-                      ? // Skeleton Loading
-                        Array.from({ length: membersPerPage }).map(
-                          (_, index) => (
-                            <MemberCardSkeleton key={`skeleton-${index}`} />
-                          )
+                    {isLoadingMembers ? (
+                      Array.from({ length: membersPerPage }).map(
+                        (_, index) => (
+                          <MemberCardSkeleton key={`skeleton-${index}`} />
                         )
-                      : paginatedMembers.map((member, index) => (
+                      )
+                    ) : (
+                      paginatedMembers.map((member, index) => (
                           <div
                             key={member.id}
-                            className={`member-card border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 bg-white flex flex-col animate-fade-in-up hover:shadow-xl hover:-translate-y-2 hover:scale-[1.02] cursor-pointer`}
+                            className={`member-card group border border-gray-200 rounded-2xl transition-all duration-300 bg-white grid grid-rows-[auto_auto_auto_auto_auto_auto] animate-fade-in-up hover:shadow-2xl hover:scale-[1.02] hover:border-cpu-green/30 cursor-pointer relative overflow-hidden`}
                             style={{
                               animationDelay: `${0.4 + index * 0.1}s`,
                               opacity: 0,
                             }}
                           >
-                            {/* Card Image/Icon Area */}
-                            <div className="member-image bg-gradient-to-br from-[#f0f4f8] to-[#e8ecf1] h-40 flex items-center justify-center border-b border-gray-200 overflow-hidden relative group">
-                              {shouldShowImage(member.id) && member.logoUrl ? (
-                                <Image
-                                  src={member.logoUrl}
-                                  alt={member.name}
-                                  fill
-                                  className="object-cover"
-                                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                                  onError={() => handleImageError(member.id)}
-                                />
-                              ) : (
-                                <div
-                                  className={`absolute inset-0 bg-gradient-to-br ${getSectorColor(
-                                    member.sector
-                                  )} flex items-center justify-center p-4`}
-                                >
-                                  {getSectorIcon(member.sector)}
+                            {/* Header avec icône, nom et localisation - ROW 1 */}
+                            <div className="p-6 pb-4 min-h-[140px] flex flex-col">
+                              <div className="flex items-start gap-4 mb-3">
+                                {/* Icône sectorielle avec animation */}
+                                <div className="flex-shrink-0">
+                                  <div className="w-16 h-16 rounded-xl bg-cpu-green/10 flex items-center justify-center group-hover:bg-cpu-green/20 transition-all duration-300 group-hover:rotate-6">
+                                    <div className="scale-75 text-cpu-green">
+                                      {getMemberIcon(member)}
+                                    </div>
+                                  </div>
                                 </div>
-                              )}
+
+                                {/* Nom et localisation */}
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-xl font-bold text-[#221F1F] mb-2 line-clamp-2 min-h-[56px] group-hover:text-cpu-green transition-colors">
+                                    {member.name}
+                                  </h3>
+                                  <div className="flex items-start text-sm text-[#6F6F6F] mb-1">
+                                    <MapPin className="h-4 w-4 mr-1.5 flex-shrink-0 text-cpu-orange mt-0.5" />
+                                    <span className="break-words">{member.fullAddress || member.region}</span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
 
-                            {/* Card Content */}
-                            <div className="p-6 flex flex-col flex-1">
-                              <div className="mb-4 flex flex-wrap gap-2 items-center">
-                                {/* Badge secteur principal */}
-                                <Badge
-                                  className="text-xs bg-white text-gray-700 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in"
-                                  style={{ animationDelay: `${index * 0.05}s` }}
-                                >
-                                  {member.sector}
-                                </Badge>
-                                {/* Badges sous-secteurs */}
-                                {(() => {
-                                  try {
-                                    const subSectors =
-                                      getSubSectorsForMemberSector(
-                                        member.sector
-                                      );
-                                    if (!subSectors || subSectors.length === 0)
-                                      return null;
-
-                                    const visibleSubSectors = subSectors.slice(
-                                      0,
-                                      2
-                                    );
-                                    const remainingCount =
-                                      subSectors.length -
-                                      visibleSubSectors.length;
-
-                                    return (
-                                      <>
-                                        {visibleSubSectors.map(
-                                          (subSector, subIndex) => {
-                                            // Alternance orange/vert basée sur l'index
-                                            const isOrange = subIndex % 2 === 0;
-                                            const badgeClass = isOrange
-                                              ? "text-xs bg-cpu-orange/10 text-cpu-orange border-cpu-orange/30 transition-all duration-300 hover:scale-105 hover:shadow-md hover:bg-cpu-orange/20 animate-fade-in"
-                                              : "text-xs bg-cpu-green/10 text-cpu-green border-cpu-green/30 transition-all duration-300 hover:scale-105 hover:shadow-md hover:bg-cpu-green/20 animate-fade-in";
-
-                                            return (
-                                              <Badge
-                                                key={`${member.id}-sub-${subIndex}`}
-                                                className={badgeClass}
-                                                style={{
-                                                  animationDelay: `${
-                                                    index * 0.05 +
-                                                    (subIndex + 1) * 0.02
-                                                  }s`,
-                                                }}
-                                              >
-                                                {subSector}
-                                              </Badge>
-                                            );
+                            {/* ROW 2 */}
+                            <div className="px-6 pb-4 min-h-[110px]">
+                              <div className="grid grid-cols-2 gap-3">
+                                {/* Filière */}
+                                <div className="border border-gray-200 rounded-lg p-3 bg-gradient-to-br from-gray-50/50 to-gray-100/30 group-hover:border-cpu-green/30 transition-all">
+                                  <div className="text-xs text-gray-500 font-medium mb-1">Filière</div>
+                                  {(() => {
+                                    let filiereName = '';
+                                    if (member.filiereId && secteursApi && Array.isArray(secteursApi)) {
+                                      for (const secteur of secteursApi) {
+                                        if (secteur.filieres && Array.isArray(secteur.filieres)) {
+                                          const filiere = secteur.filieres.find((f: any) => f.id === member.filiereId);
+                                          if (filiere) {
+                                            filiereName = filiere.name;
+                                            break;
                                           }
-                                        )}
-                                        {remainingCount > 0 && (
-                                          <Badge
-                                            className="text-xs bg-cpu-green text-white border-cpu-green transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in"
-                                            style={{
-                                              animationDelay: `${
-                                                index * 0.05 + 0.06
-                                              }s`,
-                                            }}
-                                          >
-                                            +{remainingCount}
-                                          </Badge>
-                                        )}
-                                      </>
+                                        }
+                                      }
+                                    }
+                                    return (
+                                      <div className="text-sm font-semibold text-[#221F1F] line-clamp-2 min-h-[40px]">
+                                        {filiereName || member.sector}
+                                      </div>
                                     );
-                                  } catch (error) {
-                                    console.warn(
-                                      "Erreur lors de l'affichage des sous-secteurs:",
-                                      error
+                                  })()}
+                                </div>
+
+                                {/* Sous-filière */}
+                                <div className="border border-gray-200 rounded-lg p-3 bg-gradient-to-br from-gray-50/50 to-gray-100/30 group-hover:border-cpu-green/30 transition-all">
+                                  <div className="text-xs text-gray-500 font-medium mb-1">Sous Filière</div>
+                                  {(() => {
+                                    let sousFiliereName = '';
+                                    if (member.sousFiliereId && secteursApi && Array.isArray(secteursApi)) {
+                                      for (const secteur of secteursApi) {
+                                        if (secteur.filieres && Array.isArray(secteur.filieres)) {
+                                          for (const filiere of secteur.filieres) {
+                                            if (filiere.sousFiliere && Array.isArray(filiere.sousFiliere)) {
+                                              const sf = filiere.sousFiliere.find((sf: any) => sf.id === member.sousFiliereId);
+                                              if (sf) {
+                                                sousFiliereName = sf.name;
+                                                break;
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                    return (
+                                      <div className="text-sm font-semibold text-[#221F1F] line-clamp-2 min-h-[40px]">
+                                        {sousFiliereName || '-'}
+                                      </div>
                                     );
-                                    return null;
+                                  })()}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Section Activités - ROW 3 */}
+                            <div className="px-6 pb-4 min-h-[100px]">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Briefcase className="h-4 w-4 text-gray-500" />
+                                <span className="text-xs text-gray-500 font-medium">Activités</span>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {(() => {
+                                  let activitesNames: string[] = [];
+                                  if (member.activitesIds && member.activitesIds.length > 0 && secteursApi && Array.isArray(secteursApi)) {
+                                    for (const secteur of secteursApi) {
+                                      if (secteur.filieres && Array.isArray(secteur.filieres)) {
+                                        for (const filiere of secteur.filieres) {
+                                          if (filiere.sousFiliere && Array.isArray(filiere.sousFiliere)) {
+                                            for (const sf of filiere.sousFiliere) {
+                                              if (sf.activites && Array.isArray(sf.activites)) {
+                                                for (const act of sf.activites) {
+                                                  if (member.activitesIds.includes(act.id)) {
+                                                    activitesNames.push(act.name);
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
                                   }
+                                  
+                                  const visibleActivites = activitesNames.slice(0, 3);
+                                  const remainingCount = activitesNames.length - visibleActivites.length;
+                                  
+                                  return activitesNames.length > 0 ? (
+                                    <>
+                                      {visibleActivites.map((activite, idx) => (
+                                        <Badge 
+                                          key={idx} 
+                                          className="text-xs bg-cpu-green text-white font-medium px-3 py-1.5 rounded-md hover:bg-white hover:text-cpu-green hover:border-cpu-green border-2 border-cpu-green transition-all hover:scale-105"
+                                        >
+                                          {activite}
+                                        </Badge>
+                                      ))}
+                                      {remainingCount > 0 && (
+                                        <Badge className="text-xs bg-cpu-green text-white font-medium px-3 py-1.5 rounded-md hover:bg-white hover:text-cpu-green hover:border-cpu-green border-2 border-cpu-green transition-all hover:scale-105">
+                                          +{remainingCount}
+                                        </Badge>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <span className="text-xs text-gray-400">Aucune activité</span>
+                                  );
                                 })()}
                               </div>
+                            </div>
 
-                              <h3 className="text-lg font-bold text-[#221F1F] mb-3 line-clamp-2">
-                                {member.name}
-                              </h3>
-
-                              <p className="text-sm text-[#6F6F6F] mb-6 flex-1 line-clamp-3 leading-relaxed">
+                            {/* Section À propos - ROW 4 */}
+                            <div className="px-6 pb-4 min-h-[100px]">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Users className="h-4 w-4 text-gray-500" />
+                                <span className="text-xs text-gray-500 font-medium">À propos</span>
+                              </div>
+                              <p className="text-sm text-[#6F6F6F] leading-relaxed line-clamp-3 min-h-[60px]">
                                 {member.description}
                               </p>
+                            </div>
 
-                              <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
-                                <span className="flex items-center text-xs text-[#6F6F6F]">
-                                  <MapPin className="h-3 w-3 mr-1" />
-                                  {member.region}
-                                </span>
-                                {member.website && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-cpu-orange border border-transparent hover:border-cpu-orange hover:text-cpu-orange hover:bg-orange-50 active:bg-cpu-orange active:text-white active:border-cpu-orange transition-all"
+                            {/* Boutons d'action - ROW 5 */}
+                            <div className="px-6 pb-6 mt-auto">
+                              <div className="grid grid-cols-2 gap-3">
+                                {member.email ? (
+                                  <a
+                                    href={`mailto:${member.email}`}
+                                    className="w-full"
                                   >
-                                    <Globe className="h-4 w-4 mr-1" />
-                                    Voir
+                                    <Button
+                                      className="w-full bg-cpu-green hover:bg-white hover:text-cpu-green text-white hover:border-cpu-green border-2 border-cpu-green font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-lg"
+                                    >
+                                      <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
+                                      <Globe className="h-4 w-4 mr-2" />
+                                      Contacter
+                                    </Button>
+                                  </a>
+                                ) : (
+                                  <Button
+                                    disabled
+                                    className="w-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed"
+                                  >
+                                    <Globe className="h-4 w-4 mr-2" />
+                                    Contacter
+                                  </Button>
+                                )}
+                                
+                                {member.phone ? (
+                                  <a
+                                    href={`tel:${member.phone}`}
+                                    className="w-full"
+                                  >
+                                    <Button
+                                      variant="outline"
+                                      className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                                    >
+                                      <span className="mr-2">📞</span>
+                                      Appeler
+                                    </Button>
+                                  </a>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    disabled
+                                    className="w-full border-gray-300 text-gray-400 font-semibold cursor-not-allowed"
+                                  >
+                                    <span className="mr-2">📞</span>
+                                    Appeler
                                   </Button>
                                 )}
                               </div>
                             </div>
                           </div>
-                        ))}
+                        ))
+                      )}
                   </div>
                 ) : (
                   /* Vue Liste */
                   <div className="space-y-4">
-                    {isLoading
-                      ? // Skeleton Loading pour liste
-                        Array.from({ length: membersPerPage }).map(
-                          (_, index) => (
+                    {isLoadingMembers ? (
+                      Array.from({ length: membersPerPage }).map(
+                        (_, index) => (
                             <div
                               key={`skeleton-list-${index}`}
                               className="border border-gray-200 rounded-lg bg-white flex flex-row animate-pulse"
@@ -3234,151 +4009,234 @@ const MembersContent = () => {
                             </div>
                           )
                         )
-                      : paginatedMembers.map((member, index) => (
+                      ) : (
+                        paginatedMembers.map((member, index) => (
                           <div
                             key={member.id}
-                            className={`member-card border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 bg-white flex flex-row animate-fade-in-up hover:shadow-lg hover:border-cpu-orange/30 cursor-pointer`}
+                            className={`member-card group border-2 border-gray-200 rounded-xl transition-all duration-300 bg-white flex flex-col md:flex-row animate-fade-in-up hover:shadow-2xl hover:scale-[1.01] hover:border-cpu-orange cursor-pointer relative overflow-hidden`}
                             style={{
                               animationDelay: `${0.4 + index * 0.05}s`,
                               opacity: 0,
                             }}
                           >
-                            {/* Image compacte */}
-                            <div className="member-image bg-gradient-to-br from-[#f0f4f8] to-[#e8ecf1] w-32 md:w-40 flex-shrink-0 flex items-center justify-center border-r border-gray-200 overflow-hidden relative group">
-                              {shouldShowImage(member.id) && member.logoUrl ? (
-                                <Image
-                                  src={member.logoUrl}
-                                  alt={member.name}
-                                  fill
-                                  className="object-cover"
-                                  sizes="(max-width: 768px) 128px, 160px"
-                                  onError={() => handleImageError(member.id)}
-                                />
-                              ) : (
-                                <div
-                                  className={`absolute inset-0 bg-gradient-to-br ${getSectorColor(
-                                    member.sector
-                                  )} flex items-center justify-center p-2`}
-                                >
-                                  <div className="scale-75">
-                                    {getSectorIcon(member.sector)}
+                            {/* Barre latérale orange */}
+                            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-cpu-orange group-hover:w-2 transition-all duration-300"></div>
+
+                            {/* Image avec icône */}
+                            <div className="member-image bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 w-full md:w-48 h-48 md:h-auto flex-shrink-0 flex items-center justify-center overflow-hidden relative group/image">
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-[85%] h-[85%] rounded-2xl bg-cpu-orange/10 flex items-center justify-center group-hover/image:bg-cpu-orange/20 transition-all duration-300 group-hover/image:scale-105 group-hover/image:rotate-6">
+                                  <div className="scale-90 text-cpu-orange">
+                                    {getMemberIcon(member)}
                                   </div>
                                 </div>
-                              )}
+                              </div>
                             </div>
 
-                            {/* Contenu liste */}
-                            <div className="p-4 md:p-6 flex flex-col flex-1 min-w-0">
-                              <div className="flex items-start justify-between gap-4 mb-3">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center flex-wrap gap-2 mb-2">
-                                    {/* Badge secteur principal */}
-                                    <Badge
-                                      className="text-xs bg-white text-gray-700 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in"
-                                      style={{
-                                        animationDelay: `${index * 0.05}s`,
-                                      }}
-                                    >
-                                      {member.sector}
-                                    </Badge>
-                                    {/* Badges sous-secteurs */}
-                                    {(() => {
-                                      try {
-                                        const subSectors =
-                                          getSubSectorsForMemberSector(
-                                            member.sector
-                                          );
-                                        if (
-                                          !subSectors ||
-                                          subSectors.length === 0
-                                        )
-                                          return null;
-
-                                        const visibleSubSectors =
-                                          subSectors.slice(0, 2);
-                                        const remainingCount =
-                                          subSectors.length -
-                                          visibleSubSectors.length;
-
-                                        return (
-                                          <>
-                                            {visibleSubSectors.map(
-                                              (subSector, subIndex) => {
-                                                // Alternance orange/vert basée sur l'index
-                                                const isOrange =
-                                                  subIndex % 2 === 0;
-                                                const badgeClass = isOrange
-                                                  ? "text-xs bg-cpu-orange/10 text-cpu-orange border-cpu-orange/30 transition-all duration-300 hover:scale-105 hover:shadow-md hover:bg-cpu-orange/20 animate-fade-in"
-                                                  : "text-xs bg-cpu-green/10 text-cpu-green border-cpu-green/30 transition-all duration-300 hover:scale-105 hover:shadow-md hover:bg-cpu-green/20 animate-fade-in";
-
-                                                return (
-                                                  <Badge
-                                                    key={`${member.id}-sub-${subIndex}`}
-                                                    className={badgeClass}
-                                                    style={{
-                                                      animationDelay: `${
-                                                        index * 0.05 +
-                                                        (subIndex + 1) * 0.02
-                                                      }s`,
-                                                    }}
-                                                  >
-                                                    {subSector}
-                                                  </Badge>
-                                                );
-                                              }
-                                            )}
-                                            {remainingCount > 0 && (
-                                              <Badge
-                                                className="text-xs bg-cpu-green text-white border-cpu-green transition-all duration-300 hover:scale-105 hover:shadow-md animate-fade-in"
-                                                style={{
-                                                  animationDelay: `${
-                                                    index * 0.05 + 0.06
-                                                  }s`,
-                                                }}
-                                              >
-                                                +{remainingCount}
-                                              </Badge>
-                                            )}
-                                          </>
-                                        );
-                                      } catch (error) {
-                                        console.warn(
-                                          "Erreur lors de l'affichage des sous-secteurs:",
-                                          error
-                                        );
-                                        return null;
-                                      }
-                                    })()}
-                                  </div>
-                                  <h3 className="text-lg md:text-xl font-bold text-[#221F1F] mb-2">
+                            {/* Contenu principal */}
+                            <div className="flex-1 p-5 md:p-6 flex flex-col min-w-0">
+                              {/* Header avec nom et badges */}
+                              <div className="mb-4">
+                                <div className="flex items-start justify-between gap-3 mb-3">
+                                  <h3 className="text-xl md:text-2xl font-bold text-[#221F1F] group-hover:text-cpu-orange transition-colors line-clamp-2">
                                     {member.name}
                                   </h3>
+                                  {member.interventionScope && (
+                                    <Badge className={`text-xs font-medium px-2.5 py-1 whitespace-nowrap ${
+                                      member.interventionScope === 'national' 
+                                        ? 'bg-cpu-orange/10 text-cpu-orange border-cpu-orange/30' 
+                                        : member.interventionScope === 'regions_specifiques'
+                                        ? 'bg-cpu-orange/20 text-cpu-orange border-cpu-orange/40'
+                                        : 'bg-gray-100 text-gray-700 border-gray-300'
+                                    }`}>
+                                      {member.interventionScope === 'national' && '🌍 National'}
+                                      {member.interventionScope === 'regions_specifiques' && '📍 Régional'}
+                                      {member.interventionScope === 'locale' && '🏘️ Local'}
+                                    </Badge>
+                                  )}
                                 </div>
-                                {member.website && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-cpu-orange border border-transparent hover:border-cpu-orange hover:text-cpu-orange hover:bg-orange-50 active:bg-cpu-orange active:text-white active:border-cpu-orange transition-all flex-shrink-0"
-                                  >
-                                    <Globe className="h-4 w-4 mr-1" />
-                                    Voir
-                                  </Button>
-                                )}
+
+                                {/* Localisation */}
+                                <div className="flex items-start text-sm text-[#6F6F6F] mb-3">
+                                  <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-cpu-orange mt-0.5" />
+                                  <span className="break-words">{member.fullAddress || member.region}</span>
+                                </div>
+
+                                {/* Filière et Sous-filière */}
+                                <div className="grid grid-cols-2 gap-3 mb-3">
+                                  <div className="rounded-lg p-2.5 bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 transition-all">
+                                    <div className="text-xs text-cpu-orange font-medium mb-1">Filière</div>
+                                    {(() => {
+                                      let filiereName = '';
+                                      if (member.filiereId && secteursApi && Array.isArray(secteursApi)) {
+                                        for (const secteur of secteursApi) {
+                                          if (secteur.filieres && Array.isArray(secteur.filieres)) {
+                                            const filiere = secteur.filieres.find((f: any) => f.id === member.filiereId);
+                                            if (filiere) {
+                                              filiereName = filiere.name;
+                                              break;
+                                            }
+                                          }
+                                        }
+                                      }
+                                      return (
+                                        <div className="text-sm font-semibold text-[#221F1F] line-clamp-1">
+                                          {filiereName || member.sector}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+
+                                  <div className="rounded-lg p-2.5 bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 transition-all">
+                                    <div className="text-xs text-cpu-orange font-medium mb-1">Sous Filière</div>
+                                    {(() => {
+                                      let sousFiliereName = '';
+                                      if (member.sousFiliereId && secteursApi && Array.isArray(secteursApi)) {
+                                        for (const secteur of secteursApi) {
+                                          if (secteur.filieres && Array.isArray(secteur.filieres)) {
+                                            for (const filiere of secteur.filieres) {
+                                              if (filiere.sousFiliere && Array.isArray(filiere.sousFiliere)) {
+                                                const sf = filiere.sousFiliere.find((sf: any) => sf.id === member.sousFiliereId);
+                                                if (sf) {
+                                                  sousFiliereName = sf.name;
+                                                  break;
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                      return (
+                                        <div className="text-sm font-semibold text-[#221F1F] line-clamp-1">
+                                          {sousFiliereName || '-'}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+                                </div>
+
+                                {/* Activités */}
+                                <div className="mb-3">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Briefcase className="h-3.5 w-3.5 text-cpu-orange" />
+                                    <span className="text-xs text-cpu-orange font-semibold">Activités</span>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {(() => {
+                                      let activitesNames: string[] = [];
+                                      if (member.activitesIds && member.activitesIds.length > 0 && secteursApi && Array.isArray(secteursApi)) {
+                                        for (const secteur of secteursApi) {
+                                          if (secteur.filieres && Array.isArray(secteur.filieres)) {
+                                            for (const filiere of secteur.filieres) {
+                                              if (filiere.sousFiliere && Array.isArray(filiere.sousFiliere)) {
+                                                for (const sf of filiere.sousFiliere) {
+                                                  if (sf.activites && Array.isArray(sf.activites)) {
+                                                    for (const act of sf.activites) {
+                                                      if (member.activitesIds.includes(act.id)) {
+                                                        activitesNames.push(act.name);
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                      
+                                      const visibleActivites = activitesNames.slice(0, 4);
+                                      const remainingCount = activitesNames.length - visibleActivites.length;
+                                      
+                                      return activitesNames.length > 0 ? (
+                                        <>
+                                          {visibleActivites.map((activite, idx) => (
+                                            <Badge 
+                                              key={idx} 
+                                              className="text-xs bg-cpu-orange text-white font-medium px-2.5 py-1 rounded-md hover:bg-white hover:text-cpu-orange hover:border-cpu-orange border-2 border-cpu-orange transition-all hover:scale-105"
+                                            >
+                                              {activite}
+                                            </Badge>
+                                          ))}
+                                          {remainingCount > 0 && (
+                                            <Badge className="text-xs bg-cpu-orange text-white font-medium px-2.5 py-1 rounded-md hover:bg-white hover:text-cpu-orange hover:border-cpu-orange border-2 border-cpu-orange transition-all hover:scale-105">
+                                              +{remainingCount}
+                                            </Badge>
+                                          )}
+                                        </>
+                                      ) : (
+                                        <span className="text-xs text-gray-400">Aucune activité</span>
+                                      );
+                                    })()}
+                                  </div>
+                                </div>
                               </div>
 
-                              <p className="text-sm text-[#6F6F6F] mb-4 line-clamp-2 leading-relaxed">
-                                {member.description}
-                              </p>
+                              {/* Description */}
+                              <div className="mb-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Users className="h-3.5 w-3.5 text-cpu-orange" />
+                                  <span className="text-xs text-cpu-orange font-semibold">À propos</span>
+                                </div>
+                                <p className="text-sm text-[#6F6F6F] leading-relaxed line-clamp-2">
+                                  {member.description}
+                                </p>
+                              </div>
 
-                              <div className="flex items-center gap-4 mt-auto">
-                                <span className="flex items-center text-xs text-[#6F6F6F]">
-                                  <MapPin className="h-3 w-3 mr-1" />
-                                  {member.region}
-                                </span>
+                              {/* Boutons d'action */}
+                              <div className="mt-auto">
+                                <div className="grid grid-cols-2 gap-3">
+                                  {member.email ? (
+                                    <a
+                                      href={`mailto:${member.email}`}
+                                      className="w-full"
+                                    >
+                                      <Button
+                                        className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-lg"
+                                      >
+                                        <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
+                                        <Globe className="h-4 w-4 mr-2" />
+                                        Contacter
+                                      </Button>
+                                    </a>
+                                  ) : (
+                                    <Button
+                                      disabled
+                                      className="w-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed"
+                                    >
+                                      <Globe className="h-4 w-4 mr-2" />
+                                      Contacter
+                                    </Button>
+                                  )}
+                                  
+                                  {member.phone ? (
+                                    <a
+                                      href={`tel:${member.phone}`}
+                                      className="w-full"
+                                    >
+                                      <Button
+                                        variant="outline"
+                                        className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                                      >
+                                        <span className="mr-2">📞</span>
+                                        Appeler
+                                      </Button>
+                                    </a>
+                                  ) : (
+                                    <Button
+                                      variant="outline"
+                                      disabled
+                                      className="w-full border-gray-300 text-gray-400 font-semibold cursor-not-allowed"
+                                    >
+                                      <span className="mr-2">📞</span>
+                                      Appeler
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        ))}
+                        ))
+                      )}
                   </div>
                 )}
 
@@ -4225,7 +5083,21 @@ const MembersContent = () => {
                                     {partner.categorie && (
                                       <Badge
                                         variant="outline"
-                                        className="text-xs bg-blue-300 text-blue-500 border-blue-200"
+                                        className={`text-xs ${
+                                          partner.categorie.toLowerCase() === 'technologie'
+                                            ? 'bg-blue-100 text-blue-600 border-blue-300'
+                                            : partner.categorie.toLowerCase() === 'finance'
+                                            ? 'bg-green-100 text-green-600 border-green-300'
+                                            : partner.categorie.toLowerCase() === 'voyage'
+                                            ? 'bg-purple-100 text-purple-600 border-purple-300'
+                                            : partner.categorie.toLowerCase() === 'operations'
+                                            ? 'bg-orange-100 text-orange-600 border-orange-300'
+                                            : partner.categorie.toLowerCase() === 'rh'
+                                            ? 'bg-pink-100 text-pink-600 border-pink-300'
+                                            : partner.categorie.toLowerCase() === 'loisirs'
+                                            ? 'bg-indigo-100 text-indigo-600 border-indigo-300'
+                                            : 'bg-gray-100 text-gray-600 border-gray-300'
+                                        }`}
                                       >
                                         {categoryLabels[
                                           partner.categorie.toLowerCase()
@@ -4279,9 +5151,45 @@ const MembersContent = () => {
                 </div>
 
                 {/* Form Card */}
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                  <div className="p-8 md:p-10 lg:p-12">
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-100">
+                  <div className="p-8 md:p-10 lg:p-12 overflow-hidden">
                     <form onSubmit={handleSubmit} className="space-y-0">
+                      {/* Indicateur de progression */}
+                      {selectedAdhesionType && (
+                        <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm -mx-8 md:-mx-10 lg:-mx-12 px-8 md:px-10 lg:px-12 py-6 mb-8 border-b-2 border-gray-100 shadow-lg animate-in fade-in slide-in-from-top-4 duration-500">
+                          <div className="flex justify-between items-center mb-3">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="h-5 w-5 text-cpu-green" />
+                              <span className="text-sm font-bold text-gray-900">
+                                Progression du formulaire
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-cpu-orange">
+                                {calculateProgress().completed} / {calculateProgress().total} complétés
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                ({calculateProgress().percentage}%)
+                              </span>
+                            </div>
+                          </div>
+                          <div className="relative w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
+                            <div 
+                              className="absolute top-0 left-0 h-full bg-gradient-to-r from-cpu-green via-cpu-orange to-orange-600 rounded-full transition-all duration-700 ease-out shadow-lg"
+                              style={{ width: `${calculateProgress().percentage}%` }}
+                            >
+                              <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                            </div>
+                          </div>
+                          {lastSaved && (
+                            <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
+                              <Save className="h-3 w-3" />
+                              <span>Sauvegardé automatiquement à {lastSaved.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {/* SECTION: Type de membre */}
                       <div className="pb-8">
                         <div className="flex items-center gap-3 mb-6">
@@ -4293,7 +5201,7 @@ const MembersContent = () => {
                           </h3>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                           {/* Type de membre */}
                           <div className="space-y-3">
                             <Label
@@ -4656,13 +5564,24 @@ const MembersContent = () => {
                                           <SelectValue placeholder="Choisir la fédération" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          {organisationsByType[
-                                            "federation"
-                                          ]?.map((org) => (
-                                            <SelectItem key={org} value={org}>
-                                              {org}
-                                            </SelectItem>
-                                          ))}
+                                          {(() => {
+                                            const organisations =
+                                              getApprovedOrganisationsByType(
+                                                "federation"
+                                              );
+                                            if (organisations.length === 0) {
+                                              return (
+                                                <div className="px-2 py-1.5 text-sm text-gray-500">
+                                                  Aucune organisation disponible
+                                                </div>
+                                              );
+                                            }
+                                            return organisations.map((org) => (
+                                              <SelectItem key={org} value={org}>
+                                                {org}
+                                              </SelectItem>
+                                            ));
+                                          })()}
                                         </SelectContent>
                                       </Select>
                                       <p className="text-xs text-gray-500">
@@ -4672,7 +5591,7 @@ const MembersContent = () => {
                                     </div>
                                   ) : (
                                     /* Cas normal : Afficher Type d'organisation puis Sélection organisation */
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                       {/* Type d'organisation */}
                                       <div className="space-y-3">
                                         <Label htmlFor="orgType">
@@ -4728,16 +5647,27 @@ const MembersContent = () => {
                                               <SelectValue placeholder="Choisir l'organisation" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                              {organisationsByType[
-                                                selectedOrgType
-                                              ]?.map((org) => (
-                                                <SelectItem
-                                                  key={org}
-                                                  value={org}
-                                                >
-                                                  {org}
-                                                </SelectItem>
-                                              ))}
+                                              {(() => {
+                                                const organisations =
+                                                  getApprovedOrganisationsByType(
+                                                    selectedOrgType
+                                                  );
+                                                if (organisations.length === 0) {
+                                                  return (
+                                                    <div className="px-2 py-1.5 text-sm text-gray-500">
+                                                      Aucune organisation disponible
+                                                    </div>
+                                                  );
+                                                }
+                                                return organisations.map((org) => (
+                                                  <SelectItem
+                                                    key={org}
+                                                    value={org}
+                                                  >
+                                                    {org}
+                                                  </SelectItem>
+                                                ));
+                                              })()}
                                             </SelectContent>
                                           </Select>
                                           <p className="text-sm text-gray-600 flex items-center gap-2">
@@ -4784,62 +5714,63 @@ const MembersContent = () => {
                       {/* SECTION: Coordonnées (pour Membre institutionnel uniquement) */}
                       {selectedAdhesionType === "institutionnel" && (
                         <>
-                          <div className="pb-8">
+                          {/* Message contextuel pour institutionnel */}
+                          <div id="coordonnees-section" className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <p className="text-sm text-orange-900 flex items-center gap-2">
+                              <Info className="h-4 w-4 flex-shrink-0" />
+                              <span className="font-medium">
+                                En tant que <strong>membre institutionnel</strong>, vous bénéficiez d'un accompagnement personnalisé et d'une visibilité renforcée.
+                              </span>
+                            </p>
+                          </div>
+
+                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-green-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex items-center gap-3 mb-6">
                               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-green/10">
                                 <MapPin className="h-5 w-5 text-cpu-green" />
                               </div>
-                              <h3 className="text-xl font-bold text-gray-900">
-                                Coordonnées
-                              </h3>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold text-gray-900">
+                                  Coordonnées de votre institution
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Informations de localisation de votre organisation
+                                </p>
+                              </div>
                             </div>
 
                             <div className="space-y-5">
-                              {/* Adresse complète */}
+                              {/* Adresse complète (stockée dans siegeVillage) */}
                               <div className="space-y-3">
-                                <Label
-                                  htmlFor="fullAddress"
-                                  className="text-sm font-semibold text-gray-700"
-                                >
-                                  Adresse complète
-                                </Label>
+                                <div className="flex items-center gap-2">
+                                  <Label
+                                    htmlFor="fullAddress"
+                                    className="text-sm font-semibold text-gray-700"
+                                  >
+                                    Adresse complète
+                                  </Label>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p className="max-w-xs">Indiquez l'adresse du siège de votre institution</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
                                 <Input
                                   id="fullAddress"
-                                  placeholder="Ex: Boulevard Latrille, Cocody"
+                                  value={siegeVillage}
+                                  onChange={(e) => setSiegeVillage(e.target.value)}
+                                  placeholder="Ex: Boulevard Latrille, Cocody-Danga, Abidjan, Côte d'Ivoire"
                                   className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900"
                                 />
-                              </div>
-
-                              {/* Ligne: Ville et Pays */}
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div className="space-y-3">
-                                  <Label
-                                    htmlFor="city"
-                                    className="text-sm font-semibold text-gray-700"
-                                  >
-                                    Ville
-                                  </Label>
-                                  <Input
-                                    id="city"
-                                    placeholder="Ex: Abidjan"
-                                    className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900"
-                                  />
-                                </div>
-
-                                <div className="space-y-3">
-                                  <Label
-                                    htmlFor="country"
-                                    className="text-sm font-semibold text-gray-700"
-                                  >
-                                    Pays
-                                  </Label>
-                                  <Input
-                                    id="country"
-                                    placeholder="Côte d'Ivoire"
-                                    defaultValue="Côte d'Ivoire"
-                                    className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900 font-medium"
-                                  />
-                                </div>
+                                <p className="text-xs text-gray-500 flex items-center gap-1">
+                                  <Lightbulb className="h-3 w-3" />
+                                  Incluez la rue, le quartier, la ville et les repères importants
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -4852,43 +5783,76 @@ const MembersContent = () => {
                       {/* SECTION: Axes d'intérêt (pour Membre institutionnel uniquement) */}
                       {selectedAdhesionType === "institutionnel" && (
                         <>
-                          <div className="pb-8">
+                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex items-center gap-3 mb-6">
                               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
                                 <Target className="h-5 w-5 text-cpu-orange" />
                               </div>
-                              <h3 className="text-xl font-bold text-gray-900">
-                                Axes d'intérêt{" "}
-                                <span className="text-gray-500 text-base font-normal">
-                                  (cochez un ou plusieurs)
-                                </span>
-                              </h3>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold text-gray-900">
+                                  Axes d'intérêt
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Sélectionnez vos domaines d'intervention prioritaires
+                                </p>
+                              </div>
+                              {selectedAxesInteret.length > 0 && (
+                                <Badge className="bg-cpu-orange text-white px-3 py-1.5 text-sm font-semibold animate-in zoom-in duration-200">
+                                  {selectedAxesInteret.length} sélectionné{selectedAxesInteret.length > 1 ? 's' : ''}
+                                </Badge>
+                              )}
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6 border-2 border-gray-100 rounded-2xl bg-gradient-to-br from-gray-50 to-white shadow-sm">
+                            <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
+                              <p className="text-sm text-gray-600 flex items-center gap-1">
+                                <Info className="h-4 w-4" />
+                                Cochez un ou plusieurs axes
+                              </p>
+                              {!isLoadingCentresInteret && centresInteretApi.length > 0 && (
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={toggleAllAxes}
+                                  className="border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-colors"
+                                >
+                                  {selectedAxesInteret.length === centresInteretApi.length
+                                    ? "Tout décocher"
+                                    : "Tout sélectionner"}
+                                </Button>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 p-6 border-2 border-gray-100 rounded-xl bg-white max-h-80 overflow-y-auto">
                               {isLoadingCentresInteret ? (
-                                <div className="col-span-2 flex items-center justify-center py-4">
+                                <div className="col-span-3 flex items-center justify-center py-4">
                                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cpu-orange"></div>
                                   <span className="ml-2 text-gray-500">Chargement des axes d'intérêt...</span>
                                 </div>
+                              ) : errorCentresInteret ? (
+                                <div className="col-span-3 p-4 border-2 border-red-200 rounded-xl bg-red-50 text-red-600 text-center">
+                                  <div className="font-bold mb-1">Erreur de chargement</div>
+                                  <div className="text-sm">{errorCentresInteret.message || "Impossible de charger les axes d'intérêt"}</div>
+                                </div>
+                              ) : centresInteretApi.length === 0 ? (
+                                <div className="col-span-3 p-4 text-center text-gray-600 font-medium">
+                                  Aucun axe d'intérêt existant
+                                </div>
                               ) : (
-                                (centresInteretApi.length > 0
-                                  ? centresInteretApi.map((ci) => ci.name)
-                                  : axesInteretOptionsFallback
-                                ).map((axe) => (
+                                centresInteretApi.map((ci) => (
                                   <div
-                                    key={axe}
+                                    key={ci.id || ci.name}
                                     className="flex items-start space-x-3 p-3 rounded-lg hover:bg-white transition-colors"
                                   >
                                     <input
                                       type="checkbox"
-                                      id={`axe-${axe}`}
-                                      checked={selectedAxesInteret.includes(axe)}
+                                      id={`axe-${ci.name}`}
+                                      checked={selectedAxesInteret.includes(ci.name)}
                                       onChange={() => {
                                         setSelectedAxesInteret((prev) =>
-                                          prev.includes(axe)
-                                            ? prev.filter((a) => a !== axe)
-                                            : [...prev, axe]
+                                          prev.includes(ci.name)
+                                            ? prev.filter((a) => a !== ci.name)
+                                            : [...prev, ci.name]
                                         );
                                       }}
                                       className="h-5 w-5 border-2 border-cpu-orange rounded-md focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange transition-all"
@@ -4898,15 +5862,35 @@ const MembersContent = () => {
                                       }}
                                     />
                                     <Label
-                                      htmlFor={`axe-${axe}`}
+                                      htmlFor={`axe-${ci.name}`}
                                       className="text-sm cursor-pointer font-medium text-gray-700 leading-tight"
                                     >
-                                      {axe}
+                                      {ci.name}
                                     </Label>
                                   </div>
                                 ))
                               )}
                             </div>
+
+                            {selectedAxesInteret.length === 0 && (
+                              <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                <p className="text-sm text-orange-700 flex items-center gap-2">
+                                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                  <span className="font-medium">
+                                    Veuillez sélectionner au moins un axe d'intérêt pour continuer
+                                  </span>
+                                </p>
+                              </div>
+                            )}
+
+                            {selectedAxesInteret.length > 0 && selectedAxesInteret.length < 3 && (
+                              <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                                <p className="text-xs text-gray-700 flex items-center gap-1">
+                                  <Lightbulb className="h-3 w-3" />
+                                  Vous pouvez sélectionner plusieurs axes pour maximiser vos opportunités
+                                </p>
+                              </div>
+                            )}
                           </div>
 
                           {/* Séparateur moderne */}
@@ -4919,14 +5903,19 @@ const MembersContent = () => {
                         selectedAdhesionType === "entreprise" ||
                         selectedAdhesionType === "associatif") && (
                         <>
-                          <div className="pb-8">
+                          <div id="zones-section" className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex items-center gap-3 mb-6">
                               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
                                 <MapPin className="h-5 w-5 text-cpu-orange" />
                               </div>
-                              <h3 className="text-xl font-bold text-gray-900">
-                                Zones d'intervention
-                              </h3>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold text-gray-900">
+                                  Zones d'intervention
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Indiquez votre couverture géographique pour mieux vous référencer
+                                </p>
+                              </div>
                             </div>
 
                             <div className="space-y-5">
@@ -4962,7 +5951,7 @@ const MembersContent = () => {
 
                               {/* Liste des régions en checkboxes */}
                               {interventionScope === "regions_specifiques" && (
-                                <div className="space-y-4">
+                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                   <div className="flex items-center justify-between">
                                     <div>
                                       <Label className="text-base font-bold text-gray-900">
@@ -4973,18 +5962,20 @@ const MembersContent = () => {
                                         lesquelles vous intervenez
                                       </p>
                                     </div>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={toggleAllRegions}
-                                      className="border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold rounded-lg transition-all cursor-pointer"
-                                    >
-                                      {selectedRegions.length ===
-                                      getAvailableRegions().length
-                                        ? "Tout décocher"
-                                        : "Tout cocher"}
-                                    </Button>
+                                    {!isLoadingRegions && getAvailableRegions().length > 0 && (
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={toggleAllRegions}
+                                        className="border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold rounded-lg transition-all cursor-pointer"
+                                      >
+                                        {selectedRegions.length ===
+                                        getAvailableRegions().length
+                                          ? "Tout décocher"
+                                          : "Tout sélectionner"}
+                                      </Button>
+                                    )}
                                   </div>
 
                                   {isLoadingRegions ? (
@@ -5007,6 +5998,10 @@ const MembersContent = () => {
                                             Code: {errorRegions.status}
                                           </div>
                                         )}
+                                    </div>
+                                  ) : getAvailableRegions().length === 0 ? (
+                                    <div className="p-6 border-2 border-gray-200 rounded-2xl bg-gray-50 text-center text-gray-600 font-medium">
+                                      Aucune région existante
                                     </div>
                                   ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-6 border-2 border-gray-100 rounded-2xl bg-gradient-to-br from-gray-50 to-white max-h-96 overflow-y-auto shadow-sm">
@@ -5067,38 +6062,77 @@ const MembersContent = () => {
                       {/* SECTION: Zones d'intervention (pour Membre institutionnel) */}
                       {selectedAdhesionType === "institutionnel" && (
                         <>
-                          <div className="py-6">
-                            <h3 className="text-base font-semibold text-cpu-orange flex items-center mb-4">
-                              <MapPin className="h-5 w-5 mr-2" />
-                              Zones d'intervention (cochez une ou plusieurs) *
-                            </h3>
+                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
+                                <MapPin className="h-5 w-5 text-cpu-orange" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                  Zones d'intervention
+                                  <span className="text-red-500 text-lg">*</span>
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Indiquez votre couverture géographique en Côte d'Ivoire
+                                </p>
+                              </div>
+                              {selectedRegions.length > 0 && (
+                                <Badge className="bg-cpu-orange text-white px-3 py-1.5 text-sm font-semibold animate-in zoom-in duration-200">
+                                  {selectedRegions.length} région{selectedRegions.length > 1 ? 's' : ''}
+                                </Badge>
+                              )}
+                            </div>
 
                             <div className="space-y-3">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="text-xs text-gray-500">
-                                    Cochez toutes les régions dans lesquelles
-                                    vous intervenez
+                              <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                                <div className="flex items-center gap-2">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p className="max-w-xs">Sélectionnez toutes les régions où votre institution est active</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                  <p className="text-sm text-gray-600 font-medium">
+                                    Cochez toutes les régions concernées
                                   </p>
                                 </div>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={toggleAllRegions}
-                                  className="border-cpu-orange text-cpu-orange hover:bg-orange-50"
-                                >
-                                  {selectedRegions.length ===
-                                  Object.keys(regionsData).length
-                                    ? "Tout décocher"
-                                    : "Tout sélectionner"}
-                                </Button>
+                                {!isLoadingRegions && getAvailableRegions().length > 0 && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={toggleAllRegions}
+                                    className="border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-colors"
+                                  >
+                                    {selectedRegions.length === getAvailableRegions().length
+                                      ? "Tout décocher"
+                                      : "Tout sélectionner"}
+                                  </Button>
+                                )}
                               </div>
 
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4 border border-gray-200 rounded-lg bg-gray-50 max-h-96 overflow-y-auto">
-                                {Object.keys(regionsData)
-                                  .sort()
-                                  .map((region) => (
+                              {isLoadingRegions ? (
+                                <div className="p-6 border-2 border-gray-100 rounded-2xl bg-gray-50 text-center text-gray-500 font-medium">
+                                  Chargement des régions...
+                                </div>
+                              ) : errorRegions ? (
+                                <div className="p-6 border-2 border-red-200 rounded-2xl bg-red-50 text-red-600">
+                                  <div className="font-bold mb-2">Erreur de chargement</div>
+                                  <div className="text-sm">
+                                    {errorRegions.message || "Impossible de charger les régions"}
+                                  </div>
+                                </div>
+                              ) : getAvailableRegions().length === 0 ? (
+                                <div className="p-6 border-2 border-gray-200 rounded-2xl bg-gray-50 text-center text-gray-600 font-medium">
+                                  Aucune région existante
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 p-6 border-2 border-gray-100 rounded-xl bg-white max-h-96 overflow-y-auto shadow-inner">
+                                  {getAvailableRegions().map((region) => (
                                     <div
                                       key={region}
                                       className="flex items-start space-x-2"
@@ -5124,12 +6158,13 @@ const MembersContent = () => {
                                       </Label>
                                     </div>
                                   ))}
-                              </div>
+                                </div>
+                              )}
 
                               {selectedRegions.length > 0 && (
-                                <div className="flex items-center gap-2 text-sm text-cpu-green">
-                                  <Check className="h-4 w-4" />
-                                  <span className="font-medium">
+                                <div className="flex items-center gap-2 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-100 animate-in slide-in-from-bottom-2 duration-300">
+                                  <Check className="h-5 w-5 text-cpu-green" />
+                                  <span className="font-bold text-cpu-green">
                                     {selectedRegions.length} région
                                     {selectedRegions.length > 1 ? "s" : ""}{" "}
                                     sélectionnée
@@ -5137,21 +6172,82 @@ const MembersContent = () => {
                                   </span>
                                 </div>
                               )}
+
+                              {selectedRegions.length === 0 && (
+                                <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                  <p className="text-sm text-orange-700 flex items-center gap-2">
+                                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                    <span className="font-medium">
+                                      Veuillez sélectionner au moins une région d'intervention
+                                    </span>
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           </div>
 
-                          {/* Trait de séparation */}
-                          <div className="border-t border-gray-200"></div>
+                          {/* Séparateur moderne */}
+                          <div className="border-t-2 border-gray-100 my-8"></div>
 
                           {/* SECTION: Filières prioritaires (pour Membre institutionnel) */}
-                          <div className="py-6">
-                            <h3 className="text-base font-semibold text-cpu-orange flex items-center mb-4">
-                              <Briefcase className="h-5 w-5 mr-2" />
-                              Filières prioritaires (cochez une ou plusieurs)
-                            </h3>
+                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-green-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-green/10">
+                                <Briefcase className="h-5 w-5 text-cpu-green" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold text-gray-900">
+                                  Filières prioritaires
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Les filières que vous accompagnez en priorité
+                                </p>
+                              </div>
+                              {selectedFilieresPrioritaires.length > 0 && (
+                                <Badge className="bg-cpu-green text-white px-3 py-1.5 text-sm font-semibold animate-in zoom-in duration-200">
+                                  {selectedFilieresPrioritaires.length} sélectionnée{selectedFilieresPrioritaires.length > 1 ? 's' : ''}
+                                </Badge>
+                              )}
+                            </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border border-gray-200 rounded-lg bg-gray-50 max-h-96 overflow-y-auto">
-                              {filieresPrioritairesOptions.map((filiere) => (
+                            <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
+                              <p className="text-sm text-gray-600 flex items-center gap-1">
+                                <Info className="h-4 w-4" />
+                                Optionnel - Cochez une ou plusieurs filières
+                              </p>
+                              {!isLoadingSecteurs && getAvailableFilieres().length > 0 && (
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={toggleAllFilieres}
+                                  className="border-2 border-cpu-green text-cpu-green hover:bg-cpu-green hover:text-white font-semibold transition-colors"
+                                >
+                                  {selectedFilieresPrioritaires.length === getAvailableFilieres().length
+                                    ? "Tout décocher"
+                                    : "Tout sélectionner"}
+                                </Button>
+                              )}
+                            </div>
+
+                            {isLoadingSecteurs ? (
+                              <div className="p-6 border-2 border-gray-100 rounded-2xl bg-gray-50 text-center text-gray-500 font-medium">
+                                Chargement des filières...
+                              </div>
+                            ) : errorSecteurs ? (
+                              <div className="p-6 border-2 border-red-200 rounded-2xl bg-red-50 text-red-600">
+                                <div className="font-bold mb-2">Erreur de chargement</div>
+                                <div className="text-sm">
+                                  {errorSecteurs.message || "Impossible de charger les filières"}
+                                </div>
+                              </div>
+                            ) : getAvailableFilieres().length === 0 ? (
+                              <div className="p-6 border-2 border-gray-200 rounded-2xl bg-gray-50 text-center text-gray-600 font-medium">
+                                Aucune filière existante
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 p-6 border-2 border-gray-100 rounded-xl bg-white max-h-80 overflow-y-auto">
+                                {getAvailableFilieres().map((filiere) => (
                                 <div
                                   key={filiere}
                                   className="flex items-start space-x-2"
@@ -5183,131 +6279,272 @@ const MembersContent = () => {
                                   </Label>
                                 </div>
                               ))}
-                            </div>
+                              </div>
+                            )}
 
                             {selectedFilieresPrioritaires.length > 0 && (
-                              <div className="flex items-center gap-2 text-sm text-cpu-green mt-3">
-                                <Check className="h-4 w-4" />
-                                <span className="font-medium">
+                              <div className="flex items-center gap-2 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-100 mt-4 animate-in slide-in-from-bottom-2 duration-300">
+                                <Check className="h-5 w-5 text-cpu-green" />
+                                <span className="font-bold text-cpu-green">
                                   {selectedFilieresPrioritaires.length} filière
-                                  {selectedFilieresPrioritaires.length > 1
-                                    ? "s"
-                                    : ""}{" "}
+                                  {selectedFilieresPrioritaires.length > 1 ? "s" : ""}{" "}
                                   sélectionnée
-                                  {selectedFilieresPrioritaires.length > 1
-                                    ? "s"
-                                    : ""}
+                                  {selectedFilieresPrioritaires.length > 1 ? "s" : ""}
                                 </span>
+                              </div>
+                            )}
+
+                            {selectedFilieresPrioritaires.length === 0 && (
+                              <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                                <p className="text-xs text-gray-700 flex items-center gap-1">
+                                  <Lightbulb className="h-3 w-3" />
+                                  Cette information est optionnelle mais recommandée pour mieux cibler nos services
+                                </p>
                               </div>
                             )}
                           </div>
 
-                          {/* Trait de séparation */}
-                          <div className="border-t border-gray-200"></div>
+                          {/* Séparateur moderne */}
+                          <div className="border-t-2 border-gray-100 my-8"></div>
                         </>
                       )}
 
                       {/* SECTION: Informations sur l'organisation */}
-                      <div className="pb-8">
+                      <div id="organisation-section" className="pb-8 p-6 bg-gradient-to-br from-white to-green-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center gap-3 mb-6">
                           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-green/10">
                             <Building2 className="h-5 w-5 text-cpu-green" />
                           </div>
-                          <h3 className="text-xl font-bold text-gray-900">
-                            Informations sur l'organisation
-                          </h3>
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-gray-900">
+                              Identification de votre organisation
+                            </h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Informations générales sur votre entreprise
+                            </p>
+                          </div>
                         </div>
 
                         <div className="space-y-6">
-                          {/* Ligne 1: Nom de l'organisation */}
-                          <div className="grid grid-cols-1 gap-4">
-                            <div className="space-y-3">
+                          {/* Nom de l'organisation */}
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
                               <Label
                                 htmlFor="orgName"
                                 className="text-sm font-semibold text-gray-700"
                               >
-                                Nom de l'organisation *
+                                Nom de l'organisation
                               </Label>
+                              <span className="text-red-500 text-base">*</span>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="max-w-xs">Le nom officiel de votre entreprise ou organisation</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                            <div className="relative">
                               <Input
                                 id="orgName"
                                 placeholder="Ex: Ma Société SARL"
                                 required
-                                className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900"
+                                className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 pr-10 text-gray-900"
+                                value={orgName}
+                                onChange={(e) => setOrgName(e.target.value)}
                               />
+                              {orgName && (
+                                <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-cpu-green animate-in zoom-in duration-200" />
+                              )}
                             </div>
                           </div>
 
-                          {/* Ligne 2: Filière et Secteur */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-3 relative isolate">
+                          {/* Email de l'entreprise avec validation */}
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
                               <Label
-                                htmlFor="filiere"
+                                htmlFor="email"
                                 className="text-sm font-semibold text-gray-700"
                               >
-                                Filière *
+                                Email de l'entreprise
                               </Label>
-                              <Select
+                              <span className="text-red-500 text-base">*</span>
+                            </div>
+                            <div className="relative">
+                              <Input
+                                id="email"
+                                type="email"
+                                placeholder="contact@entreprise.ci"
+                                required
+                                className={`h-12 border-2 transition-colors rounded-xl px-4 pr-10 text-gray-900 ${
+                                  emailError
+                                    ? 'border-red-500 hover:border-red-600 focus:border-red-600'
+                                    : emailValid
+                                    ? 'border-green-500 hover:border-green-600 focus:border-green-600'
+                                    : 'border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green'
+                                }`}
+                                value={formEmail}
+                                onChange={(e) => {
+                                  setFormEmail(e.target.value);
+                                  validateEmail(e.target.value);
+                                }}
+                                onBlur={() => validateEmail(formEmail)}
+                                suppressHydrationWarning
+                              />
+                              {emailValid && !emailError && (
+                                <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-green-600 animate-in zoom-in duration-200" />
+                              )}
+                              {emailError && (
+                                <AlertCircle className="absolute right-3 top-3.5 h-5 w-5 text-red-600 animate-in zoom-in duration-200" />
+                              )}
+                            </div>
+                            {emailError && (
+                              <p className="text-sm text-red-600 flex items-center gap-1 animate-in slide-in-from-top-2 duration-200">
+                                <AlertCircle className="h-4 w-4" />
+                                {emailError}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Description de l'entreprise */}
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Label
+                                htmlFor="message"
+                                className="text-sm font-semibold text-gray-700"
+                              >
+                                Description de l'entreprise
+                              </Label>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="max-w-xs">Décrivez brièvement votre activité, vos produits/services et vos objectifs</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                            <Textarea
+                              id="message"
+                              placeholder="Décrivez brièvement votre organisation, votre activité principale, et vos attentes..."
+                              className="min-h-[120px] border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 py-3 text-gray-900 resize-none"
+                              value={formMessage}
+                              onChange={(e) => setFormMessage(e.target.value)}
+                            />
+                            <p className="text-xs text-gray-500 flex items-center gap-1">
+                              <Lightbulb className="h-3 w-3" />
+                              Optionnel mais recommandé pour mieux vous connaître
+                            </p>
+                          </div>
+
+                          {/* Nombre d'employés */}
+                          {selectedAdhesionType !== "institutionnel" && (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              <div className="space-y-3">
+                                <Label
+                                  htmlFor="employees"
+                                  className="text-sm font-semibold text-gray-700"
+                                >
+                                  Nombre d'employés
+                                </Label>
+                                <Select>
+                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium">
+                                    <SelectValue placeholder="Sélectionnez" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="0-10">0 - 10</SelectItem>
+                                    <SelectItem value="11-50">11 - 50</SelectItem>
+                                    <SelectItem value="51-200">51 - 200</SelectItem>
+                                    <SelectItem value="201-500">201 - 500</SelectItem>
+                                    <SelectItem value="500+">Plus de 500</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Séparateur moderne */}
+                      <div className="border-t-2 border-gray-100 my-8"></div>
+
+                      {/* SECTION: Secteur d'activité */}
+                      <div id="secteur-section" className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
+                            <Briefcase className="h-5 w-5 text-cpu-orange" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-gray-900">
+                              Secteur d'activité
+                            </h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Précisez votre domaine d'activité professionnel
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-6">
+                          {/* Filière et Secteur */}
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="space-y-3 relative isolate">
+                              <div className="flex items-center gap-2">
+                                <Label
+                                  htmlFor="filiere"
+                                  className="text-sm font-semibold text-gray-700"
+                                >
+                                  Filière
+                                </Label>
+                                <span className="text-red-500 text-base">*</span>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="max-w-xs">La filière correspond au secteur d'activité principal</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                              <Combobox
+                                options={
+                                  isLoadingSecteurs || errorSecteurs
+                                    ? []
+                                    : getAllFilieres().map(
+                                        ({ filiere, secteurNom }) => {
+                                          // Déterminer le nom à afficher selon la structure (API ou statique)
+                                          const filiereAny = filiere as any;
+                                          const filiereName =
+                                            filiereAny.nom ||
+                                            filiereAny.name ||
+                                            filiereAny.id;
+                                          return {
+                                            value: filiere.id,
+                                            label: filiereName,
+                                            sublabel: secteurNom,
+                                          };
+                                        }
+                                      )
+                                }
                                 value={selectedFiliere}
                                 onValueChange={setSelectedFiliere}
-                                required
+                                placeholder={
+                                  isLoadingSecteurs
+                                    ? "Chargement..."
+                                    : "Sélectionnez une filière"
+                                }
+                                searchPlaceholder="Rechercher une filière..."
+                                emptyText="Aucune filière trouvée"
                                 disabled={isLoadingSecteurs}
-                              >
-                                <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium w-full disabled:opacity-60 disabled:cursor-not-allowed">
-                                  <SelectValue
-                                    placeholder={
-                                      isLoadingSecteurs
-                                        ? "Chargement..."
-                                        : "Sélectionnez une filière"
-                                    }
-                                  />
-                                </SelectTrigger>
-                                <SelectContent
-                                  className="z-[9999] max-h-[300px] overflow-y-auto"
-                                  position="popper"
-                                  sideOffset={4}
-                                  align="start"
-                                >
-                                  {isLoadingSecteurs ? (
-                                    <div className="px-2 py-1.5 text-sm text-gray-500">
-                                      Chargement des filières...
-                                    </div>
-                                  ) : errorSecteurs ? (
-                                    <div className="px-2 py-1.5 text-sm text-red-500">
-                                      Erreur lors du chargement des filières.
-                                      Veuillez réessayer.
-                                    </div>
-                                  ) : getAllFilieres().length === 0 ? (
-                                    <div className="px-2 py-1.5 text-sm text-gray-500">
-                                      Aucune filière disponible
-                                    </div>
-                                  ) : (
-                                    getAllFilieres().map(
-                                      ({ filiere, secteurNom }) => {
-                                        // Déterminer le nom à afficher selon la structure (API ou statique)
-                                        const filiereAny = filiere as any;
-                                        const filiereName =
-                                          filiereAny.nom ||
-                                          filiereAny.name ||
-                                          filiereAny.id;
-                                        return (
-                                          <SelectItem
-                                            key={filiere.id}
-                                            value={filiere.id}
-                                            className="cursor-pointer"
-                                          >
-                                            <span className="font-medium">
-                                              {filiereName}
-                                            </span>
-                                            <span className="text-gray-400 text-xs ml-2">
-                                              ({secteurNom})
-                                            </span>
-                                          </SelectItem>
-                                        );
-                                      }
-                                    )
-                                  )}
-                                </SelectContent>
-                              </Select>
+                                loading={isLoadingSecteurs}
+                                className="w-full min-w-[300px]"
+                              />
                               {errorSecteurs && (
                                 <p className="text-sm text-red-600 flex items-center gap-2">
                                   <Info className="h-4 w-4" />
@@ -5318,72 +6555,46 @@ const MembersContent = () => {
                             </div>
 
                             <div className="space-y-3 relative isolate">
-                              <Label
-                                htmlFor="sector"
-                                className="text-sm font-semibold text-gray-700"
-                              >
-                                Secteur d'activité *
-                              </Label>
-                              <Select
+                              <div className="flex items-center gap-2">
+                                <Label
+                                  htmlFor="sector"
+                                  className="text-sm font-semibold text-gray-700"
+                                >
+                                  Secteur d'activité
+                                </Label>
+                                <span className="text-red-500 text-base">*</span>
+                              </div>
+                              <Combobox
+                                options={(() => {
+                                  const secteurs =
+                                    secteursApi &&
+                                    Array.isArray(secteursApi) &&
+                                    secteursApi.length > 0
+                                      ? secteursApi.map((s) => ({
+                                          value: s.id,
+                                          label: s.name,
+                                        }))
+                                      : Object.values(secteursData).map(
+                                          (s) => ({
+                                            value: s.id,
+                                            label: s.nom,
+                                          })
+                                        );
+                                  return secteurs;
+                                })()}
                                 value={selectedMainSector}
                                 onValueChange={setSelectedMainSector}
-                                required
-                                disabled={
-                                  !!selectedFiliere || isLoadingSecteurs
+                                placeholder={
+                                  isLoadingSecteurs
+                                    ? "Chargement..."
+                                    : "Sélectionnez un secteur"
                                 }
-                              >
-                                <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium w-full disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-gray-50">
-                                  <SelectValue
-                                    placeholder={
-                                      isLoadingSecteurs
-                                        ? "Chargement..."
-                                        : "Sélectionnez un secteur"
-                                    }
-                                  />
-                                </SelectTrigger>
-                                <SelectContent
-                                  className="z-[9999]"
-                                  position="popper"
-                                  sideOffset={4}
-                                  align="start"
-                                >
-                                  {isLoadingSecteurs ? (
-                                    <div className="px-2 py-1.5 text-sm text-gray-500">
-                                      Chargement des secteurs...
-                                    </div>
-                                  ) : errorSecteurs ? (
-                                    <div className="px-2 py-1.5 text-sm text-red-500">
-                                      Erreur lors du chargement des secteurs.
-                                      Utilisation des données statiques.
-                                    </div>
-                                  ) : (
-                                    (() => {
-                                      // Utiliser les données de l'API si disponibles, sinon fallback vers données statiques
-                                      const secteurs =
-                                        secteursApi &&
-                                        Array.isArray(secteursApi) &&
-                                        secteursApi.length > 0
-                                          ? secteursApi.map((s) => ({
-                                              id: s.id,
-                                              nom: s.name,
-                                            }))
-                                          : Object.values(secteursData).map(
-                                              (s) => ({ id: s.id, nom: s.nom })
-                                            );
-
-                                      return secteurs.map((secteur) => (
-                                        <SelectItem
-                                          key={secteur.id}
-                                          value={secteur.id}
-                                          className="cursor-pointer"
-                                        >
-                                          {secteur.nom}
-                                        </SelectItem>
-                                      ));
-                                    })()
-                                  )}
-                                </SelectContent>
-                              </Select>
+                                searchPlaceholder="Rechercher un secteur..."
+                                emptyText="Aucun secteur trouvé"
+                                disabled={!!selectedFiliere || isLoadingSecteurs}
+                                loading={isLoadingSecteurs}
+                                className="w-full min-w-[300px]"
+                              />
                               {selectedFiliere && (
                                 <p className="text-sm text-gray-600 flex items-center gap-2">
                                   <Info className="h-4 w-4 text-cpu-green" />
@@ -5394,89 +6605,81 @@ const MembersContent = () => {
                             </div>
                           </div>
 
-                          {/* Ligne 3: Sous-filière */}
+                          {/* Sous-filière */}
                           {selectedFiliere && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                               <div className="space-y-3 relative isolate">
-                                <Label
-                                  htmlFor="subFiliere"
-                                  className="text-sm font-semibold text-gray-700"
-                                >
-                                  Sous-filière *
-                                </Label>
-                                <Select
+                                <div className="flex items-center gap-2">
+                                  <Label
+                                    htmlFor="subFiliere"
+                                    className="text-sm font-semibold text-gray-700"
+                                  >
+                                    Sous-filière
+                                  </Label>
+                                  <span className="text-red-500 text-base">*</span>
+                                </div>
+                                <Combobox
+                                  options={
+                                    isLoadingSecteurs
+                                      ? []
+                                      : getSubCategoriesForFiliere().map(
+                                          (subCat: {
+                                            id?: string;
+                                            nom: string;
+                                          }) => {
+                                            // Utiliser l'ID si disponible (API), sinon le nom (données statiques)
+                                            const value =
+                                              subCat.id || subCat.nom;
+                                            const displayName = subCat.nom;
+                                            return {
+                                              value: value,
+                                              label: displayName,
+                                            };
+                                          }
+                                        )
+                                  }
                                   value={selectedSubCategory}
                                   onValueChange={setSelectedSubCategory}
-                                  required
+                                  placeholder={
+                                    isLoadingSecteurs
+                                      ? "Chargement..."
+                                      : "Sélectionnez une sous-filière"
+                                  }
+                                  searchPlaceholder="Rechercher une sous-filière..."
+                                  emptyText="Aucune sous-filière disponible pour cette filière"
                                   disabled={isLoadingSecteurs}
-                                >
-                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium w-full disabled:opacity-60 disabled:cursor-not-allowed">
-                                    <SelectValue
-                                      placeholder={
-                                        isLoadingSecteurs
-                                          ? "Chargement..."
-                                          : "Sélectionnez une sous-filière"
-                                      }
-                                    />
-                                  </SelectTrigger>
-                                  <SelectContent
-                                    className="z-[9999]"
-                                    position="popper"
-                                    sideOffset={4}
-                                    align="start"
-                                  >
-                                    {isLoadingSecteurs ? (
-                                      <div className="px-2 py-1.5 text-sm text-gray-500">
-                                        Chargement des sous-filières...
-                                      </div>
-                                    ) : getSubCategoriesForFiliere().length ===
-                                      0 ? (
-                                      <div className="px-2 py-1.5 text-sm text-gray-500">
-                                        Aucune sous-filière disponible pour
-                                        cette filière
-                                      </div>
-                                    ) : (
-                                      getSubCategoriesForFiliere().map(
-                                        (subCat: {
-                                          id?: string;
-                                          nom: string;
-                                        }) => {
-                                          // Utiliser l'ID si disponible (API), sinon le nom (données statiques)
-                                          const value = subCat.id || subCat.nom;
-                                          const displayName = subCat.nom;
-                                          return (
-                                            <SelectItem
-                                              key={value}
-                                              value={value}
-                                              className="cursor-pointer"
-                                            >
-                                              {displayName}
-                                            </SelectItem>
-                                          );
-                                        }
-                                      )
-                                    )}
-                                  </SelectContent>
-                                </Select>
+                                  loading={isLoadingSecteurs}
+                                  className="w-full min-w-[300px]"
+                                />
                               </div>
                             </div>
                           )}
 
-                          {/* Activités / Corps de métiers (conditionnels) */}
+                          {/* Activités / Corps de métiers */}
                           {selectedSubCategory && (
-                            <div className="space-y-5">
+                            <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
                               <div className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-100">
-                                <Label className="text-base font-bold text-gray-900">
-                                  Activités / Corps de métiers
-                                </Label>
-                                <p className="text-sm text-gray-600 mt-1">
-                                  Sélectionnez une ou plusieurs activités. Vous
-                                  ne trouvez pas votre activité ? Ajoutez-la
-                                  manuellement ci-dessous.
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Label className="text-base font-bold text-gray-900">
+                                    Activités / Corps de métiers
+                                  </Label>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <HelpCircle className="h-4 w-4 text-gray-600 cursor-help" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p className="max-w-xs">Cochez toutes les activités correspondant à votre entreprise</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
+                                <p className="text-sm text-gray-600">
+                                  Sélectionnez une ou plusieurs activités correspondant à votre entreprise
                                 </p>
                               </div>
 
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-6 border-2 border-gray-100 rounded-2xl bg-gradient-to-br from-gray-50 to-white shadow-sm">
+                              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 p-6 border-2 border-gray-100 rounded-2xl bg-gradient-to-br from-gray-50 to-white shadow-sm max-h-80 overflow-y-auto">
                                 {getActivitiesForSubCategory().map(
                                   (activity) => (
                                     <div
@@ -5510,40 +6713,6 @@ const MembersContent = () => {
                               </div>
                             </div>
                           )}
-
-                          {/* Nombre d'employés (non affiché pour les membres institutionnels) */}
-                          {selectedAdhesionType !== "institutionnel" && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <div className="space-y-3">
-                                <Label
-                                  htmlFor="employees"
-                                  className="text-sm font-semibold text-gray-700"
-                                >
-                                  Nombre d'employés
-                                </Label>
-                                <Select>
-                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium">
-                                    <SelectValue placeholder="Sélectionnez" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="0-10">0 - 10</SelectItem>
-                                    <SelectItem value="11-50">
-                                      11 - 50
-                                    </SelectItem>
-                                    <SelectItem value="51-200">
-                                      51 - 200
-                                    </SelectItem>
-                                    <SelectItem value="201-500">
-                                      201 - 500
-                                    </SelectItem>
-                                    <SelectItem value="500+">
-                                      Plus de 500
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </div>
 
@@ -5551,16 +6720,21 @@ const MembersContent = () => {
                       <div className="border-t-2 border-gray-100 my-8"></div>
 
                       {/* SECTION: Localisation du siège / bureaux */}
-                      <div className="pb-8">
+                      <div className="pb-8 p-6 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center gap-3 mb-6">
                           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
                             <MapPin className="h-5 w-5 text-cpu-orange" />
                           </div>
-                          <h3 className="text-xl font-bold text-gray-900">
-                            {selectedAdhesionType === "institutionnel"
-                              ? "Localisation des bureaux en Côte d'Ivoire"
-                              : "Localisation du siège"}
-                          </h3>
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-gray-900">
+                              {selectedAdhesionType === "institutionnel"
+                                ? "Localisation des bureaux en Côte d'Ivoire"
+                                : "Localisation du siège"}
+                            </h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Indiquez l'adresse de votre établissement principal
+                            </p>
+                          </div>
                         </div>
 
                         {/* Question pour les membres institutionnels */}
@@ -5619,7 +6793,7 @@ const MembersContent = () => {
                             </div>
 
                             {/* Ligne 1: Commune et Région */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                               <div className="space-y-3 relative isolate">
                                 <Label
                                   htmlFor="siegeCommune"
@@ -5627,79 +6801,46 @@ const MembersContent = () => {
                                 >
                                   Commune *
                                 </Label>
-                                <Select
+                                <Combobox
+                                  options={
+                                    isLoadingRegions || errorRegions
+                                      ? []
+                                      : getAvailableCommunes().map(
+                                          ({ commune, regionName }) => {
+                                            const communeName =
+                                              "name" in commune
+                                                ? commune.name
+                                                : (commune as any).name;
+                                            return {
+                                              value: communeName,
+                                              label: communeName,
+                                              sublabel: !siegeRegion
+                                                ? regionName
+                                                : undefined,
+                                            };
+                                          }
+                                        )
+                                  }
                                   value={siegeCommune}
                                   onValueChange={(value) => {
                                     setSiegeCommune(value);
                                     // La ville et la région sont déterminées automatiquement par le useEffect
                                   }}
-                                  required
+                                  placeholder={
+                                    isLoadingRegions
+                                      ? "Chargement..."
+                                      : "Sélectionnez une commune"
+                                  }
+                                  searchPlaceholder="Rechercher une commune..."
+                                  emptyText={
+                                    siegeRegion
+                                      ? "Aucune commune disponible pour cette région"
+                                      : "Aucune commune trouvée"
+                                  }
                                   disabled={isLoadingRegions}
-                                >
-                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl bg-white text-gray-900 font-medium w-full disabled:opacity-60 disabled:cursor-not-allowed">
-                                    <SelectValue
-                                      placeholder={
-                                        isLoadingRegions
-                                          ? "Chargement..."
-                                          : "Sélectionnez une commune"
-                                      }
-                                    />
-                                  </SelectTrigger>
-                                  <SelectContent
-                                    className="z-[9999] max-h-[300px] overflow-y-auto"
-                                    position="popper"
-                                    sideOffset={4}
-                                    align="start"
-                                  >
-                                    {isLoadingRegions ? (
-                                      <div className="px-2 py-1.5 text-sm text-gray-500">
-                                        Chargement des communes...
-                                      </div>
-                                    ) : errorRegions ? (
-                                      <div className="px-2 py-1.5 text-sm text-red-500">
-                                        Erreur lors du chargement des communes.
-                                        Veuillez réessayer.
-                                      </div>
-                                    ) : getAvailableCommunes().length === 0 ? (
-                                      <div className="px-2 py-1.5 text-sm text-gray-500">
-                                        {siegeRegion
-                                          ? "Aucune commune disponible pour cette région"
-                                          : "Aucune commune disponible"}
-                                      </div>
-                                    ) : (
-                                      getAvailableCommunes().map(
-                                        ({ commune, regionName }, index) => {
-                                          const communeName =
-                                            "name" in commune
-                                              ? commune.name
-                                              : (commune as any).name;
-                                          const communeValue =
-                                            "id" in commune
-                                              ? commune.id
-                                              : communeName;
-                                          // Utiliser une clé unique combinant région et commune pour éviter les doublons
-                                          const uniqueKey = `${regionName}-${communeValue}-${index}`;
-                                          return (
-                                            <SelectItem
-                                              key={uniqueKey}
-                                              value={communeName}
-                                              className="cursor-pointer"
-                                            >
-                                              <span className="font-medium">
-                                                {communeName}
-                                              </span>
-                                              {!siegeRegion && (
-                                                <span className="text-gray-400 text-xs ml-2">
-                                                  ({regionName})
-                                                </span>
-                                              )}
-                                            </SelectItem>
-                                          );
-                                        }
-                                      )
-                                    )}
-                                  </SelectContent>
-                                </Select>
+                                  loading={isLoadingRegions}
+                                  className="w-full min-w-[300px]"
+                                />
                                 {errorRegions && (
                                   <p className="text-sm text-red-600 flex items-center gap-2">
                                     <Info className="h-4 w-4" />
@@ -5716,75 +6857,43 @@ const MembersContent = () => {
                                 >
                                   Région *
                                 </Label>
-                                <Select
+                                <Combobox
+                                  options={(() => {
+                                    const regions =
+                                      regionsApi &&
+                                      Array.isArray(regionsApi) &&
+                                      regionsApi.length > 0
+                                        ? regionsApi
+                                            .filter((r) => r.isActive !== false)
+                                            .map((r) => ({
+                                              value: r.id,
+                                              label: r.name,
+                                            }))
+                                        : Object.keys(regionsData).map(
+                                            (regionName) => ({
+                                              value: regionName,
+                                              label: regionName,
+                                            })
+                                          );
+                                    return regions;
+                                  })()}
                                   value={siegeRegion}
                                   onValueChange={(value) => {
                                     setSiegeRegion(value);
                                     setSiegeCommune(""); // Réinitialiser la commune
                                     setSiegeVille(""); // Réinitialiser la ville
                                   }}
-                                  required
+                                  placeholder={
+                                    isLoadingRegions
+                                      ? "Chargement..."
+                                      : "Sélectionnez une région"
+                                  }
+                                  searchPlaceholder="Rechercher une région..."
+                                  emptyText="Aucune région trouvée"
                                   disabled={!!siegeCommune || isLoadingRegions}
-                                >
-                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl bg-white text-gray-900 font-medium w-full disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-gray-50">
-                                    <SelectValue
-                                      placeholder={
-                                        isLoadingRegions
-                                          ? "Chargement..."
-                                          : "Sélectionnez une région"
-                                      }
-                                    />
-                                  </SelectTrigger>
-                                  <SelectContent
-                                    className="z-[9999]"
-                                    position="popper"
-                                    sideOffset={4}
-                                    align="start"
-                                  >
-                                    {isLoadingRegions ? (
-                                      <div className="px-2 py-1.5 text-sm text-gray-500">
-                                        Chargement des régions...
-                                      </div>
-                                    ) : errorRegions ? (
-                                      <div className="px-2 py-1.5 text-sm text-red-500">
-                                        Erreur lors du chargement des régions.
-                                        Utilisation des données statiques.
-                                      </div>
-                                    ) : (
-                                      (() => {
-                                        // Utiliser les données de l'API si disponibles, sinon fallback vers données statiques
-                                        const regions =
-                                          regionsApi &&
-                                          Array.isArray(regionsApi) &&
-                                          regionsApi.length > 0
-                                            ? regionsApi
-                                                .filter(
-                                                  (r) => r.isActive !== false
-                                                )
-                                                .map((r) => ({
-                                                  id: r.id,
-                                                  name: r.name,
-                                                }))
-                                            : Object.keys(regionsData).map(
-                                                (regionName) => ({
-                                                  id: regionName,
-                                                  name: regionName,
-                                                })
-                                              );
-
-                                        return regions.map((region) => (
-                                          <SelectItem
-                                            key={region.id}
-                                            value={region.id}
-                                            className="cursor-pointer"
-                                          >
-                                            {region.name}
-                                          </SelectItem>
-                                        ));
-                                      })()
-                                    )}
-                                  </SelectContent>
-                                </Select>
+                                  loading={isLoadingRegions}
+                                  className="w-full min-w-[300px]"
+                                />
                                 {siegeCommune && (
                                   <p className="text-sm text-gray-600 flex items-center gap-2">
                                     <Info className="h-4 w-4 text-cpu-orange" />
@@ -5804,25 +6913,21 @@ const MembersContent = () => {
                                 >
                                   Ville *
                                 </Label>
-                                <Select
+                                <Combobox
+                                  options={getVillesForCommune(
+                                    siegeRegion,
+                                    siegeCommune
+                                  ).map((ville) => ({
+                                    value: ville,
+                                    label: ville,
+                                  }))}
                                   value={siegeVille}
                                   onValueChange={setSiegeVille}
-                                  required
-                                >
-                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl bg-white text-gray-900 font-medium">
-                                    <SelectValue placeholder="Sélectionnez une ville" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {getVillesForCommune(
-                                      siegeRegion,
-                                      siegeCommune
-                                    ).map((ville) => (
-                                      <SelectItem key={ville} value={ville}>
-                                        {ville}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                  placeholder="Sélectionnez une ville"
+                                  searchPlaceholder="Rechercher une ville..."
+                                  emptyText="Aucune ville trouvée"
+                                  className="w-full min-w-[300px]"
+                                />
                               </div>
                             )}
                           </div>
@@ -5832,33 +6937,46 @@ const MembersContent = () => {
                       {/* Séparateur moderne */}
                       <div className="border-t-2 border-gray-100 my-8"></div>
 
-                      {/* SECTION: Informations de contact */}
-                      <div className="pb-8">
+                      {/* SECTION: Votre contact */}
+                      <div className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center gap-3 mb-6">
                           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
                             <Users className="h-5 w-5 text-cpu-orange" />
                           </div>
-                          <h3 className="text-xl font-bold text-gray-900">
-                            Informations de contact
-                          </h3>
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-gray-900">
+                              Votre contact
+                            </h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Personne à contacter pour le suivi de votre adhésion
+                            </p>
+                          </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                           <div className="space-y-3">
-                            <Label
-                              htmlFor="representativeName"
-                              className="text-sm font-semibold text-gray-700"
-                            >
-                              Nom du représentant *
-                            </Label>
-                            <Input
-                              id="representativeName"
-                              placeholder="Prénom et Nom"
-                              required
-                              className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900"
-                              value={formName}
-                              onChange={(e) => setFormName(e.target.value)}
-                            />
+                            <div className="flex items-center gap-2">
+                              <Label
+                                htmlFor="representativeName"
+                                className="text-sm font-semibold text-gray-700"
+                              >
+                                Nom du représentant
+                              </Label>
+                              <span className="text-red-500 text-base">*</span>
+                            </div>
+                            <div className="relative">
+                              <Input
+                                id="representativeName"
+                                placeholder="Prénom et Nom"
+                                required
+                                className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 pr-10 text-gray-900"
+                                value={formName}
+                                onChange={(e) => setFormName(e.target.value)}
+                              />
+                              {formName && (
+                                <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-cpu-green animate-in zoom-in duration-200" />
+                              )}
+                            </div>
                           </div>
 
                           <div className="space-y-3">
@@ -5868,50 +6986,63 @@ const MembersContent = () => {
                             >
                               Fonction
                             </Label>
-                            <Input
-                              id="position"
-                              placeholder="Ex: Directeur Général"
-                              className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900"
-                              value={formPosition}
-                              onChange={(e) => setFormPosition(e.target.value)}
-                            />
+                            <div className="relative">
+                              <Input
+                                id="position"
+                                placeholder="Ex: Directeur Général, Gérant"
+                                className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 pr-10 text-gray-900"
+                                value={formPosition}
+                                onChange={(e) => setFormPosition(e.target.value)}
+                              />
+                              {formPosition && (
+                                <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-cpu-green animate-in zoom-in duration-200" />
+                              )}
+                            </div>
                           </div>
 
                           <div className="space-y-3">
-                            <Label
-                              htmlFor="email"
-                              className="text-sm font-semibold text-gray-700"
-                            >
-                              Email professionnel *
-                            </Label>
-                            <Input
-                              id="email"
-                              type="email"
-                              placeholder="email@entreprise.ci"
-                              required
-                              className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900"
-                              value={formEmail}
-                              onChange={(e) => setFormEmail(e.target.value)}
-                              suppressHydrationWarning
-                            />
-                          </div>
-
-                          <div className="space-y-3">
-                            <Label
-                              htmlFor="phone"
-                              className="text-sm font-semibold text-gray-700"
-                            >
-                              Téléphone *
-                            </Label>
-                            <Input
-                              id="phone"
-                              type="tel"
-                              placeholder="+225 XX XX XX XX XX"
-                              required
-                              className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900"
-                              value={formPhone}
-                              onChange={(e) => setFormPhone(e.target.value)}
-                            />
+                            <div className="flex items-center gap-2">
+                              <Label
+                                htmlFor="phone"
+                                className="text-sm font-semibold text-gray-700"
+                              >
+                                Téléphone
+                              </Label>
+                              <span className="text-red-500 text-base">*</span>
+                            </div>
+                            <div className="relative">
+                              <Input
+                                id="phone"
+                                type="tel"
+                                placeholder="+225 XX XX XX XX XX"
+                                required
+                                className={`h-12 border-2 transition-colors rounded-xl px-4 pr-10 text-gray-900 ${
+                                  phoneError
+                                    ? 'border-red-500 hover:border-red-600 focus:border-red-600'
+                                    : phoneValid
+                                    ? 'border-green-500 hover:border-green-600 focus:border-green-600'
+                                    : 'border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange'
+                                }`}
+                                value={formPhone}
+                                onChange={(e) => {
+                                  setFormPhone(e.target.value);
+                                  validatePhone(e.target.value);
+                                }}
+                                onBlur={() => validatePhone(formPhone)}
+                              />
+                              {phoneValid && !phoneError && (
+                                <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-green-600 animate-in zoom-in duration-200" />
+                              )}
+                              {phoneError && (
+                                <AlertCircle className="absolute right-3 top-3.5 h-5 w-5 text-red-600 animate-in zoom-in duration-200" />
+                              )}
+                            </div>
+                            {phoneError && (
+                              <p className="text-sm text-red-600 flex items-center gap-1 animate-in slide-in-from-top-2 duration-200">
+                                <AlertCircle className="h-4 w-4" />
+                                {phoneError}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -5988,28 +7119,6 @@ const MembersContent = () => {
                             </p>
                           )}
 
-                        </div>
-                      </div>
-
-                      {/* Séparateur moderne */}
-                      <div className="border-t-2 border-gray-100 my-8"></div>
-
-                      {/* SECTION: Message */}
-                      <div className="pb-8">
-                        <div className="space-y-3">
-                          <Label
-                            htmlFor="message"
-                            className="text-sm font-semibold text-gray-700"
-                          >
-                            Message ou informations complémentaires
-                          </Label>
-                          <Textarea
-                            id="message"
-                            placeholder="Décrivez brièvement votre organisation et vos attentes..."
-                            className="min-h-[140px] border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 py-3 text-gray-900 resize-none"
-                            value={formMessage}
-                            onChange={(e) => setFormMessage(e.target.value)}
-                          />
                         </div>
                       </div>
 

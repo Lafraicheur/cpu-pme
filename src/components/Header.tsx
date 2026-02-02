@@ -130,11 +130,9 @@ function HeaderContent() {
 
   return (
     <>
-      {/* Header */}
       <header className="sticky top-0 z-50 px-4 sm:px-6 py-4 sm:py-5 bg-white/80 backdrop-blur-sm shadow-sm">
         <div className="max-w-[1400px] mx-auto">
           <div className="flex items-center justify-between gap-2 sm:gap-4 md:gap-6">
-            {/* Logo */}
             <div className="flex items-center shrink-0">
               <Image
                 src="/logo.png"
@@ -146,7 +144,6 @@ function HeaderContent() {
               />
             </div>
 
-            {/* Navigation */}
             <nav className="hidden xl:flex items-center gap-4 flex-1 justify-center">
               <Link
                 href="/"
@@ -159,7 +156,6 @@ function HeaderContent() {
                 Accueil
               </Link>
 
-              {/* Menu À Propos avec sous-menu */}
               <Link
                 href="/a-propos"
                 className={`font-inter text-sm transition-all whitespace-nowrap pb-1 border-b-2 ${
@@ -171,7 +167,6 @@ function HeaderContent() {
                 À propos
               </Link>
 
-              {/* Menu Services avec sous-menu */}
               <div
                 className="relative"
                 onMouseEnter={() => {
@@ -206,7 +201,7 @@ function HeaderContent() {
                 {/* Sous-menu Services */}
                 {isServicesMenuOpen && (
                   <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
-                    <Link
+                    {/* <Link
                       href="#"
                       className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
                     >
@@ -223,7 +218,7 @@ function HeaderContent() {
                       <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
                         Appels d&apos;offres & Opportunités
                       </span>
-                    </Link>
+                    </Link> */}
                     <Link
                       href="#"
                       className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
@@ -233,7 +228,7 @@ function HeaderContent() {
                         Formation / CPU-Académie
                       </span>
                     </Link>
-                    <Link
+                    {/* <Link
                       href="#"
                       className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
                     >
@@ -259,7 +254,7 @@ function HeaderContent() {
                       <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
                         Réseautage & Événements
                       </span>
-                    </Link>
+                    </Link> */}
                   </div>
                 )}
               </div>

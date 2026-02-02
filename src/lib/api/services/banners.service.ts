@@ -2,6 +2,7 @@
  * Service API pour les banners
  */
 
+import { apiClient } from '../client';
 import { API_ENDPOINTS, API_BASE_URL } from '../config';
 
 /**
@@ -70,25 +71,16 @@ export const bannersService = {
         queryParams.append('activeOnly', params.activeOnly.toString());
       }
 
-      const endpoint = params && (params.position || params.type || params.activeOnly !== undefined)
-        ? `${API_BASE_URL}${API_ENDPOINTS.BANNERS.FOR_SITE_WEB}?${queryParams.toString()}`
-        : `${API_BASE_URL}${API_ENDPOINTS.BANNERS.FOR_SITE_WEB}`;
+      const endpoint = queryParams.toString()
+        ? `${API_ENDPOINTS.BANNERS.FOR_SITE_WEB}?${queryParams.toString()}`
+        : API_ENDPOINTS.BANNERS.FOR_SITE_WEB;
 
-      const response = await fetch(endpoint, {
-        method: 'GET',
-        headers: {
-          'Accept': '*/*',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const responseData = await response.json();
+      const response = await apiClient.get<any>(endpoint);
 
       // La réponse a une structure imbriquée : { success: true, data: { success: true, data: Banner[] } }
       let data: Banner[] = [];
+
+      const responseData = response.data;
 
       // Gérer la structure imbriquée
       if (responseData && typeof responseData === 'object') {
