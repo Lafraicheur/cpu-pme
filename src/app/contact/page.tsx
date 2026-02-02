@@ -53,23 +53,24 @@ export default function Contact() {
     <>
       {/* Hero Section */}
 
-      <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
+      <section className="relative flex items-center justify-center overflow-hidden min-h-[80vh] h-[400px] md:h-[500px] lg:h-[550px]">
         {/* BACKGROUND IMAGE */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 w-full h-full">
           <img
             src="/logo.png"
             alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover min-h-full"
+            style={{ minHeight: '100%' }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
         </div>
 
         {/* CONTENU */}
-        <div className="relative z-10 container mx-auto px-4 text-center text-white">
-          <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold mb-6 animate-fade-in">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center w-full h-full px-4 text-center text-white bg-transparent">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in drop-shadow-md">
             Contactez-nous
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in">
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in drop-shadow">
             Notre équipe est à votre écoute pour répondre à toutes vos questions
           </p>
           <div className="flex gap-4 justify-center">

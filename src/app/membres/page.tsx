@@ -85,6 +85,8 @@ import {
   HelpCircle,
   Lightbulb,
   Save,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   membershipBenefits,
@@ -710,6 +712,7 @@ const MembersContent = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const membersPerPage = 9;
   const [isLoading, setIsLoading] = useState(true);
@@ -1567,25 +1570,23 @@ const MembersContent = () => {
     }
   }, [isMounted, isDraftRestored, toast]);
 
-  // Smooth scroll vers les sections qui apparaissent
-  // Ne scroller que lorsque le type de membre ET le profil sont sélectionnés
-  useEffect(() => {
-    if (selectedAdhesionType && selectedSubProfile && isMounted) {
-      setTimeout(() => {
-        // Pour les membres institutionnels, scroller vers la section Coordonnées (première section)
-        // Pour les autres types (individuel, entreprise, associatif), scroller vers Zones d'intervention
-        const targetSection = selectedAdhesionType === 'institutionnel' 
-          ? 'coordonnees-section'
-          : 'zones-section';
-        
-        document.getElementById(targetSection)?.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start',
-          inline: 'nearest'
-        });
-      }, 100);
-    }
-  }, [selectedAdhesionType, selectedSubProfile ?? "", isMounted]);
+  // Désactivé: Scroll automatique qui perturbait la navigation entre sections
+  // Les sections sont maintenant dans l'ordre logique et l'utilisateur peut naviguer naturellement
+  // useEffect(() => {
+  //   if (selectedAdhesionType && selectedSubProfile && isMounted) {
+  //     setTimeout(() => {
+  //       const targetSection = selectedAdhesionType === 'institutionnel' 
+  //         ? 'coordonnees-section'
+  //         : 'zones-section';
+  //       
+  //       document.getElementById(targetSection)?.scrollIntoView({ 
+  //         behavior: 'smooth', 
+  //         block: 'start',
+  //         inline: 'nearest'
+  //       });
+  //     }, 100);
+  //   }
+  // }, [selectedAdhesionType, selectedSubProfile ?? "", isMounted]);
 
   // Gérer la sélection/désélection d'une activité
   const toggleActivity = (activity: string) => {
@@ -2613,96 +2614,8 @@ const MembersContent = () => {
   };
 
   const getMemberIcon = (member: Member) => {
-    // Récupérer le nom de la filière depuis l'API
-    let filiereName = '';
-    if (member.filiereId && secteursApi && Array.isArray(secteursApi)) {
-      for (const secteur of secteursApi) {
-        if (secteur.filieres && Array.isArray(secteur.filieres)) {
-          const filiere = secteur.filieres.find((f: any) => f.id === member.filiereId);
-          if (filiere) {
-            filiereName = filiere.name.toLowerCase();
-            break;
-          }
-        }
-      }
-    }
-
-    // Mapper les filières aux icônes sectorielles
-    if (filiereName) {
-      // BTP & Construction
-      if (filiereName.includes('btp') || filiereName.includes('construction') || 
-          filiereName.includes('bâtiment') || filiereName.includes('batiment') ||
-          filiereName.includes('génie civil') || filiereName.includes('genie civil')) {
-        return <IconBTP className="h-10 w-10 text-cpu-green" />;
-      }
-      // Commerce
-      if (filiereName.includes('commerce') || filiereName.includes('distribution') ||
-          filiereName.includes('vente') || filiereName.includes('négoce') || 
-          filiereName.includes('negoce')) {
-        return <IconCommerce className="h-10 w-10 text-cpu-green" />;
-      }
-      // Industrie
-      if (filiereName.includes('industrie') || filiereName.includes('industriel') ||
-          filiereName.includes('manufacture') || filiereName.includes('production') ||
-          filiereName.includes('fabrication')) {
-        return <IconIndustrie className="h-10 w-10 text-cpu-green" />;
-      }
-      // Services
-      if (filiereName.includes('service') || filiereName.includes('conseil') ||
-          filiereName.includes('consulting') || filiereName.includes('assistance')) {
-        return <IconServices className="h-10 w-10 text-cpu-green" />;
-      }
-      // Technologie & Digital
-      if (filiereName.includes('technologie') || filiereName.includes('digital') ||
-          filiereName.includes('numérique') || filiereName.includes('numerique') ||
-          filiereName.includes('informatique') || filiereName.includes('tech') ||
-          filiereName.includes('logiciel') || filiereName.includes('software')) {
-        return <IconTechnologie className="h-10 w-10 text-cpu-green" />;
-      }
-      // Transport & Logistique
-      if (filiereName.includes('transport') || filiereName.includes('logistique') ||
-          filiereName.includes('livraison') || filiereName.includes('fret')) {
-        return <IconTransport className="h-10 w-10 text-cpu-green" />;
-      }
-      // Tourisme & Hôtellerie
-      if (filiereName.includes('tourisme') || filiereName.includes('hôtel') ||
-          filiereName.includes('hotel') || filiereName.includes('hospitalité') ||
-          filiereName.includes('hospitalite') || filiereName.includes('voyage')) {
-        return <IconTourisme className="h-10 w-10 text-cpu-green" />;
-      }
-      // Santé
-      if (filiereName.includes('santé') || filiereName.includes('sante') ||
-          filiereName.includes('médical') || filiereName.includes('medical') ||
-          filiereName.includes('pharmaceutique') || filiereName.includes('clinique')) {
-        return <IconSante className="h-10 w-10 text-cpu-green" />;
-      }
-      // Énergie
-      if (filiereName.includes('énergie') || filiereName.includes('energie') ||
-          filiereName.includes('électrique') || filiereName.includes('electrique') ||
-          filiereName.includes('solaire') || filiereName.includes('renouvelable')) {
-        return <IconEnergie className="h-10 w-10 text-cpu-green" />;
-      }
-      // Agriculture
-      if (filiereName.includes('agriculture') || filiereName.includes('agricole') ||
-          filiereName.includes('agro') || filiereName.includes('agroalimentaire') ||
-          filiereName.includes('élevage') || filiereName.includes('elevage') ||
-          filiereName.includes('culture') || filiereName.includes('plantation')) {
-        return <IconAgriculture className="h-10 w-10 text-cpu-green" />;
-      }
-    }
-
-    // Fallback selon le type de membre si pas de filière
-    switch (member.memberType) {
-      case "individuel":
-        return <Users className="h-10 w-10 text-cpu-green" />;
-      case "associatif":
-        return <Handshake className="h-10 w-10 text-cpu-green" />;
-      case "institutionnel":
-        return <Building className="h-10 w-10 text-cpu-green" />;
-      case "entreprise":
-      default:
-        return <Building2 className="h-10 w-10 text-cpu-green" />;
-    }
+    // Icon entreprise uniforme pour tous les membres
+    return <Building2 className="h-10 w-10 text-cpu-green" />;
   };
 
   // Fonction pour obtenir l'icône et la couleur du badge
@@ -3064,19 +2977,20 @@ const MembersContent = () => {
         </DialogContent>
       </Dialog>
       {/* Hero Section */}
-      <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
+      <section className="relative flex items-center justify-center overflow-hidden min-h-[80vh] h-[400px] md:h-[500px] lg:h-[550px]">
         {/* BACKGROUND IMAGE */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 w-full h-full">
           <img
             src="/logo.png"
             alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover min-h-full"
+            style={{ minHeight: '100%' }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
         </div>
 
         {/* CONTENU */}
-        <div className="relative z-10 container mx-auto px-4 text-center text-white">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center w-full h-full px-4 text-center text-white bg-transparent">
           <div className="mb-4">
             <span className="text-lg md:text-xl font-medium text-white/80">
               Membres
@@ -3096,10 +3010,10 @@ const MembersContent = () => {
               </>
             )}
           </div>
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in drop-shadow-md">
             {getPageTitle()}
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in">
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in drop-shadow">
             {getPageDescription()}
           </p>
         </div>
@@ -3183,7 +3097,7 @@ const MembersContent = () => {
                       <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-cpu-orange hover:w-2 transition-all duration-300"></div>
 
                       {/* Image avec icône */}
-                      <div className="member-image bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 w-full md:w-48 h-48 md:h-auto flex-shrink-0 flex items-center justify-center overflow-hidden relative group/image">
+                      <div className="member-image bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 w-full md:w-36 h-36 md:h-auto flex-shrink-0 flex items-center justify-center overflow-hidden relative group/image">
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="w-[85%] h-[85%] rounded-2xl bg-cpu-orange/10 flex items-center justify-center group-hover/image:bg-cpu-orange/20 transition-all duration-300 group-hover/image:scale-105 group-hover/image:rotate-6">
                             <div className="scale-90 text-cpu-orange">
@@ -3194,11 +3108,11 @@ const MembersContent = () => {
                       </div>
 
                       {/* Contenu principal */}
-                      <div className="flex-1 p-5 md:p-6 flex flex-col min-w-0">
+                      <div className="flex-1 p-3 md:p-4 flex flex-col min-w-0">
                         {/* Header avec nom et badge */}
-                        <div className="mb-4">
-                          <div className="flex items-start justify-between gap-3 mb-3">
-                            <h3 className="text-xl md:text-2xl font-bold text-[#221F1F] hover:text-cpu-orange transition-colors line-clamp-2">
+                        <div className="mb-2">
+                          <div className="flex items-start justify-between gap-3 mb-2">
+                            <h3 className="text-lg md:text-xl font-bold text-[#221F1F] hover:text-cpu-orange transition-colors line-clamp-2">
                               {recentMembers[featuredIndex].name}
                             </h3>
                             <Badge className="bg-green-600 text-white text-xs whitespace-nowrap px-2.5 py-1">
@@ -3207,13 +3121,13 @@ const MembersContent = () => {
                           </div>
 
                           {/* Localisation */}
-                          <div className="flex items-start text-sm text-[#6F6F6F] mb-3">
+                          <div className="flex items-start text-sm text-[#6F6F6F] mb-2">
                             <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-cpu-orange mt-0.5" />
                             <span className="break-words">{recentMembers[featuredIndex].fullAddress || recentMembers[featuredIndex].region}</span>
                           </div>
 
                           {/* Filière et Sous-filière */}
-                          <div className="grid grid-cols-2 gap-3 mb-3">
+                          <div className="grid grid-cols-2 gap-2 mb-2">
                             <div className="rounded-lg p-2.5 bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 transition-all">
                               <div className="text-xs text-cpu-orange font-medium mb-1">Filière</div>
                               {(() => {
@@ -3266,7 +3180,7 @@ const MembersContent = () => {
                           </div>
 
                           {/* Activités */}
-                          <div className="mb-3">
+                          <div className="mb-2">
                             <div className="flex items-center gap-2 mb-2">
                               <Briefcase className="h-3.5 w-3.5 text-cpu-orange" />
                               <span className="text-xs text-cpu-orange font-semibold">Activités</span>
@@ -3322,66 +3236,94 @@ const MembersContent = () => {
                         </div>
 
                         {/* Description */}
-                        <div className="mb-4">
+                        <div className="mb-2">
                           <div className="flex items-center gap-2 mb-2">
                             <Users className="h-3.5 w-3.5 text-cpu-orange" />
                             <span className="text-xs text-cpu-orange font-semibold">À propos</span>
                           </div>
-                          <p className="text-sm text-[#6F6F6F] leading-relaxed line-clamp-2">
+                          <p className={`text-sm text-[#6F6F6F] leading-relaxed ${expandedMembers.has(recentMembers[featuredIndex].id) ? '' : 'line-clamp-2'}`}>
                             {recentMembers[featuredIndex].description}
                           </p>
                         </div>
 
                         {/* Boutons d'action */}
                         <div className="mt-auto">
-                          <div className="grid grid-cols-2 gap-3">
-                            {recentMembers[featuredIndex].email ? (
-                              <a
-                                href={`mailto:${recentMembers[featuredIndex].email}`}
-                                className="w-full"
-                              >
-                                <Button
-                                  className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-lg"
-                                >
-                                  <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
-                                  <Globe className="h-4 w-4 mr-2" />
-                                  Contacter
-                                </Button>
-                              </a>
-                            ) : (
+                          {!expandedMembers.has(recentMembers[featuredIndex].id) ? (
+                            <Button
+                              onClick={() => {
+                                const newExpanded = new Set(expandedMembers);
+                                newExpanded.add(recentMembers[featuredIndex].id);
+                                setExpandedMembers(newExpanded);
+                              }}
+                              className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              En savoir plus
+                            </Button>
+                          ) : (
+                            <>
+                              <div className="grid grid-cols-2 gap-3 mb-3">
+                                {recentMembers[featuredIndex].email ? (
+                                  <a
+                                    href={`mailto:${recentMembers[featuredIndex].email}`}
+                                    className="w-full"
+                                  >
+                                    <Button
+                                      className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-lg"
+                                    >
+                                      <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
+                                      <Globe className="h-4 w-4 mr-2" />
+                                      Contacter
+                                    </Button>
+                                  </a>
+                                ) : (
+                                  <Button
+                                    disabled
+                                    className="w-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed"
+                                  >
+                                    <Globe className="h-4 w-4 mr-2" />
+                                    Contacter
+                                  </Button>
+                                )}
+                                
+                                {recentMembers[featuredIndex].phone ? (
+                                  <a
+                                    href={`tel:${recentMembers[featuredIndex].phone}`}
+                                    className="w-full"
+                                  >
+                                    <Button
+                                      variant="outline"
+                                      className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                                    >
+                                      <span className="mr-2">📞</span>
+                                      Appeler
+                                    </Button>
+                                  </a>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    disabled
+                                    className="w-full border-gray-300 text-gray-400 font-semibold cursor-not-allowed"
+                                  >
+                                    <span className="mr-2">📞</span>
+                                    Appeler
+                                  </Button>
+                                )}
+                              </div>
                               <Button
-                                disabled
-                                className="w-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed"
-                              >
-                                <Globe className="h-4 w-4 mr-2" />
-                                Contacter
-                              </Button>
-                            )}
-                            
-                            {recentMembers[featuredIndex].phone ? (
-                              <a
-                                href={`tel:${recentMembers[featuredIndex].phone}`}
-                                className="w-full"
-                              >
-                                <Button
-                                  variant="outline"
-                                  className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:scale-105 hover:shadow-lg"
-                                >
-                                  <span className="mr-2">📞</span>
-                                  Appeler
-                                </Button>
-                              </a>
-                            ) : (
-                              <Button
+                                onClick={() => {
+                                  const newExpanded = new Set(expandedMembers);
+                                  newExpanded.delete(recentMembers[featuredIndex].id);
+                                  setExpandedMembers(newExpanded);
+                                }}
                                 variant="outline"
-                                disabled
-                                className="w-full border-gray-300 text-gray-400 font-semibold cursor-not-allowed"
+                                className="w-full border-gray-300 text-gray-600 hover:bg-gray-50 font-semibold transition-all"
                               >
-                                <span className="mr-2">📞</span>
-                                Appeler
+                                <EyeOff className="h-4 w-4 mr-2" />
+                                Voir moins
                               </Button>
-                            )}
-                          </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -3897,7 +3839,8 @@ const MembersContent = () => {
                                     }
                                   }
                                   
-                                  const visibleActivites = activitesNames.slice(0, 3);
+                                  const isExpanded = expandedMembers.has(member.id);
+                                  const visibleActivites = isExpanded ? activitesNames : activitesNames.slice(0, 3);
                                   const remainingCount = activitesNames.length - visibleActivites.length;
                                   
                                   return activitesNames.length > 0 ? (
@@ -3910,7 +3853,7 @@ const MembersContent = () => {
                                           {activite}
                                         </Badge>
                                       ))}
-                                      {remainingCount > 0 && (
+                                      {!isExpanded && remainingCount > 0 && (
                                         <Badge className="text-xs bg-cpu-green text-white font-medium px-3 py-1.5 rounded-md hover:bg-white hover:text-cpu-green hover:border-cpu-green border-2 border-cpu-green transition-all hover:scale-105">
                                           +{remainingCount}
                                         </Badge>
@@ -3929,61 +3872,89 @@ const MembersContent = () => {
                                 <Users className="h-4 w-4 text-gray-500" />
                                 <span className="text-xs text-gray-500 font-medium">À propos</span>
                               </div>
-                              <p className="text-sm text-[#6F6F6F] leading-relaxed line-clamp-3 min-h-[60px]">
+                              <p className={`text-sm text-[#6F6F6F] leading-relaxed ${expandedMembers.has(member.id) ? '' : 'line-clamp-2'} min-h-[60px]`}>
                                 {member.description}
                               </p>
                             </div>
 
                             {/* Boutons d'action - ROW 5 */}
                             <div className="px-6 pb-6 mt-auto">
-                              <div className="grid grid-cols-2 gap-3">
-                                {member.email ? (
-                                  <a
-                                    href={`mailto:${member.email}`}
-                                    className="w-full"
-                                  >
-                                    <Button
-                                      className="w-full bg-cpu-green hover:bg-white hover:text-cpu-green text-white hover:border-cpu-green border-2 border-cpu-green font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-lg"
-                                    >
-                                      <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
-                                      <Globe className="h-4 w-4 mr-2" />
-                                      Contacter
-                                    </Button>
-                                  </a>
-                                ) : (
+                              {!expandedMembers.has(member.id) ? (
+                                <Button
+                                  onClick={() => {
+                                    const newExpanded = new Set(expandedMembers);
+                                    newExpanded.add(member.id);
+                                    setExpandedMembers(newExpanded);
+                                  }}
+                                  className="w-full bg-cpu-green hover:bg-white hover:text-cpu-green text-white hover:border-cpu-green border-2 border-cpu-green font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  En savoir plus
+                                </Button>
+                              ) : (
+                                <>
+                                  <div className="grid grid-cols-2 gap-3 mb-3">
+                                    {member.email ? (
+                                      <a
+                                        href={`mailto:${member.email}`}
+                                        className="w-full"
+                                      >
+                                        <Button
+                                          className="w-full bg-cpu-green hover:bg-white hover:text-cpu-green text-white hover:border-cpu-green border-2 border-cpu-green font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-lg"
+                                        >
+                                          <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
+                                          <Globe className="h-4 w-4 mr-2" />
+                                          Contacter
+                                        </Button>
+                                      </a>
+                                    ) : (
+                                      <Button
+                                        disabled
+                                        className="w-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed"
+                                      >
+                                        <Globe className="h-4 w-4 mr-2" />
+                                        Contacter
+                                      </Button>
+                                    )}
+                                    
+                                    {member.phone ? (
+                                      <a
+                                        href={`tel:${member.phone}`}
+                                        className="w-full"
+                                      >
+                                        <Button
+                                          variant="outline"
+                                          className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                                        >
+                                          <span className="mr-2">📞</span>
+                                          Appeler
+                                        </Button>
+                                      </a>
+                                    ) : (
+                                      <Button
+                                        variant="outline"
+                                        disabled
+                                        className="w-full border-gray-300 text-gray-400 font-semibold cursor-not-allowed"
+                                      >
+                                        <span className="mr-2">📞</span>
+                                        Appeler
+                                      </Button>
+                                    )}
+                                  </div>
                                   <Button
-                                    disabled
-                                    className="w-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed"
-                                  >
-                                    <Globe className="h-4 w-4 mr-2" />
-                                    Contacter
-                                  </Button>
-                                )}
-                                
-                                {member.phone ? (
-                                  <a
-                                    href={`tel:${member.phone}`}
-                                    className="w-full"
-                                  >
-                                    <Button
-                                      variant="outline"
-                                      className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:scale-105 hover:shadow-lg"
-                                    >
-                                      <span className="mr-2">📞</span>
-                                      Appeler
-                                    </Button>
-                                  </a>
-                                ) : (
-                                  <Button
+                                    onClick={() => {
+                                      const newExpanded = new Set(expandedMembers);
+                                      newExpanded.delete(member.id);
+                                      setExpandedMembers(newExpanded);
+                                    }}
                                     variant="outline"
-                                    disabled
-                                    className="w-full border-gray-300 text-gray-400 font-semibold cursor-not-allowed"
+                                    className="w-full border-gray-300 text-gray-600 hover:bg-gray-50 font-semibold transition-all"
                                   >
-                                    <span className="mr-2">📞</span>
-                                    Appeler
+                                    <EyeOff className="h-4 w-4 mr-2" />
+                                    Voir moins
                                   </Button>
-                                )}
-                              </div>
+                                </>
+                              )}
                             </div>
                           </div>
                         ))
@@ -4023,7 +3994,7 @@ const MembersContent = () => {
                             <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-cpu-orange group-hover:w-2 transition-all duration-300"></div>
 
                             {/* Image avec icône */}
-                            <div className="member-image bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 w-full md:w-48 h-48 md:h-auto flex-shrink-0 flex items-center justify-center overflow-hidden relative group/image">
+                            <div className="member-image bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 w-full md:w-36 h-36 md:h-auto flex-shrink-0 flex items-center justify-center overflow-hidden relative group/image">
                               <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="w-[85%] h-[85%] rounded-2xl bg-cpu-orange/10 flex items-center justify-center group-hover/image:bg-cpu-orange/20 transition-all duration-300 group-hover/image:scale-105 group-hover/image:rotate-6">
                                   <div className="scale-90 text-cpu-orange">
@@ -4034,11 +4005,11 @@ const MembersContent = () => {
                             </div>
 
                             {/* Contenu principal */}
-                            <div className="flex-1 p-5 md:p-6 flex flex-col min-w-0">
+                            <div className="flex-1 p-3 md:p-4 flex flex-col min-w-0">
                               {/* Header avec nom et badges */}
-                              <div className="mb-4">
-                                <div className="flex items-start justify-between gap-3 mb-3">
-                                  <h3 className="text-xl md:text-2xl font-bold text-[#221F1F] group-hover:text-cpu-orange transition-colors line-clamp-2">
+                              <div className="mb-2">
+                                <div className="flex items-start justify-between gap-3 mb-2">
+                                  <h3 className="text-lg md:text-xl font-bold text-[#221F1F] group-hover:text-cpu-orange transition-colors line-clamp-2">
                                     {member.name}
                                   </h3>
                                   {member.interventionScope && (
@@ -4057,13 +4028,13 @@ const MembersContent = () => {
                                 </div>
 
                                 {/* Localisation */}
-                                <div className="flex items-start text-sm text-[#6F6F6F] mb-3">
+                                <div className="flex items-start text-sm text-[#6F6F6F] mb-2">
                                   <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-cpu-orange mt-0.5" />
                                   <span className="break-words">{member.fullAddress || member.region}</span>
                                 </div>
 
                                 {/* Filière et Sous-filière */}
-                                <div className="grid grid-cols-2 gap-3 mb-3">
+                                <div className="grid grid-cols-2 gap-2 mb-2">
                                   <div className="rounded-lg p-2.5 bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 transition-all">
                                     <div className="text-xs text-cpu-orange font-medium mb-1">Filière</div>
                                     {(() => {
@@ -4116,7 +4087,7 @@ const MembersContent = () => {
                                 </div>
 
                                 {/* Activités */}
-                                <div className="mb-3">
+                                <div className="mb-2">
                                   <div className="flex items-center gap-2 mb-2">
                                     <Briefcase className="h-3.5 w-3.5 text-cpu-orange" />
                                     <span className="text-xs text-cpu-orange font-semibold">Activités</span>
@@ -4144,7 +4115,8 @@ const MembersContent = () => {
                                         }
                                       }
                                       
-                                      const visibleActivites = activitesNames.slice(0, 4);
+                                      const isExpanded = expandedMembers.has(member.id);
+                                      const visibleActivites = isExpanded ? activitesNames : activitesNames.slice(0, 3);
                                       const remainingCount = activitesNames.length - visibleActivites.length;
                                       
                                       return activitesNames.length > 0 ? (
@@ -4157,7 +4129,7 @@ const MembersContent = () => {
                                               {activite}
                                             </Badge>
                                           ))}
-                                          {remainingCount > 0 && (
+                                          {!isExpanded && remainingCount > 0 && (
                                             <Badge className="text-xs bg-cpu-orange text-white font-medium px-2.5 py-1 rounded-md hover:bg-white hover:text-cpu-orange hover:border-cpu-orange border-2 border-cpu-orange transition-all hover:scale-105">
                                               +{remainingCount}
                                             </Badge>
@@ -4172,66 +4144,94 @@ const MembersContent = () => {
                               </div>
 
                               {/* Description */}
-                              <div className="mb-4">
+                              <div className="mb-2">
                                 <div className="flex items-center gap-2 mb-2">
                                   <Users className="h-3.5 w-3.5 text-cpu-orange" />
                                   <span className="text-xs text-cpu-orange font-semibold">À propos</span>
                                 </div>
-                                <p className="text-sm text-[#6F6F6F] leading-relaxed line-clamp-2">
+                                <p className={`text-sm text-[#6F6F6F] leading-relaxed ${expandedMembers.has(member.id) ? '' : 'line-clamp-2'}`}>
                                   {member.description}
                                 </p>
                               </div>
 
                               {/* Boutons d'action */}
                               <div className="mt-auto">
-                                <div className="grid grid-cols-2 gap-3">
-                                  {member.email ? (
-                                    <a
-                                      href={`mailto:${member.email}`}
-                                      className="w-full"
-                                    >
-                                      <Button
-                                        className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-lg"
-                                      >
-                                        <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
-                                        <Globe className="h-4 w-4 mr-2" />
-                                        Contacter
-                                      </Button>
-                                    </a>
-                                  ) : (
+                                {!expandedMembers.has(member.id) ? (
+                                  <Button
+                                    onClick={() => {
+                                      const newExpanded = new Set(expandedMembers);
+                                      newExpanded.add(member.id);
+                                      setExpandedMembers(newExpanded);
+                                    }}
+                                    className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    En savoir plus
+                                  </Button>
+                                ) : (
+                                  <>
+                                    <div className="grid grid-cols-2 gap-3 mb-3">
+                                      {member.email ? (
+                                        <a
+                                          href={`mailto:${member.email}`}
+                                          className="w-full"
+                                        >
+                                          <Button
+                                            className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-lg"
+                                          >
+                                            <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
+                                            <Globe className="h-4 w-4 mr-2" />
+                                            Contacter
+                                          </Button>
+                                        </a>
+                                      ) : (
+                                        <Button
+                                          disabled
+                                          className="w-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed"
+                                        >
+                                          <Globe className="h-4 w-4 mr-2" />
+                                          Contacter
+                                        </Button>
+                                      )}
+                                      
+                                      {member.phone ? (
+                                        <a
+                                          href={`tel:${member.phone}`}
+                                          className="w-full"
+                                        >
+                                          <Button
+                                            variant="outline"
+                                            className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                                          >
+                                            <span className="mr-2">📞</span>
+                                            Appeler
+                                          </Button>
+                                        </a>
+                                      ) : (
+                                        <Button
+                                          variant="outline"
+                                          disabled
+                                          className="w-full border-gray-300 text-gray-400 font-semibold cursor-not-allowed"
+                                        >
+                                          <span className="mr-2">📞</span>
+                                          Appeler
+                                        </Button>
+                                      )}
+                                    </div>
                                     <Button
-                                      disabled
-                                      className="w-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed"
-                                    >
-                                      <Globe className="h-4 w-4 mr-2" />
-                                      Contacter
-                                    </Button>
-                                  )}
-                                  
-                                  {member.phone ? (
-                                    <a
-                                      href={`tel:${member.phone}`}
-                                      className="w-full"
-                                    >
-                                      <Button
-                                        variant="outline"
-                                        className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:scale-105 hover:shadow-lg"
-                                      >
-                                        <span className="mr-2">📞</span>
-                                        Appeler
-                                      </Button>
-                                    </a>
-                                  ) : (
-                                    <Button
+                                      onClick={() => {
+                                        const newExpanded = new Set(expandedMembers);
+                                        newExpanded.delete(member.id);
+                                        setExpandedMembers(newExpanded);
+                                      }}
                                       variant="outline"
-                                      disabled
-                                      className="w-full border-gray-300 text-gray-400 font-semibold cursor-not-allowed"
+                                      className="w-full border-gray-300 text-gray-600 hover:bg-gray-50 font-semibold transition-all"
                                     >
-                                      <span className="mr-2">📞</span>
-                                      Appeler
+                                      <EyeOff className="h-4 w-4 mr-2" />
+                                      Voir moins
                                     </Button>
-                                  )}
-                                </div>
+                                  </>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -4466,11 +4466,11 @@ const MembersContent = () => {
                             </div>
                           )}
 
-                          <div className="p-8 flex flex-col h-full">
-                            <h3 className="text-lg font-bold text-[#221F1F] mb-2 mt-1">
+                          <div className="p-6 md:p-8 flex flex-col h-full">
+                            <h3 className="text-lg font-bold text-[#221F1F] mb-2 mt-1 break-words">
                               {plan.libelle}
                             </h3>
-                            <p className="text-cpu-darkgray text-sm mb-6">
+                            <p className="text-cpu-darkgray text-sm mb-6 break-words">
                               {plan.description}
                             </p>
 
@@ -4527,7 +4527,7 @@ const MembersContent = () => {
                                     className="flex items-start gap-3"
                                   >
                                     <Check className="h-5 w-5 text-cpu-green flex-shrink-0 mt-0.5" />
-                                    <span className="text-sm text-[#221F1F]">
+                                    <span className="text-sm text-[#221F1F] break-words">
                                       {avantage.libelle}
                                     </span>
                                   </li>
@@ -4628,11 +4628,11 @@ const MembersContent = () => {
                               </div>
                             )}
 
-                          <div className="p-8 flex flex-col h-full">
-                            <h3 className="text-lg font-bold text-[#221F1F] mb-2 mt-1">
+                          <div className="p-6 md:p-8 flex flex-col h-full">
+                            <h3 className="text-lg font-bold text-[#221F1F] mb-2 mt-1 break-words">
                               {plan.libelle}
                             </h3>
-                            <p className="text-cpu-darkgray text-sm mb-6">
+                            <p className="text-cpu-darkgray text-sm mb-6 break-words">
                               {plan.description}
                             </p>
 
@@ -4689,7 +4689,7 @@ const MembersContent = () => {
                                     className="flex items-start gap-3"
                                   >
                                     <Check className="h-5 w-5 text-cpu-green flex-shrink-0 mt-0.5" />
-                                    <span className="text-sm text-[#221F1F]">
+                                    <span className="text-sm text-[#221F1F] break-words">
                                       {avantage.libelle}
                                     </span>
                                   </li>
@@ -5156,38 +5156,45 @@ const MembersContent = () => {
                     <form onSubmit={handleSubmit} className="space-y-0">
                       {/* Indicateur de progression */}
                       {selectedAdhesionType && (
-                        <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm -mx-8 md:-mx-10 lg:-mx-12 px-8 md:px-10 lg:px-12 py-6 mb-8 border-b-2 border-gray-100 shadow-lg animate-in fade-in slide-in-from-top-4 duration-500">
-                          <div className="flex justify-between items-center mb-3">
-                            <div className="flex items-center gap-2">
-                              <CheckCircle className="h-5 w-5 text-cpu-green" />
-                              <span className="text-sm font-bold text-gray-900">
-                                Progression du formulaire
-                              </span>
+                        <div className="fixed top-16 md:top-20 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm px-4 md:px-8 lg:px-12 py-4 border-b-2 border-gray-100 shadow-lg animate-in fade-in slide-in-from-top-4 duration-500">
+                          <div className="max-w-7xl mx-auto">
+                            <div className="flex justify-between items-center mb-3">
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className="h-5 w-5 text-cpu-green" />
+                                <span className="text-sm font-bold text-gray-900">
+                                  Progression du formulaire
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-cpu-orange">
+                                  {calculateProgress().completed} / {calculateProgress().total} complétés
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  ({calculateProgress().percentage}%)
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-cpu-orange">
-                                {calculateProgress().completed} / {calculateProgress().total} complétés
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                ({calculateProgress().percentage}%)
-                              </span>
+                            <div className="relative w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
+                              <div 
+                                className="absolute top-0 left-0 h-full bg-gradient-to-r from-cpu-green via-cpu-orange to-orange-600 rounded-full transition-all duration-700 ease-out shadow-lg"
+                                style={{ width: `${calculateProgress().percentage}%` }}
+                              >
+                                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                              </div>
                             </div>
+                            {lastSaved && (
+                              <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
+                                <Save className="h-3 w-3" />
+                                <span>Sauvegardé automatiquement à {lastSaved.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                              </div>
+                            )}
                           </div>
-                          <div className="relative w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
-                            <div 
-                              className="absolute top-0 left-0 h-full bg-gradient-to-r from-cpu-green via-cpu-orange to-orange-600 rounded-full transition-all duration-700 ease-out shadow-lg"
-                              style={{ width: `${calculateProgress().percentage}%` }}
-                            >
-                              <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                            </div>
-                          </div>
-                          {lastSaved && (
-                            <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
-                              <Save className="h-3 w-3" />
-                              <span>Sauvegardé automatiquement à {lastSaved.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
-                            </div>
-                          )}
                         </div>
+                      )}
+
+                      {/* Spacer pour compenser la barre fixe */}
+                      {selectedAdhesionType && (
+                        <div className="h-32 md:h-36"></div>
                       )}
 
                       {/* SECTION: Type de membre */}
@@ -5711,603 +5718,73 @@ const MembersContent = () => {
                       {/* Séparateur moderne */}
                       <div className="border-t-2 border-gray-100 my-8"></div>
 
-                      {/* SECTION: Coordonnées (pour Membre institutionnel uniquement) */}
-                      {selectedAdhesionType === "institutionnel" && (
-                        <>
-                          {/* Message contextuel pour institutionnel */}
-                          <div id="coordonnees-section" className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <p className="text-sm text-orange-900 flex items-center gap-2">
-                              <Info className="h-4 w-4 flex-shrink-0" />
-                              <span className="font-medium">
-                                En tant que <strong>membre institutionnel</strong>, vous bénéficiez d'un accompagnement personnalisé et d'une visibilité renforcée.
-                              </span>
+                      {/* SECTION: Votre contact */}
+                      <div className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
+                            <Users className="h-5 w-5 text-cpu-orange" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-gray-900">
+                              Votre contact
+                            </h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Personne à contacter pour le suivi de votre adhésion
                             </p>
                           </div>
+                        </div>
 
-                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-green-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center gap-3 mb-6">
-                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-green/10">
-                                <MapPin className="h-5 w-5 text-cpu-green" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="text-xl font-bold text-gray-900">
-                                  Coordonnées de votre institution
-                                </h3>
-                                <p className="text-sm text-gray-600 mt-1">
-                                  Informations de localisation de votre organisation
-                                </p>
-                              </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Label
+                                htmlFor="representativeName"
+                                className="text-sm font-semibold text-gray-700"
+                              >
+                                Nom du représentant
+                              </Label>
+                              <span className="text-red-500 text-base">*</span>
                             </div>
-
-                            <div className="space-y-5">
-                              {/* Adresse complète (stockée dans siegeVillage) */}
-                              <div className="space-y-3">
-                                <div className="flex items-center gap-2">
-                                  <Label
-                                    htmlFor="fullAddress"
-                                    className="text-sm font-semibold text-gray-700"
-                                  >
-                                    Adresse complète
-                                  </Label>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p className="max-w-xs">Indiquez l'adresse du siège de votre institution</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                                <Input
-                                  id="fullAddress"
-                                  value={siegeVillage}
-                                  onChange={(e) => setSiegeVillage(e.target.value)}
-                                  placeholder="Ex: Boulevard Latrille, Cocody-Danga, Abidjan, Côte d'Ivoire"
-                                  className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900"
-                                />
-                                <p className="text-xs text-gray-500 flex items-center gap-1">
-                                  <Lightbulb className="h-3 w-3" />
-                                  Incluez la rue, le quartier, la ville et les repères importants
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Séparateur moderne */}
-                          <div className="border-t-2 border-gray-100 my-8"></div>
-                        </>
-                      )}
-
-                      {/* SECTION: Axes d'intérêt (pour Membre institutionnel uniquement) */}
-                      {selectedAdhesionType === "institutionnel" && (
-                        <>
-                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center gap-3 mb-6">
-                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
-                                <Target className="h-5 w-5 text-cpu-orange" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="text-xl font-bold text-gray-900">
-                                  Axes d'intérêt
-                                </h3>
-                                <p className="text-sm text-gray-600 mt-1">
-                                  Sélectionnez vos domaines d'intervention prioritaires
-                                </p>
-                              </div>
-                              {selectedAxesInteret.length > 0 && (
-                                <Badge className="bg-cpu-orange text-white px-3 py-1.5 text-sm font-semibold animate-in zoom-in duration-200">
-                                  {selectedAxesInteret.length} sélectionné{selectedAxesInteret.length > 1 ? 's' : ''}
-                                </Badge>
-                              )}
-                            </div>
-
-                            <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
-                              <p className="text-sm text-gray-600 flex items-center gap-1">
-                                <Info className="h-4 w-4" />
-                                Cochez un ou plusieurs axes
-                              </p>
-                              {!isLoadingCentresInteret && centresInteretApi.length > 0 && (
-                                <Button 
-                                  type="button" 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={toggleAllAxes}
-                                  className="border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-colors"
-                                >
-                                  {selectedAxesInteret.length === centresInteretApi.length
-                                    ? "Tout décocher"
-                                    : "Tout sélectionner"}
-                                </Button>
-                              )}
-                            </div>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 p-6 border-2 border-gray-100 rounded-xl bg-white max-h-80 overflow-y-auto">
-                              {isLoadingCentresInteret ? (
-                                <div className="col-span-3 flex items-center justify-center py-4">
-                                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cpu-orange"></div>
-                                  <span className="ml-2 text-gray-500">Chargement des axes d'intérêt...</span>
-                                </div>
-                              ) : errorCentresInteret ? (
-                                <div className="col-span-3 p-4 border-2 border-red-200 rounded-xl bg-red-50 text-red-600 text-center">
-                                  <div className="font-bold mb-1">Erreur de chargement</div>
-                                  <div className="text-sm">{errorCentresInteret.message || "Impossible de charger les axes d'intérêt"}</div>
-                                </div>
-                              ) : centresInteretApi.length === 0 ? (
-                                <div className="col-span-3 p-4 text-center text-gray-600 font-medium">
-                                  Aucun axe d'intérêt existant
-                                </div>
-                              ) : (
-                                centresInteretApi.map((ci) => (
-                                  <div
-                                    key={ci.id || ci.name}
-                                    className="flex items-start space-x-3 p-3 rounded-lg hover:bg-white transition-colors"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      id={`axe-${ci.name}`}
-                                      checked={selectedAxesInteret.includes(ci.name)}
-                                      onChange={() => {
-                                        setSelectedAxesInteret((prev) =>
-                                          prev.includes(ci.name)
-                                            ? prev.filter((a) => a !== ci.name)
-                                            : [...prev, ci.name]
-                                        );
-                                      }}
-                                      className="h-5 w-5 border-2 border-cpu-orange rounded-md focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange transition-all"
-                                      style={{
-                                        accentColor: "#F27A20",
-                                        colorScheme: "light",
-                                      }}
-                                    />
-                                    <Label
-                                      htmlFor={`axe-${ci.name}`}
-                                      className="text-sm cursor-pointer font-medium text-gray-700 leading-tight"
-                                    >
-                                      {ci.name}
-                                    </Label>
-                                  </div>
-                                ))
-                              )}
-                            </div>
-
-                            {selectedAxesInteret.length === 0 && (
-                              <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-200">
-                                <p className="text-sm text-orange-700 flex items-center gap-2">
-                                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                                  <span className="font-medium">
-                                    Veuillez sélectionner au moins un axe d'intérêt pour continuer
-                                  </span>
-                                </p>
-                              </div>
-                            )}
-
-                            {selectedAxesInteret.length > 0 && selectedAxesInteret.length < 3 && (
-                              <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-xl">
-                                <p className="text-xs text-gray-700 flex items-center gap-1">
-                                  <Lightbulb className="h-3 w-3" />
-                                  Vous pouvez sélectionner plusieurs axes pour maximiser vos opportunités
-                                </p>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Séparateur moderne */}
-                          <div className="border-t-2 border-gray-100 my-8"></div>
-                        </>
-                      )}
-
-                      {/* SECTION: Zones d'intervention (pour Membre individuel, Entreprise et Associatif) */}
-                      {(selectedAdhesionType === "individuel" ||
-                        selectedAdhesionType === "entreprise" ||
-                        selectedAdhesionType === "associatif") && (
-                        <>
-                          <div id="zones-section" className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center gap-3 mb-6">
-                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
-                                <MapPin className="h-5 w-5 text-cpu-orange" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="text-xl font-bold text-gray-900">
-                                  Zones d'intervention
-                                </h3>
-                                <p className="text-sm text-gray-600 mt-1">
-                                  Indiquez votre couverture géographique pour mieux vous référencer
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="space-y-5">
-                              <div className="space-y-3">
-                                <Label
-                                  htmlFor="interventionScope"
-                                  className="text-sm font-semibold text-gray-700"
-                                >
-                                  Portée de l'intervention
-                                </Label>
-                                <Select
-                                  value={interventionScope}
-                                  onValueChange={(value) => {
-                                    setInterventionScope(value);
-                                    if (value !== "regions_specifiques") {
-                                      setSelectedRegions([]);
-                                    }
-                                  }}
-                                >
-                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl bg-white text-gray-900 font-medium">
-                                    <SelectValue placeholder="Sélectionnez la portée" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="national">
-                                      National
-                                    </SelectItem>
-                                    <SelectItem value="regions_specifiques">
-                                      Régions spécifiques
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-
-                              {/* Liste des régions en checkboxes */}
-                              {interventionScope === "regions_specifiques" && (
-                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                  <div className="flex items-center justify-between">
-                                    <div>
-                                      <Label className="text-base font-bold text-gray-900">
-                                        Sélectionnez les régions
-                                      </Label>
-                                      <p className="text-sm text-gray-600 mt-1">
-                                        Cochez toutes les régions dans
-                                        lesquelles vous intervenez
-                                      </p>
-                                    </div>
-                                    {!isLoadingRegions && getAvailableRegions().length > 0 && (
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={toggleAllRegions}
-                                        className="border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold rounded-lg transition-all cursor-pointer"
-                                      >
-                                        {selectedRegions.length ===
-                                        getAvailableRegions().length
-                                          ? "Tout décocher"
-                                          : "Tout sélectionner"}
-                                      </Button>
-                                    )}
-                                  </div>
-
-                                  {isLoadingRegions ? (
-                                    <div className="p-6 border-2 border-gray-100 rounded-2xl bg-gray-50 text-center text-gray-500 font-medium">
-                                      Chargement des régions...
-                                    </div>
-                                  ) : errorRegions ? (
-                                    <div className="p-6 border-2 border-red-200 rounded-2xl bg-red-50 text-red-600">
-                                      <div className="font-bold mb-2">
-                                        Erreur de chargement
-                                      </div>
-                                      <div className="text-sm">
-                                        {errorRegions.message ||
-                                          "Impossible de charger les régions"}
-                                      </div>
-                                      {"status" in errorRegions &&
-                                        typeof errorRegions.status ===
-                                          "number" && (
-                                          <div className="text-xs mt-2 opacity-75">
-                                            Code: {errorRegions.status}
-                                          </div>
-                                        )}
-                                    </div>
-                                  ) : getAvailableRegions().length === 0 ? (
-                                    <div className="p-6 border-2 border-gray-200 rounded-2xl bg-gray-50 text-center text-gray-600 font-medium">
-                                      Aucune région existante
-                                    </div>
-                                  ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-6 border-2 border-gray-100 rounded-2xl bg-gradient-to-br from-gray-50 to-white max-h-96 overflow-y-auto shadow-sm">
-                                      {getAvailableRegions().map((region) => (
-                                        <div
-                                          key={region}
-                                          className="flex items-start space-x-3 p-3 rounded-lg hover:bg-white transition-colors"
-                                        >
-                                          <input
-                                            type="checkbox"
-                                            id={`region-${region}`}
-                                            checked={selectedRegions.includes(
-                                              region
-                                            )}
-                                            onChange={() =>
-                                              toggleRegion(region)
-                                            }
-                                            className="h-5 w-5 border-2 border-cpu-orange rounded-md focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange transition-all"
-                                            style={{
-                                              accentColor: "#F27A20",
-                                              colorScheme: "light",
-                                            }}
-                                          />
-                                          <Label
-                                            htmlFor={`region-${region}`}
-                                            className="text-sm cursor-pointer font-medium text-gray-700 leading-tight"
-                                          >
-                                            {region}
-                                          </Label>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-
-                                  {selectedRegions.length > 0 && (
-                                    <div className="flex items-center gap-2 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-100">
-                                      <Check className="h-5 w-5 text-cpu-green" />
-                                      <span className="font-bold text-cpu-green">
-                                        {selectedRegions.length} région
-                                        {selectedRegions.length > 1
-                                          ? "s"
-                                          : ""}{" "}
-                                        sélectionnée
-                                        {selectedRegions.length > 1 ? "s" : ""}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
+                            <div className="relative">
+                              <Input
+                                id="representativeName"
+                                placeholder="Prénom et Nom"
+                                required
+                                className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 pr-10 text-gray-900"
+                                value={formName}
+                                onChange={(e) => setFormName(e.target.value)}
+                              />
+                              {formName && (
+                                <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-cpu-green animate-in zoom-in duration-200" />
                               )}
                             </div>
                           </div>
 
-                          {/* Séparateur moderne */}
-                          <div className="border-t-2 border-gray-100 my-8"></div>
-                        </>
-                      )}
-
-                      {/* SECTION: Zones d'intervention (pour Membre institutionnel) */}
-                      {selectedAdhesionType === "institutionnel" && (
-                        <>
-                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center gap-3 mb-6">
-                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
-                                <MapPin className="h-5 w-5 text-cpu-orange" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                  Zones d'intervention
-                                  <span className="text-red-500 text-lg">*</span>
-                                </h3>
-                                <p className="text-sm text-gray-600 mt-1">
-                                  Indiquez votre couverture géographique en Côte d'Ivoire
-                                </p>
-                              </div>
-                              {selectedRegions.length > 0 && (
-                                <Badge className="bg-cpu-orange text-white px-3 py-1.5 text-sm font-semibold animate-in zoom-in duration-200">
-                                  {selectedRegions.length} région{selectedRegions.length > 1 ? 's' : ''}
-                                </Badge>
-                              )}
-                            </div>
-
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                                <div className="flex items-center gap-2">
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p className="max-w-xs">Sélectionnez toutes les régions où votre institution est active</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                  <p className="text-sm text-gray-600 font-medium">
-                                    Cochez toutes les régions concernées
-                                  </p>
-                                </div>
-                                {!isLoadingRegions && getAvailableRegions().length > 0 && (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={toggleAllRegions}
-                                    className="border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-colors"
-                                  >
-                                    {selectedRegions.length === getAvailableRegions().length
-                                      ? "Tout décocher"
-                                      : "Tout sélectionner"}
-                                  </Button>
-                                )}
-                              </div>
-
-                              {isLoadingRegions ? (
-                                <div className="p-6 border-2 border-gray-100 rounded-2xl bg-gray-50 text-center text-gray-500 font-medium">
-                                  Chargement des régions...
-                                </div>
-                              ) : errorRegions ? (
-                                <div className="p-6 border-2 border-red-200 rounded-2xl bg-red-50 text-red-600">
-                                  <div className="font-bold mb-2">Erreur de chargement</div>
-                                  <div className="text-sm">
-                                    {errorRegions.message || "Impossible de charger les régions"}
-                                  </div>
-                                </div>
-                              ) : getAvailableRegions().length === 0 ? (
-                                <div className="p-6 border-2 border-gray-200 rounded-2xl bg-gray-50 text-center text-gray-600 font-medium">
-                                  Aucune région existante
-                                </div>
-                              ) : (
-                                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 p-6 border-2 border-gray-100 rounded-xl bg-white max-h-96 overflow-y-auto shadow-inner">
-                                  {getAvailableRegions().map((region) => (
-                                    <div
-                                      key={region}
-                                      className="flex items-start space-x-2"
-                                    >
-                                      <input
-                                        type="checkbox"
-                                        id={`region-inst-${region}`}
-                                        checked={selectedRegions.includes(
-                                          region
-                                        )}
-                                        onChange={() => toggleRegion(region)}
-                                        className="h-4 w-4 border-2 border-cpu-orange rounded focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange"
-                                        style={{
-                                          accentColor: "#F27A20",
-                                          colorScheme: "light",
-                                        }}
-                                      />
-                                      <Label
-                                        htmlFor={`region-inst-${region}`}
-                                        className="text-sm cursor-pointer font-normal leading-tight"
-                                      >
-                                        {region}
-                                      </Label>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-
-                              {selectedRegions.length > 0 && (
-                                <div className="flex items-center gap-2 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-100 animate-in slide-in-from-bottom-2 duration-300">
-                                  <Check className="h-5 w-5 text-cpu-green" />
-                                  <span className="font-bold text-cpu-green">
-                                    {selectedRegions.length} région
-                                    {selectedRegions.length > 1 ? "s" : ""}{" "}
-                                    sélectionnée
-                                    {selectedRegions.length > 1 ? "s" : ""}
-                                  </span>
-                                </div>
-                              )}
-
-                              {selectedRegions.length === 0 && (
-                                <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-200">
-                                  <p className="text-sm text-orange-700 flex items-center gap-2">
-                                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                                    <span className="font-medium">
-                                      Veuillez sélectionner au moins une région d'intervention
-                                    </span>
-                                  </p>
-                                </div>
+                          <div className="space-y-3">
+                            <Label
+                              htmlFor="position"
+                              className="text-sm font-semibold text-gray-700"
+                            >
+                              Fonction
+                            </Label>
+                            <div className="relative">
+                              <Input
+                                id="position"
+                                placeholder="Ex: Directeur Général, Gérant"
+                                className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 pr-10 text-gray-900"
+                                value={formPosition}
+                                onChange={(e) => setFormPosition(e.target.value)}
+                              />
+                              {formPosition && (
+                                <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-cpu-green animate-in zoom-in duration-200" />
                               )}
                             </div>
                           </div>
+                        </div>
+                      </div>
 
-                          {/* Séparateur moderne */}
-                          <div className="border-t-2 border-gray-100 my-8"></div>
-
-                          {/* SECTION: Filières prioritaires (pour Membre institutionnel) */}
-                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-green-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center gap-3 mb-6">
-                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-green/10">
-                                <Briefcase className="h-5 w-5 text-cpu-green" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="text-xl font-bold text-gray-900">
-                                  Filières prioritaires
-                                </h3>
-                                <p className="text-sm text-gray-600 mt-1">
-                                  Les filières que vous accompagnez en priorité
-                                </p>
-                              </div>
-                              {selectedFilieresPrioritaires.length > 0 && (
-                                <Badge className="bg-cpu-green text-white px-3 py-1.5 text-sm font-semibold animate-in zoom-in duration-200">
-                                  {selectedFilieresPrioritaires.length} sélectionnée{selectedFilieresPrioritaires.length > 1 ? 's' : ''}
-                                </Badge>
-                              )}
-                            </div>
-
-                            <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
-                              <p className="text-sm text-gray-600 flex items-center gap-1">
-                                <Info className="h-4 w-4" />
-                                Optionnel - Cochez une ou plusieurs filières
-                              </p>
-                              {!isLoadingSecteurs && getAvailableFilieres().length > 0 && (
-                                <Button 
-                                  type="button" 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={toggleAllFilieres}
-                                  className="border-2 border-cpu-green text-cpu-green hover:bg-cpu-green hover:text-white font-semibold transition-colors"
-                                >
-                                  {selectedFilieresPrioritaires.length === getAvailableFilieres().length
-                                    ? "Tout décocher"
-                                    : "Tout sélectionner"}
-                                </Button>
-                              )}
-                            </div>
-
-                            {isLoadingSecteurs ? (
-                              <div className="p-6 border-2 border-gray-100 rounded-2xl bg-gray-50 text-center text-gray-500 font-medium">
-                                Chargement des filières...
-                              </div>
-                            ) : errorSecteurs ? (
-                              <div className="p-6 border-2 border-red-200 rounded-2xl bg-red-50 text-red-600">
-                                <div className="font-bold mb-2">Erreur de chargement</div>
-                                <div className="text-sm">
-                                  {errorSecteurs.message || "Impossible de charger les filières"}
-                                </div>
-                              </div>
-                            ) : getAvailableFilieres().length === 0 ? (
-                              <div className="p-6 border-2 border-gray-200 rounded-2xl bg-gray-50 text-center text-gray-600 font-medium">
-                                Aucune filière existante
-                              </div>
-                            ) : (
-                              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 p-6 border-2 border-gray-100 rounded-xl bg-white max-h-80 overflow-y-auto">
-                                {getAvailableFilieres().map((filiere) => (
-                                <div
-                                  key={filiere}
-                                  className="flex items-start space-x-2"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    id={`filiere-${filiere}`}
-                                    checked={selectedFilieresPrioritaires.includes(
-                                      filiere
-                                    )}
-                                    onChange={() => {
-                                      setSelectedFilieresPrioritaires((prev) =>
-                                        prev.includes(filiere)
-                                          ? prev.filter((f) => f !== filiere)
-                                          : [...prev, filiere]
-                                      );
-                                    }}
-                                    className="h-4 w-4 border-2 border-cpu-orange rounded focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange"
-                                    style={{
-                                      accentColor: "#F27A20",
-                                      colorScheme: "light",
-                                    }}
-                                  />
-                                  <Label
-                                    htmlFor={`filiere-${filiere}`}
-                                    className="text-sm cursor-pointer font-normal"
-                                  >
-                                    {filiere}
-                                  </Label>
-                                </div>
-                              ))}
-                              </div>
-                            )}
-
-                            {selectedFilieresPrioritaires.length > 0 && (
-                              <div className="flex items-center gap-2 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-100 mt-4 animate-in slide-in-from-bottom-2 duration-300">
-                                <Check className="h-5 w-5 text-cpu-green" />
-                                <span className="font-bold text-cpu-green">
-                                  {selectedFilieresPrioritaires.length} filière
-                                  {selectedFilieresPrioritaires.length > 1 ? "s" : ""}{" "}
-                                  sélectionnée
-                                  {selectedFilieresPrioritaires.length > 1 ? "s" : ""}
-                                </span>
-                              </div>
-                            )}
-
-                            {selectedFilieresPrioritaires.length === 0 && (
-                              <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-xl">
-                                <p className="text-xs text-gray-700 flex items-center gap-1">
-                                  <Lightbulb className="h-3 w-3" />
-                                  Cette information est optionnelle mais recommandée pour mieux cibler nos services
-                                </p>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Séparateur moderne */}
-                          <div className="border-t-2 border-gray-100 my-8"></div>
-                        </>
-                      )}
+                      {/* Séparateur moderne */}
+                      <div className="border-t-2 border-gray-100 my-8"></div>
 
                       {/* SECTION: Informations sur l'organisation */}
                       <div id="organisation-section" className="pb-8 p-6 bg-gradient-to-br from-white to-green-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -6409,6 +5886,79 @@ const MembersContent = () => {
                             )}
                           </div>
 
+                          {/* Téléphone de l'entreprise et Nombre d'employés */}
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Téléphone de l'entreprise */}
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <Label
+                                  htmlFor="phone"
+                                  className="text-sm font-semibold text-gray-700"
+                                >
+                                  Téléphone de l'entreprise
+                                </Label>
+                                <span className="text-red-500 text-base">*</span>
+                              </div>
+                              <div className="relative">
+                                <Input
+                                  id="phone"
+                                  type="tel"
+                                  placeholder="+225 XX XX XX XX XX"
+                                  required
+                                  className={`h-12 border-2 transition-colors rounded-xl px-4 pr-10 text-gray-900 ${
+                                    phoneError
+                                      ? 'border-red-500 hover:border-red-600 focus:border-red-600'
+                                      : phoneValid
+                                      ? 'border-green-500 hover:border-green-600 focus:border-green-600'
+                                      : 'border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green'
+                                  }`}
+                                  value={formPhone}
+                                  onChange={(e) => {
+                                    setFormPhone(e.target.value);
+                                    validatePhone(e.target.value);
+                                  }}
+                                  onBlur={() => validatePhone(formPhone)}
+                                />
+                                {phoneValid && !phoneError && (
+                                  <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-green-600 animate-in zoom-in duration-200" />
+                                )}
+                                {phoneError && (
+                                  <AlertCircle className="absolute right-3 top-3.5 h-5 w-5 text-red-600 animate-in zoom-in duration-200" />
+                                )}
+                              </div>
+                              {phoneError && (
+                                <p className="text-sm text-red-600 flex items-center gap-1 animate-in slide-in-from-top-2 duration-200">
+                                  <AlertCircle className="h-4 w-4" />
+                                  {phoneError}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Nombre d'employés */}
+                            {selectedAdhesionType !== "institutionnel" && (
+                              <div className="space-y-3">
+                                <Label
+                                  htmlFor="employees"
+                                  className="text-sm font-semibold text-gray-700"
+                                >
+                                  Nombre d'employés
+                                </Label>
+                                <Select>
+                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium">
+                                    <SelectValue placeholder="Sélectionnez" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="0-10">0 - 10</SelectItem>
+                                    <SelectItem value="11-50">11 - 50</SelectItem>
+                                    <SelectItem value="51-200">51 - 200</SelectItem>
+                                    <SelectItem value="201-500">201 - 500</SelectItem>
+                                    <SelectItem value="500+">Plus de 500</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
+                          </div>
+
                           {/* Description de l'entreprise */}
                           <div className="space-y-3">
                             <div className="flex items-center gap-2">
@@ -6441,32 +5991,6 @@ const MembersContent = () => {
                               Optionnel mais recommandé pour mieux vous connaître
                             </p>
                           </div>
-
-                          {/* Nombre d'employés */}
-                          {selectedAdhesionType !== "institutionnel" && (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                              <div className="space-y-3">
-                                <Label
-                                  htmlFor="employees"
-                                  className="text-sm font-semibold text-gray-700"
-                                >
-                                  Nombre d'employés
-                                </Label>
-                                <Select>
-                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium">
-                                    <SelectValue placeholder="Sélectionnez" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="0-10">0 - 10</SelectItem>
-                                    <SelectItem value="11-50">11 - 50</SelectItem>
-                                    <SelectItem value="51-200">51 - 200</SelectItem>
-                                    <SelectItem value="201-500">201 - 500</SelectItem>
-                                    <SelectItem value="500+">Plus de 500</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </div>
 
@@ -6937,118 +6461,534 @@ const MembersContent = () => {
                       {/* Séparateur moderne */}
                       <div className="border-t-2 border-gray-100 my-8"></div>
 
-                      {/* SECTION: Votre contact */}
-                      <div className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="flex items-center gap-3 mb-6">
-                          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
-                            <Users className="h-5 w-5 text-cpu-orange" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-900">
-                              Votre contact
-                            </h3>
-                            <p className="text-sm text-gray-600 mt-1">
-                              Personne à contacter pour le suivi de votre adhésion
-                            </p>
-                          </div>
-                        </div>
+                      {/* SECTION: Zones d'intervention (pour Membres non-institutionnels) */}
+                      {(selectedAdhesionType === "individuel" ||
+                        selectedAdhesionType === "entreprise" ||
+                        selectedAdhesionType === "associatif") && (
+                        <>
+                          <div id="zones-section" className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
+                                <MapPin className="h-5 w-5 text-cpu-orange" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold text-gray-900">
+                                  Zones d'intervention
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Indiquez votre couverture géographique pour mieux vous référencer
+                                </p>
+                              </div>
+                            </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                              <Label
-                                htmlFor="representativeName"
-                                className="text-sm font-semibold text-gray-700"
-                              >
-                                Nom du représentant
-                              </Label>
-                              <span className="text-red-500 text-base">*</span>
-                            </div>
-                            <div className="relative">
-                              <Input
-                                id="representativeName"
-                                placeholder="Prénom et Nom"
-                                required
-                                className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 pr-10 text-gray-900"
-                                value={formName}
-                                onChange={(e) => setFormName(e.target.value)}
-                              />
-                              {formName && (
-                                <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-cpu-green animate-in zoom-in duration-200" />
+                            <div className="space-y-5">
+                              <div className="space-y-3">
+                                <Label
+                                  htmlFor="interventionScope"
+                                  className="text-sm font-semibold text-gray-700"
+                                >
+                                  Portée de l'intervention
+                                </Label>
+                                <Select
+                                  value={interventionScope}
+                                  onValueChange={(value) => {
+                                    setInterventionScope(value);
+                                    if (value !== "regions_specifiques") {
+                                      setSelectedRegions([]);
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl bg-white text-gray-900 font-medium">
+                                    <SelectValue placeholder="Sélectionnez la portée" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="national">
+                                      National
+                                    </SelectItem>
+                                    <SelectItem value="regions_specifiques">
+                                      Régions spécifiques
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {/* Liste des régions en checkboxes */}
+                              {interventionScope === "regions_specifiques" && (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <Label className="text-base font-bold text-gray-900">
+                                        Sélectionnez les régions
+                                      </Label>
+                                      <p className="text-sm text-gray-600 mt-1">
+                                        Cochez toutes les régions dans
+                                        lesquelles vous intervenez
+                                      </p>
+                                    </div>
+                                    {!isLoadingRegions && getAvailableRegions().length > 0 && (
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={toggleAllRegions}
+                                        className="border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold rounded-lg transition-all cursor-pointer"
+                                      >
+                                        {selectedRegions.length ===
+                                        getAvailableRegions().length
+                                          ? "Tout décocher"
+                                          : "Tout sélectionner"}
+                                      </Button>
+                                    )}
+                                  </div>
+
+                                  {isLoadingRegions ? (
+                                    <div className="p-6 border-2 border-gray-100 rounded-2xl bg-gray-50 text-center text-gray-500 font-medium">
+                                      Chargement des régions...
+                                    </div>
+                                  ) : errorRegions ? (
+                                    <div className="p-6 border-2 border-red-200 rounded-2xl bg-red-50 text-red-600">
+                                      <div className="font-bold mb-2">
+                                        Erreur de chargement
+                                      </div>
+                                      <div className="text-sm">
+                                        {errorRegions.message ||
+                                          "Impossible de charger les régions"}
+                                      </div>
+                                      {"status" in errorRegions &&
+                                        typeof errorRegions.status ===
+                                          "number" && (
+                                          <div className="text-xs mt-2 opacity-75">
+                                            Code: {errorRegions.status}
+                                          </div>
+                                        )}
+                                    </div>
+                                  ) : getAvailableRegions().length === 0 ? (
+                                    <div className="p-6 border-2 border-gray-200 rounded-2xl bg-gray-50 text-center text-gray-600 font-medium">
+                                      Aucune région existante
+                                    </div>
+                                  ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-6 border-2 border-gray-100 rounded-2xl bg-gradient-to-br from-gray-50 to-white max-h-96 overflow-y-auto shadow-sm">
+                                      {getAvailableRegions().map((region) => (
+                                        <div
+                                          key={region}
+                                          className="flex items-start space-x-3 p-3 rounded-lg hover:bg-white transition-colors"
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            id={`region-${region}`}
+                                            checked={selectedRegions.includes(
+                                              region
+                                            )}
+                                            onChange={() =>
+                                              toggleRegion(region)
+                                            }
+                                            className="h-5 w-5 border-2 border-cpu-orange rounded-md focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange transition-all"
+                                            style={{
+                                              accentColor: "#F27A20",
+                                              colorScheme: "light",
+                                            }}
+                                          />
+                                          <Label
+                                            htmlFor={`region-${region}`}
+                                            className="text-sm cursor-pointer font-medium text-gray-700 leading-tight"
+                                          >
+                                            {region}
+                                          </Label>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {selectedRegions.length > 0 && (
+                                    <div className="flex items-center gap-2 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-100">
+                                      <Check className="h-5 w-5 text-cpu-green" />
+                                      <span className="font-bold text-cpu-green">
+                                        {selectedRegions.length} région
+                                        {selectedRegions.length > 1
+                                          ? "s"
+                                          : ""}{" "}
+                                        sélectionnée
+                                        {selectedRegions.length > 1 ? "s" : ""}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </div>
 
-                          <div className="space-y-3">
-                            <Label
-                              htmlFor="position"
-                              className="text-sm font-semibold text-gray-700"
-                            >
-                              Fonction
-                            </Label>
-                            <div className="relative">
-                              <Input
-                                id="position"
-                                placeholder="Ex: Directeur Général, Gérant"
-                                className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 pr-10 text-gray-900"
-                                value={formPosition}
-                                onChange={(e) => setFormPosition(e.target.value)}
-                              />
-                              {formPosition && (
-                                <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-cpu-green animate-in zoom-in duration-200" />
+                          {/* Séparateur moderne */}
+                          <div className="border-t-2 border-gray-100 my-8"></div>
+                        </>
+                      )}
+
+                      {/* SECTION: Zones d'intervention (pour Membre institutionnel) */}
+                      {selectedAdhesionType === "institutionnel" && (
+                        <>
+                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
+                                <MapPin className="h-5 w-5 text-cpu-orange" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                  Zones d'intervention
+                                  <span className="text-red-500 text-lg">*</span>
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Indiquez votre couverture géographique en Côte d'Ivoire
+                                </p>
+                              </div>
+                              {selectedRegions.length > 0 && (
+                                <Badge className="bg-cpu-orange text-white px-3 py-1.5 text-sm font-semibold animate-in zoom-in duration-200">
+                                  {selectedRegions.length} région{selectedRegions.length > 1 ? 's' : ''}
+                                </Badge>
+                              )}
+                            </div>
+
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                                <div className="flex items-center gap-2">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p className="max-w-xs">Sélectionnez toutes les régions où votre institution est active</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                  <p className="text-sm text-gray-600 font-medium">
+                                    Cochez toutes les régions concernées
+                                  </p>
+                                </div>
+                                {!isLoadingRegions && getAvailableRegions().length > 0 && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={toggleAllRegions}
+                                    className="border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-colors"
+                                  >
+                                    {selectedRegions.length === getAvailableRegions().length
+                                      ? "Tout décocher"
+                                      : "Tout sélectionner"}
+                                  </Button>
+                                )}
+                              </div>
+
+                              {isLoadingRegions ? (
+                                <div className="p-6 border-2 border-gray-100 rounded-2xl bg-gray-50 text-center text-gray-500 font-medium">
+                                  Chargement des régions...
+                                </div>
+                              ) : errorRegions ? (
+                                <div className="p-6 border-2 border-red-200 rounded-2xl bg-red-50 text-red-600">
+                                  <div className="font-bold mb-2">Erreur de chargement</div>
+                                  <div className="text-sm">
+                                    {errorRegions.message || "Impossible de charger les régions"}
+                                  </div>
+                                </div>
+                              ) : getAvailableRegions().length === 0 ? (
+                                <div className="p-6 border-2 border-gray-200 rounded-2xl bg-gray-50 text-center text-gray-600 font-medium">
+                                  Aucune région existante
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 p-6 border-2 border-gray-100 rounded-xl bg-white max-h-96 overflow-y-auto shadow-inner">
+                                  {getAvailableRegions().map((region) => (
+                                    <div
+                                      key={region}
+                                      className="flex items-start space-x-2"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        id={`region-inst-${region}`}
+                                        checked={selectedRegions.includes(
+                                          region
+                                        )}
+                                        onChange={() => toggleRegion(region)}
+                                        className="h-4 w-4 border-2 border-cpu-orange rounded focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange"
+                                        style={{
+                                          accentColor: "#F27A20",
+                                          colorScheme: "light",
+                                        }}
+                                      />
+                                      <Label
+                                        htmlFor={`region-inst-${region}`}
+                                        className="text-sm cursor-pointer font-normal leading-tight"
+                                      >
+                                        {region}
+                                      </Label>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {selectedRegions.length > 0 && (
+                                <div className="flex items-center gap-2 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-100 animate-in slide-in-from-bottom-2 duration-300">
+                                  <Check className="h-5 w-5 text-cpu-green" />
+                                  <span className="font-bold text-cpu-green">
+                                    {selectedRegions.length} région
+                                    {selectedRegions.length > 1 ? "s" : ""}{" "}
+                                    sélectionnée
+                                    {selectedRegions.length > 1 ? "s" : ""}
+                                  </span>
+                                </div>
+                              )}
+
+                              {selectedRegions.length === 0 && (
+                                <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                  <p className="text-sm text-orange-700 flex items-center gap-2">
+                                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                    <span className="font-medium">
+                                      Veuillez sélectionner au moins une région d'intervention
+                                    </span>
+                                  </p>
+                                </div>
                               )}
                             </div>
                           </div>
 
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                              <Label
-                                htmlFor="phone"
-                                className="text-sm font-semibold text-gray-700"
-                              >
-                                Téléphone
-                              </Label>
-                              <span className="text-red-500 text-base">*</span>
-                            </div>
-                            <div className="relative">
-                              <Input
-                                id="phone"
-                                type="tel"
-                                placeholder="+225 XX XX XX XX XX"
-                                required
-                                className={`h-12 border-2 transition-colors rounded-xl px-4 pr-10 text-gray-900 ${
-                                  phoneError
-                                    ? 'border-red-500 hover:border-red-600 focus:border-red-600'
-                                    : phoneValid
-                                    ? 'border-green-500 hover:border-green-600 focus:border-green-600'
-                                    : 'border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange'
-                                }`}
-                                value={formPhone}
-                                onChange={(e) => {
-                                  setFormPhone(e.target.value);
-                                  validatePhone(e.target.value);
-                                }}
-                                onBlur={() => validatePhone(formPhone)}
-                              />
-                              {phoneValid && !phoneError && (
-                                <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-green-600 animate-in zoom-in duration-200" />
-                              )}
-                              {phoneError && (
-                                <AlertCircle className="absolute right-3 top-3.5 h-5 w-5 text-red-600 animate-in zoom-in duration-200" />
+                          {/* Séparateur moderne */}
+                          <div className="border-t-2 border-gray-100 my-8"></div>
+                        </>
+                      )}
+
+                      {/* SECTION: Axes d'intérêt (pour Membre institutionnel uniquement) */}
+                      {selectedAdhesionType === "institutionnel" && (
+                        <>
+                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
+                                <Target className="h-5 w-5 text-cpu-orange" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold text-gray-900">
+                                  Axes d'intérêt
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Sélectionnez vos domaines d'intervention prioritaires
+                                </p>
+                              </div>
+                              {selectedAxesInteret.length > 0 && (
+                                <Badge className="bg-cpu-orange text-white px-3 py-1.5 text-sm font-semibold animate-in zoom-in duration-200">
+                                  {selectedAxesInteret.length} sélectionné{selectedAxesInteret.length > 1 ? 's' : ''}
+                                </Badge>
                               )}
                             </div>
-                            {phoneError && (
-                              <p className="text-sm text-red-600 flex items-center gap-1 animate-in slide-in-from-top-2 duration-200">
-                                <AlertCircle className="h-4 w-4" />
-                                {phoneError}
+
+                            <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
+                              <p className="text-sm text-gray-600 flex items-center gap-1">
+                                <Info className="h-4 w-4" />
+                                Cochez un ou plusieurs axes
                               </p>
+                              {!isLoadingCentresInteret && centresInteretApi.length > 0 && (
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={toggleAllAxes}
+                                  className="border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-colors"
+                                >
+                                  {selectedAxesInteret.length === centresInteretApi.length
+                                    ? "Tout décocher"
+                                    : "Tout sélectionner"}
+                                </Button>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 p-6 border-2 border-gray-100 rounded-xl bg-white max-h-80 overflow-y-auto">
+                              {isLoadingCentresInteret ? (
+                                <div className="col-span-3 flex items-center justify-center py-4">
+                                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cpu-orange"></div>
+                                  <span className="ml-2 text-gray-500">Chargement des axes d'intérêt...</span>
+                                </div>
+                              ) : errorCentresInteret ? (
+                                <div className="col-span-3 p-4 border-2 border-red-200 rounded-xl bg-red-50 text-red-600 text-center">
+                                  <div className="font-bold mb-1">Erreur de chargement</div>
+                                  <div className="text-sm">{errorCentresInteret.message || "Impossible de charger les axes d'intérêt"}</div>
+                                </div>
+                              ) : centresInteretApi.length === 0 ? (
+                                <div className="col-span-3 p-4 text-center text-gray-600 font-medium">
+                                  Aucun axe d'intérêt existant
+                                </div>
+                              ) : (
+                                centresInteretApi.map((ci) => (
+                                  <div
+                                    key={ci.id || ci.name}
+                                    className="flex items-start space-x-3 p-3 rounded-lg hover:bg-white transition-colors"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      id={`axe-${ci.name}`}
+                                      checked={selectedAxesInteret.includes(ci.name)}
+                                      onChange={() => {
+                                        setSelectedAxesInteret((prev) =>
+                                          prev.includes(ci.name)
+                                            ? prev.filter((a) => a !== ci.name)
+                                            : [...prev, ci.name]
+                                        );
+                                      }}
+                                      className="h-5 w-5 border-2 border-cpu-orange rounded-md focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange transition-all"
+                                      style={{
+                                        accentColor: "#F27A20",
+                                        colorScheme: "light",
+                                      }}
+                                    />
+                                    <Label
+                                      htmlFor={`axe-${ci.name}`}
+                                      className="text-sm cursor-pointer font-medium text-gray-700 leading-tight"
+                                    >
+                                      {ci.name}
+                                    </Label>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+
+                            {selectedAxesInteret.length === 0 && (
+                              <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                <p className="text-sm text-orange-700 flex items-center gap-2">
+                                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                  <span className="font-medium">
+                                    Veuillez sélectionner au moins un axe d'intérêt pour continuer
+                                  </span>
+                                </p>
+                              </div>
+                            )}
+
+                            {selectedAxesInteret.length > 0 && selectedAxesInteret.length < 3 && (
+                              <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                                <p className="text-xs text-gray-700 flex items-center gap-1">
+                                  <Lightbulb className="h-3 w-3" />
+                                  Vous pouvez sélectionner plusieurs axes pour maximiser vos opportunités
+                                </p>
+                              </div>
                             )}
                           </div>
-                        </div>
-                      </div>
 
-                      {/* Séparateur moderne */}
-                      <div className="border-t-2 border-gray-100 my-8"></div>
+                          {/* Séparateur moderne */}
+                          <div className="border-t-2 border-gray-100 my-8"></div>
+
+                          {/* SECTION: Filières prioritaires (pour Membre institutionnel) */}
+                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-green-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-green/10">
+                                <Briefcase className="h-5 w-5 text-cpu-green" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold text-gray-900">
+                                  Filières prioritaires
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Les filières que vous accompagnez en priorité
+                                </p>
+                              </div>
+                              {selectedFilieresPrioritaires.length > 0 && (
+                                <Badge className="bg-cpu-green text-white px-3 py-1.5 text-sm font-semibold animate-in zoom-in duration-200">
+                                  {selectedFilieresPrioritaires.length} sélectionnée{selectedFilieresPrioritaires.length > 1 ? 's' : ''}
+                                </Badge>
+                              )}
+                            </div>
+
+                            <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
+                              <p className="text-sm text-gray-600 flex items-center gap-1">
+                                <Info className="h-4 w-4" />
+                                Optionnel - Cochez une ou plusieurs filières
+                              </p>
+                              {!isLoadingSecteurs && getAvailableFilieres().length > 0 && (
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={toggleAllFilieres}
+                                  className="border-2 border-cpu-green text-cpu-green hover:bg-cpu-green hover:text-white font-semibold transition-colors"
+                                >
+                                  {selectedFilieresPrioritaires.length === getAvailableFilieres().length
+                                    ? "Tout décocher"
+                                    : "Tout sélectionner"}
+                                </Button>
+                              )}
+                            </div>
+
+                            {isLoadingSecteurs ? (
+                              <div className="p-6 border-2 border-gray-100 rounded-2xl bg-gray-50 text-center text-gray-500 font-medium">
+                                Chargement des filières...
+                              </div>
+                            ) : errorSecteurs ? (
+                              <div className="p-6 border-2 border-red-200 rounded-2xl bg-red-50 text-red-600">
+                                <div className="font-bold mb-2">Erreur de chargement</div>
+                                <div className="text-sm">
+                                  {errorSecteurs.message || "Impossible de charger les filières"}
+                                </div>
+                              </div>
+                            ) : getAvailableFilieres().length === 0 ? (
+                              <div className="p-6 border-2 border-gray-200 rounded-2xl bg-gray-50 text-center text-gray-600 font-medium">
+                                Aucune filière existante
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 p-6 border-2 border-gray-100 rounded-xl bg-white max-h-80 overflow-y-auto">
+                                {getAvailableFilieres().map((filiere) => (
+                                <div
+                                  key={filiere}
+                                  className="flex items-start space-x-2"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    id={`filiere-${filiere}`}
+                                    checked={selectedFilieresPrioritaires.includes(
+                                      filiere
+                                    )}
+                                    onChange={() => {
+                                      setSelectedFilieresPrioritaires((prev) =>
+                                        prev.includes(filiere)
+                                          ? prev.filter((f) => f !== filiere)
+                                          : [...prev, filiere]
+                                      );
+                                    }}
+                                    className="h-4 w-4 border-2 border-cpu-orange rounded focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange"
+                                    style={{
+                                      accentColor: "#F27A20",
+                                      colorScheme: "light",
+                                    }}
+                                  />
+                                  <Label
+                                    htmlFor={`filiere-${filiere}`}
+                                    className="text-sm cursor-pointer font-normal"
+                                  >
+                                    {filiere}
+                                  </Label>
+                                </div>
+                              ))}
+                              </div>
+                            )}
+
+                            {selectedFilieresPrioritaires.length > 0 && (
+                              <div className="flex items-center gap-2 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-100 mt-4 animate-in slide-in-from-bottom-2 duration-300">
+                                <Check className="h-5 w-5 text-cpu-green" />
+                                <span className="font-bold text-cpu-green">
+                                  {selectedFilieresPrioritaires.length} filière
+                                  {selectedFilieresPrioritaires.length > 1 ? "s" : ""}{" "}
+                                  sélectionnée
+                                  {selectedFilieresPrioritaires.length > 1 ? "s" : ""}
+                                </span>
+                              </div>
+                            )}
+
+                            {selectedFilieresPrioritaires.length === 0 && (
+                              <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                                <p className="text-xs text-gray-700 flex items-center gap-1">
+                                  <Lightbulb className="h-3 w-3" />
+                                  Cette information est optionnelle mais recommandée pour mieux cibler nos services
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Séparateur moderne */}
+                          <div className="border-t-2 border-gray-100 my-8"></div>
+                        </>
+                      )}
 
                       {/* SECTION: Formule souhaitée */}
                       <div className="pb-8">
