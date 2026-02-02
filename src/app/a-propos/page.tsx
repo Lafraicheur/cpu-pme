@@ -684,12 +684,13 @@ function AProposContent() {
                           <img
                             src={membre.photo}
                             alt={membre.nom}
-                            className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
+                            className="h-full w-full object-contain sm:object-cover hover:scale-105 transition-transform duration-300"
                             onError={(e) => {
                               e.currentTarget.src = "/logo.png";
                             }}
                           />
                         </div>
+
                         <CardContent className="pt-6 pb-6">
                           <h3 className="text-lg font-bold mb-2 text-gray-900">
                             {membre.nom}
