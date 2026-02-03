@@ -41,24 +41,23 @@ function AProposContent() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative flex items-center justify-center overflow-hidden min-h-[80vh] h-[400px] md:h-[500px] lg:h-[550px]">
+      <section className="relative h-64 sm:h-72 md:h-80 lg:h-150 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#1a1a1a]">
         {/* BACKGROUND IMAGE */}
-        <div className="absolute inset-0 w-full h-full">
+        <div className="absolute inset-0 opacity-50">
           <img
             src="/logo.png"
             alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-            className="w-full h-full object-cover min-h-full"
-            style={{ minHeight: "100%" }}
+            className="w-full h-full"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
         </div>
 
         {/* CONTENU */}
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center w-full h-full px-4 text-center text-white bg-transparent">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in drop-shadow-md">
+        <div className="relative z-10 container mx-auto px-4 text-center text-white">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 tracking-tight">
             À Propos de CPU-PME.CI
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in drop-shadow">
+          <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 max-w-2xl mx-auto text-white/80 font-light px-4">
             Découvrez l'histoire, la mission et la vision de la Confédération
             Patronale Unique des PME de Côte d'Ivoire
           </p>
@@ -93,7 +92,7 @@ function AProposContent() {
             </div>
 
             {/* Mission & Vision Content */}
-            <TabsContent value="mission" className="mt-8 sm:mt-0">
+            <TabsContent value="mission" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div>
                   <br />
@@ -380,8 +379,9 @@ function AProposContent() {
             </TabsContent>
 
             {/* Histoire Content */}
-            <TabsContent value="histoire" className="mt-8 sm:mt-0">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <TabsContent value="histoire" className="mt-0">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-1">
+                <br />
                 <div className="lg:col-span-1">
                   <div className="sticky top-24">
                     <div className="flex items-center mb-4">
@@ -650,12 +650,13 @@ function AProposContent() {
             </TabsContent>
 
             {/* Équipe Content */}
-            <TabsContent value="equipe" className="mt-8 sm:mt-0">
+            <TabsContent value="equipe" className="mt-0">
               {/* Direction */}
               <div>
-                <div className="flex items-center mb-6 flex-wrap sm:flex-nowrap">
+                <br />
+                <div className="flex items-center mb-6">
                   <div
-                    className="p-3 rounded-full mr-4 flex-shrink-0"
+                    className="p-3 rounded-full mr-4"
                     style={{ backgroundColor: "rgba(240, 130, 35, 0.1)" }}
                   >
                     <Users
@@ -663,7 +664,7 @@ function AProposContent() {
                       style={{ color: "var(--color-primary)" }}
                     />
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-bold break-words">
+                  <h2 className="text-2xl md:text-3xl font-bold">
                     Équipe Dirigeante
                   </h2>
                 </div>
@@ -679,11 +680,11 @@ function AProposContent() {
                         key={membre.id}
                         className="overflow-hidden border-0 transition-all duration-300 bg-white hover:shadow-lg"
                       >
-                        <div className="h-56 sm:h-64 md:h-72 lg:h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
+                        <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
                           <img
                             src={membre.photo}
                             alt={membre.nom}
-                            className="h-full w-full object-contain hover:scale-105 transition-transform duration-300"
+                            className="h-full w-full object-contain sm:object-cover hover:scale-105 transition-transform duration-300"
                             onError={(e) => {
                               e.currentTarget.src = "/logo.png";
                             }}
@@ -763,13 +764,14 @@ function AProposContent() {
             </TabsContent>
 
             {/* Partenaires Content */}
-            <TabsContent value="partenaires" className="mt-8 sm:mt-0">
-              <div className="grid grid-cols-1 gap-12">
+            <TabsContent value="partenaires" className="mt-0">
+              <div className="grid grid-cols-1 gap-1">
                 {/* Partenaires */}
+                <br />
                 <div>
-                  <div className="flex items-center mb-6 flex-wrap sm:flex-nowrap">
+                  <div className="flex items-center mb-6">
                     <div
-                      className="p-3 rounded-full mr-4 flex-shrink-0"
+                      className="p-3 rounded-full mr-4"
                       style={{ backgroundColor: "rgba(25, 157, 78, 0.1)" }}
                     >
                       <Handshake
@@ -777,7 +779,7 @@ function AProposContent() {
                         style={{ color: "var(--color-success)" }}
                       />
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-bold break-words">
+                    <h2 className="text-2xl md:text-3xl font-bold">
                       Partenaires Stratégiques
                     </h2>
                   </div>

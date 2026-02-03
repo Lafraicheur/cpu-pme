@@ -2977,14 +2977,13 @@ const MembersContent = () => {
         </DialogContent>
       </Dialog>
       {/* Hero Section */}
-      <section className="relative flex items-center justify-center overflow-hidden min-h-[80vh] h-[400px] md:h-[500px] lg:h-[550px]">
+      <section className="relative h-64 sm:h-72 md:h-80 lg:h-150 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#1a1a1a]">
         {/* BACKGROUND IMAGE */}
-        <div className="absolute inset-0 w-full h-full">
+        <div className="absolute inset-0 opacity-50">
           <img
             src="/logo.png"
             alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-            className="w-full h-full object-cover min-h-full"
-            style={{ minHeight: "100%" }}
+            className="w-full h-full"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
         </div>
@@ -3010,10 +3009,10 @@ const MembersContent = () => {
               </>
             )}
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in drop-shadow-md">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 tracking-tight">
             {getPageTitle()}
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in drop-shadow">
+          <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 max-w-2xl mx-auto text-white/80 font-light px-4">
             {getPageDescription()}
           </p>
         </div>
