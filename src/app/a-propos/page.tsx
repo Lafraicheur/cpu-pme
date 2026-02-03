@@ -381,7 +381,6 @@ function AProposContent() {
             {/* Histoire Content */}
             <TabsContent value="histoire" className="mt-0">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-1">
-                <br />
                 <div className="lg:col-span-1">
                   <div className="sticky top-24">
                     <div className="flex items-center mb-4">
