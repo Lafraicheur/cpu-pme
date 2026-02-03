@@ -954,6 +954,30 @@ const MembersContent = () => {
   );
   const shuffledSignatureRef = useRef<string>("");
 
+  const filiereNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    if (Array.isArray(secteursApi)) {
+      secteursApi.forEach((secteur) => {
+        secteur.filieres?.forEach((filiere) => {
+          if (filiere?.id && filiere?.name) {
+            map.set(filiere.id, filiere.name);
+          }
+          filiere.sousFiliere?.forEach((sf) => {
+            if (sf?.id && sf?.name) {
+              map.set(sf.id, sf.name);
+            }
+            sf.activites?.forEach((act) => {
+              if (act?.id && act?.name) {
+                map.set(act.id, act.name);
+              }
+            });
+          });
+        });
+      });
+    }
+    return map;
+  }, [secteursApi]);
+
   const directorySectors = useMemo(
     () =>
       Array.from(new Set(membersFromApi.map((member) => member.sector))).sort(),
@@ -1841,7 +1865,7 @@ const MembersContent = () => {
     return Object.keys(getDefaultCommunes());
   };
 
-  // Obtenir les villes d'une commune (depuis l'API ou données statiques)
+  // Obtenir la ville parente d'une commune (depuis l'API ou données statiques)
   const getVillesForCommune = (region: string, commune: string): string[] => {
     // Utiliser les données de l'API si disponibles
     if (regionsApi && Array.isArray(regionsApi) && regionsApi.length > 0) {
@@ -1862,14 +1886,7 @@ const MembersContent = () => {
                   (c.name === commune || c.id === commune) && c.isActive !== false
               );
               if (communeData) {
-                // Si la commune a des quartiers, les retourner
-                if (communeData.quartiers && communeData.quartiers.length > 0) {
-                  return communeData.quartiers
-                    .filter((q) => q.isActive !== false)
-                    .map((q) => q.name)
-                    .sort();
-                }
-                // Sinon, retourner la ville parente comme option
+                // Retourner uniquement la ville parente (pas les quartiers)
                 return [ville.name];
               }
             }
@@ -1894,7 +1911,7 @@ const MembersContent = () => {
     if (defaults[commune]) {
       return defaults[commune];
     }
-    return ["Ville Centre"];
+    return [];
   };
 
   // Récupérer les paramètres d'URL au chargement
@@ -2075,12 +2092,27 @@ const MembersContent = () => {
   const filteredMembers = membersFromApi.filter((member) => {
     // Recherche insensible à la casse
     const searchLower = searchTerm.toLowerCase().trim();
+    const filiereName = member.filiereId
+      ? filiereNameById.get(member.filiereId) || ""
+      : "";
+    const sousFiliereName = member.sousFiliereId
+      ? filiereNameById.get(member.sousFiliereId) || ""
+      : "";
+    const activiteNames = Array.isArray(member.activitesIds)
+      ? member.activitesIds
+          .map((id) => filiereNameById.get(id))
+          .filter((name): name is string => Boolean(name))
+          .join(" ")
+      : "";
     const matchesSearch =
       searchTerm === "" ||
       member.name.toLowerCase().includes(searchLower) ||
       member.description.toLowerCase().includes(searchLower) ||
       member.sector.toLowerCase().includes(searchLower) ||
-      member.region.toLowerCase().includes(searchLower);
+      member.region.toLowerCase().includes(searchLower) ||
+      filiereName.toLowerCase().includes(searchLower) ||
+      sousFiliereName.toLowerCase().includes(searchLower) ||
+      activiteNames.toLowerCase().includes(searchLower);
     const matchesSector =
       selectedSector === "all" || member.sector === selectedSector;
     const matchesRegion =
@@ -2401,10 +2433,6 @@ const MembersContent = () => {
         selectedAdhesionType === "individuel"
           ? formName
           : orgName || formName;
-      const messageWithRepresentative =
-        selectedAdhesionType === "individuel" || !formName
-          ? formMessage || undefined
-          : `${formMessage ? `${formMessage}\n\n` : ""}Représentant: ${formName}`;
       const companyName =
         selectedAdhesionType === "individuel" ? undefined : orgName || undefined;
 
@@ -2413,7 +2441,7 @@ const MembersContent = () => {
         position: formPosition || undefined,
         email: formEmail,
         phone: formPhone,
-        message: messageWithRepresentative,
+        message: formMessage || undefined,
         typeMembreId: selectedTypeMembre.id,
         profilId: resolveProfilId(),
         abonnementId: resolveAbonnementId(),
@@ -2977,13 +3005,14 @@ const MembersContent = () => {
         </DialogContent>
       </Dialog>
       {/* Hero Section */}
-      <section className="relative h-64 sm:h-72 md:h-80 lg:h-150 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#1a1a1a]">
+      <section className="relative flex items-center justify-center overflow-hidden min-h-[80vh] h-[400px] md:h-[500px] lg:h-[550px]">
         {/* BACKGROUND IMAGE */}
-        <div className="absolute inset-0 opacity-50">
+        <div className="absolute inset-0 w-full h-full">
           <img
             src="/logo.png"
             alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-            className="w-full h-full"
+            className="w-full h-full object-cover min-h-full"
+            style={{ minHeight: "100%" }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
         </div>
@@ -3009,10 +3038,10 @@ const MembersContent = () => {
               </>
             )}
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 tracking-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in drop-shadow-md">
             {getPageTitle()}
           </h1>
-          <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 max-w-2xl mx-auto text-white/80 font-light px-4">
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in drop-shadow">
             {getPageDescription()}
           </p>
         </div>

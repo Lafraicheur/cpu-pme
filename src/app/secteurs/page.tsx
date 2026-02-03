@@ -184,6 +184,29 @@ const SecteursContent = () => {
     return text.toLowerCase().includes(searchTerm.toLowerCase());
   };
 
+  // Fonction pour vérifier si un secteur contient des résultats de recherche
+  const secteurHasSearchResults = (secteur: Secteur): boolean => {
+    if (!searchTerm) return true;
+    
+    return secteur.filieres.some((filiere) =>
+      matchesSearch(filiere.name) ||
+      filiere.sousFiliere.some((sf) => 
+        matchesSearch(sf.name) ||
+        (sf.activites && sf.activites.some((act) => matchesSearch(act.name)))
+      )
+    );
+  };
+
+  // Basculer automatiquement vers le premier secteur avec des résultats lors de la recherche
+  useEffect(() => {
+    if (searchTerm && sortedSecteurs.length > 0) {
+      const firstMatchingSecteur = sortedSecteurs.find(secteur => secteurHasSearchResults(secteur));
+      if (firstMatchingSecteur && firstMatchingSecteur.id !== activeSecteurId) {
+        setActiveSecteurId(firstMatchingSecteur.id);
+      }
+    }
+  }, [searchTerm, sortedSecteurs]);
+
   const toggleFiliere = (filiereId: string) => {
     setSelectedFilieres((prev) => {
       const newSet = new Set(prev);
@@ -595,7 +618,10 @@ const SecteursContent = () => {
                     .filter((filiere) =>
                       !searchTerm ||
                       matchesSearch(filiere.name) ||
-                      filiere.sousFiliere.some((sf) => matchesSearch(sf.name))
+                      filiere.sousFiliere.some((sf) => 
+                        matchesSearch(sf.name) ||
+                        (sf.activites && sf.activites.some((act) => matchesSearch(act.name)))
+                      )
                     )
                     .map((filiere) => (
                       <div
@@ -614,15 +640,28 @@ const SecteursContent = () => {
                         </div>
 
                         {/* Accordion pour Sous-Filières */}
-                        <Accordion
-                          key={`${filiere.id}-${isCompactMode ? 'multiple' : 'single'}`}
-                          type={isCompactMode ? "multiple" : "single"}
-                          collapsible
-                          className="w-full"
-                        >
-                          {filiere.sousFiliere
-                            .filter((sf) => !searchTerm || matchesSearch(sf.name))
-                            .map((sousFiliere, index) => (
+                        {isCompactMode ? (
+                          <Accordion
+                            key={`${filiere.id}-multiple-${searchTerm}`}
+                            type="multiple"
+                            className="w-full"
+                            defaultValue={
+                              searchTerm
+                                ? filiere.sousFiliere
+                                    .filter((sf) => 
+                                      sf.activites && sf.activites.some((act) => matchesSearch(act.name))
+                                    )
+                                    .map((sf) => sf.id)
+                                : undefined
+                            }
+                          >
+                            {filiere.sousFiliere
+                              .filter((sf) => 
+                                !searchTerm || 
+                                matchesSearch(sf.name) ||
+                                (sf.activites && sf.activites.some((act) => matchesSearch(act.name)))
+                              )
+                              .map((sousFiliere, index) => (
                               <AccordionItem
                                 key={sousFiliere.id}
                                 value={sousFiliere.id}
@@ -648,7 +687,7 @@ const SecteursContent = () => {
                                       <>
                                         {/* Section header avec checkbox et barre orange */}
                                         <div className="flex items-center gap-3 mb-3">
-                                          <div className={`h-6 w-1 flex-shrink-0 rounded-full ${
+                                          <div className={`h-8 w-1.5 flex-shrink-0 rounded-sm ${
                                             isBarOrange 
                                               ? "bg-gradient-to-b from-cpu-orange to-orange-600" 
                                               : "bg-gray-300"
@@ -718,7 +757,120 @@ const SecteursContent = () => {
                                 </AccordionContent>
                               </AccordionItem>
                             ))}
-                        </Accordion>
+                          </Accordion>
+                        ) : (
+                          <Accordion
+                            key={`${filiere.id}-single-${searchTerm}`}
+                            type="single"
+                            collapsible
+                            className="w-full"
+                            defaultValue={
+                              searchTerm
+                                ? filiere.sousFiliere.find((sf) => 
+                                    sf.activites && sf.activites.some((act) => matchesSearch(act.name))
+                                  )?.id
+                                : undefined
+                            }
+                          >
+                            {filiere.sousFiliere
+                              .filter((sf) => 
+                                !searchTerm || 
+                                matchesSearch(sf.name) ||
+                                (sf.activites && sf.activites.some((act) => matchesSearch(act.name)))
+                              )
+                              .map((sousFiliere, index) => (
+                              <AccordionItem
+                                key={sousFiliere.id}
+                                value={sousFiliere.id}
+                                className={`border-b border-gray-200 ${index === filiere.sousFiliere.length - 1 ? "border-b-0" : ""}`}
+                              >
+                                {/* Trigger Sous-Filière */}
+                                <AccordionTrigger className="text-left px-6 py-4 hover:no-underline hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-transparent transition-all">
+                                  <div className="flex items-center gap-3 flex-1">
+                                    <span className="font-semibold text-[#221F1F] text-base">
+                                      {decodeHtmlEntities(sousFiliere.name)}
+                                    </span>
+                                  </div>
+                                </AccordionTrigger>
+
+                                {/* Contenu - Section avec checkbox + Activités */}
+                                <AccordionContent className="px-6 pt-3 pb-5 bg-gradient-to-b from-gray-50/50 to-white">
+                                  {(() => {
+                                    // Vérifier si au moins une activité est sélectionnée dans cette sous-filière
+                                    const hasSelectedActivite = sousFiliere.activites?.some(act => selectedActivites.has(act.id)) || false;
+                                    const isBarOrange = selectedSousFiliere.has(sousFiliere.id) || hasSelectedActivite;
+                                    
+                                    return (
+                                      <>
+                                        {/* Section header avec checkbox et barre orange */}
+                                        <div className="flex items-center gap-3 mb-3">
+                                          <div className={`h-8 w-1.5 flex-shrink-0 rounded-sm ${
+                                            isBarOrange 
+                                              ? "bg-gradient-to-b from-cpu-orange to-orange-600" 
+                                              : "bg-gray-300"
+                                          }`}></div>
+                                          <Checkbox
+                                            checked={selectedSousFiliere.has(sousFiliere.id)}
+                                            onCheckedChange={() => toggleSousFiliere(sousFiliere.id)}
+                                            className="h-5 w-5 rounded-sm border-2 border-gray-300 data-[state=checked]:bg-cpu-orange data-[state=checked]:border-cpu-orange transition-all flex-shrink-0"
+                                          />
+                                          <Link
+                                            href={`/membres?sector=${encodeURIComponent(secteur.name)}&filiere=${encodeURIComponent(filiere.name)}&subsector=${encodeURIComponent(sousFiliere.name)}`}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                            }}
+                                            className="flex-1 font-inter text-lg font-semibold text-[#221F1F] hover:text-cpu-orange transition-colors cursor-pointer"
+                                          >
+                                            {decodeHtmlEntities(sousFiliere.name)}
+                                          </Link>
+                                        </div>
+
+                                        {/* Activités en ligne */}
+                                        {sousFiliere.activites && sousFiliere.activites.length > 0 && (
+                                          <div className="flex flex-wrap gap-2.5 ml-6">
+                                            {sousFiliere.activites
+                                              .filter((activite) => !searchTerm || matchesSearch(activite.name))
+                                              .map((activite) => {
+                                                const isSelected = selectedActivites.has(activite.id);
+                                                return (
+                                                  <div
+                                                    key={activite.id}
+                                                    className={`flex items-center gap-2.5 pl-4 pr-4 py-2.5 rounded-md transition-all duration-200 ${
+                                                      isSelected
+                                                        ? "bg-gradient-to-r from-cpu-orange/10 to-orange-50 border-l-4 border-cpu-orange shadow-sm"
+                                                        : "bg-white border-l-4 border-transparent hover:border-cpu-orange/30 hover:bg-gray-50/50"
+                                                    }`}
+                                                  >
+                                                    <Checkbox
+                                                      checked={isSelected}
+                                                      onCheckedChange={() => toggleActivite(activite.id)}
+                                                      onClick={(e) => e.stopPropagation()}
+                                                      className="h-4 w-4 rounded-none border-2 border-gray-300 data-[state=checked]:bg-cpu-orange data-[state=checked]:border-cpu-orange transition-all flex-shrink-0 shadow-sm"
+                                                    />
+                                                    <Link
+                                                      href={`/membres?sector=${encodeURIComponent(secteur.name)}&filiere=${encodeURIComponent(filiere.name)}&subsector=${encodeURIComponent(sousFiliere.name)}&tag=${encodeURIComponent(activite.name)}`}
+                                                      onClick={(e) => e.stopPropagation()}
+                                                      className={`text-sm font-medium whitespace-nowrap cursor-pointer transition-colors duration-200 ${
+                                                        isSelected
+                                                          ? "text-cpu-orange font-semibold"
+                                                          : "text-[#221F1F] hover:text-cpu-orange"
+                                                      }`}
+                                                    >
+                                                      {decodeHtmlEntities(activite.name)}
+                                                    </Link>
+                                                  </div>
+                                                );
+                                              })}
+                                          </div>
+                                        )}
+                                      </>
+                                    );
+                                  })()}
+                                </AccordionContent>
+                              </AccordionItem>
+                            ))}
+                          </Accordion>
+                        )}
                       </div>
                     ))}
                 </div>
