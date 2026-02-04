@@ -1,19 +1,16 @@
 "use client";
 
+import { DynamicHeroBanner } from "@/components/DynamicHeroBanner";
+
 export default function CRM() {
   return (
     <>
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-orange-50/30 to-blue-50/40 py-16 sm:py-24">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
-          <h1 className="font-montserrat text-4xl sm:text-5xl md:text-6xl font-bold text-[#221F1F] text-center mb-6">
-            CRM & Réseautage
-          </h1>
-          <p className="font-inter text-lg sm:text-xl text-[#6F6F6F] text-center max-w-3xl mx-auto">
-            Développez votre réseau et créez des opportunités d'affaires
-          </p>
-        </div>
-      </section>
+      <DynamicHeroBanner
+        position="product"
+        title="CRM & Réseautage"
+        subtitle="Développez votre réseau et créez des opportunités d'affaires"
+      />
 
       {/* Content Section */}
       <section className="py-16 sm:py-20">

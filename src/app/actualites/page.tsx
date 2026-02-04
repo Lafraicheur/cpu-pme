@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useActualities, usePublications } from "@/hooks/use-api";
+import { DynamicHeroBanner } from "@/components/DynamicHeroBanner";
 
 // Fonction utilitaire pour obtenir les informations sur le type de fichier
 function getFileTypeInfo(fileUrl: string | null, publicationType?: string) {
@@ -390,27 +391,11 @@ const NewsContent = () => {
 
   return (
     <div className="min-h-screen">
-      <section className="relative h-64 sm:h-72 md:h-80 lg:h-150 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#1a1a1a]">
-        {/* BACKGROUND IMAGE */}
-        <div className="absolute inset-0 opacity-50">
-          <img
-            src="/logo.png"
-            alt="CPU-PME"
-            className="w-full h-full"
-          />
-        </div>
-
-        {/* CONTENU */}
-        <div className="relative z-10 container mx-auto px-4 sm:px-6 text-center text-white">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 tracking-tight">
-            Actualités & Publications
-          </h1>
-          <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 max-w-2xl mx-auto text-white/80 font-light px-4">
-            Restez informés sur l'actualité de la CPU-PME et accédez à nos
-            publications : rapports, guides, études et documents stratégiques
-          </p>
-        </div>
-      </section>
+      <DynamicHeroBanner
+        position="news"
+        title="Actualités & Publications"
+        subtitle="Restez informés sur l'actualité de la CPU-PME et accédez à nos publications : rapports, guides, études et documents stratégiques"
+      />
 
       {/* Onglets principaux : Actualités et Publications */}
       <section className="py-16 sm:py-20 bg-white">

@@ -13,6 +13,8 @@ export const metadata: Metadata = {
     'font-preconnect-googleapis': 'https://fonts.googleapis.com',
     'font-preconnect-gstatic': 'https://fonts.gstatic.com',
   },
+  metadataBase: new URL('https://cpu-pme.ci'),
+  charset: 'UTF-8',
 };
 
 export default function RootLayout({
@@ -22,6 +24,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
+      <head>
+        <meta charSet="UTF-8" />
+        <meta httpEquiv="Content-Type" content="text/html; charset=UTF-8" />
+      </head>
       <body className="antialiased" style={{
         fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
         '--font-montserrat': 'Montserrat, sans-serif',

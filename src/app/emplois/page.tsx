@@ -11,6 +11,7 @@ import {
   Users,
   FileText,
 } from "lucide-react";
+import { DynamicHeroBanner } from "@/components/DynamicHeroBanner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -84,32 +85,16 @@ const Jobs = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative flex items-center justify-center overflow-hidden min-h-[80vh] h-[400px] md:h-[500px] lg:h-[550px]">
-        {/* BACKGROUND IMAGE */}
-        <div className="absolute inset-0 w-full h-full">
-          <img
-            src="/logo.png"
-            alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-            className="w-full h-full object-cover min-h-full"
-            style={{ minHeight: '100%' }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
-        </div>
-
-        {/* CONTENU */}
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center w-full h-full px-4 text-center text-white bg-transparent">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in drop-shadow-md">
-            Offres d&apos;emploi CPU-PME
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in drop-shadow">
-            Rejoignez une équipe dynamique au service du développement des PME
-            ivoiriennes
-          </p>
-          <p className="text-lg italic text-white/80">
-            &quot;L&apos;écosystème intégré au service des PME&quot;
-          </p>
-        </div>
-      </section>
+      <DynamicHeroBanner
+        position="training"
+        title="Offres d'emploi CPU-PME"
+        subtitle="Rejoignez une équipe dynamique au service du développement des PME ivoiriennes"
+        minHeight="min-h-[80vh] h-[400px] md:h-[500px] lg:h-[550px]"
+      >
+        <p className="text-lg italic text-white/80">
+          &quot;L&apos;écosystème intégré au service des PME&quot;
+        </p>
+      </DynamicHeroBanner>
 
       {/* Stats Section */}
       <section className="py-8 bg-muted/30">

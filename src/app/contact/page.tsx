@@ -25,6 +25,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
+import { DynamicHeroBanner } from "@/components/DynamicHeroBanner";
 
 export default function Contact() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -52,42 +53,26 @@ export default function Contact() {
   return (
     <>
       {/* Hero Section */}
-
-      <section className="relative flex items-center justify-center overflow-hidden min-h-[80vh] h-[400px] md:h-[500px] lg:h-[550px]">
-        {/* BACKGROUND IMAGE */}
-        <div className="absolute inset-0 w-full h-full">
-          <img
-            src="/logo.png"
-            alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-            className="w-full h-full object-cover min-h-full"
-            style={{ minHeight: '100%' }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+      <DynamicHeroBanner
+        position="homepage"
+        title="Contactez-nous"
+        subtitle="Notre équipe est à votre écoute pour répondre à toutes vos questions"
+        minHeight="min-h-[80vh] h-[400px] md:h-[500px] lg:h-[550px]"
+      >
+        <div className="flex gap-4 justify-center">
+          <Button
+            className="bg-white text-[#F17C21] hover:bg-gray-100 font-semibold px-6 py-3"
+            onClick={() =>
+              document
+                .getElementById("contact-form")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Nous écrire
+          </Button>
         </div>
-
-        {/* CONTENU */}
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center w-full h-full px-4 text-center text-white bg-transparent">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in drop-shadow-md">
-            Contactez-nous
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in drop-shadow">
-            Notre équipe est à votre écoute pour répondre à toutes vos questions
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Button
-              className="bg-white text-[#F17C21] hover:bg-gray-100 font-semibold px-6 py-3"
-              onClick={() =>
-                document
-                  .getElementById("contact-form")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              <Send className="w-4 h-4 mr-2" />
-              Nous écrire
-            </Button>
-          </div>
-        </div>
-      </section>
+      </DynamicHeroBanner>
 
       {/* Main Content */}
       <section className="py-16 bg-white">

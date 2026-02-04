@@ -128,7 +128,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { decodeHtmlEntities } from "@/lib/utils/decodeHtmlEntities";
 import "./member-cards.css";
+import { DynamicHeroBanner } from "@/components/DynamicHeroBanner";
 
 // Composant Skeleton pour les cartes
 const MemberCardSkeleton = () => (
@@ -2752,13 +2754,13 @@ const MembersContent = () => {
       "Site Web",
     ];
     const rows = filteredMembers.map((member) => [
-      member.name,
+      decodeHtmlEntities(member.name),
       memberTypes.find((t) => t.value === member.memberType)?.label ||
         member.memberType,
-      member.sector,
-      member.region,
+      decodeHtmlEntities(member.sector),
+      decodeHtmlEntities(member.region),
       member.badge || "N/A",
-      member.description.replace(/,/g, ";"), // Remplacer les virgules pour éviter les problèmes CSV
+      decodeHtmlEntities(member.description.replace(/,/g, ";")), // Remplacer les virgules pour éviter les problèmes CSV
       member.website || "N/A",
     ]);
 
@@ -2858,13 +2860,13 @@ const MembersContent = () => {
                 .map(
                   (member) => `
                 <tr>
-                  <td>${member.name}</td>
+                  <td>${decodeHtmlEntities(member.name)}</td>
                   <td>${
                     memberTypes.find((t) => t.value === member.memberType)
                       ?.label || member.memberType
                   }</td>
-                  <td>${member.sector}</td>
-                  <td>${member.region}</td>
+                  <td>${decodeHtmlEntities(member.sector)}</td>
+                  <td>${decodeHtmlEntities(member.region)}</td>
                   <td>${member.badge || "N/A"}</td>
                   <td>${member.website || "N/A"}</td>
                 </tr>
@@ -3005,47 +3007,32 @@ const MembersContent = () => {
         </DialogContent>
       </Dialog>
       {/* Hero Section */}
-      <section className="relative flex items-center justify-center overflow-hidden min-h-[80vh] h-[400px] md:h-[500px] lg:h-[550px]">
-        {/* BACKGROUND IMAGE */}
-        <div className="absolute inset-0 w-full h-full">
-          <img
-            src="/logo.png"
-            alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-            className="w-full h-full object-cover min-h-full"
-            style={{ minHeight: "100%" }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+      <DynamicHeroBanner
+        position="member"
+        title={getPageTitle()}
+        subtitle={getPageDescription()}
+        minHeight="min-h-[80vh] h-[400px] md:h-[500px] lg:h-[550px]"
+      >
+        <div className="mb-4">
+          <span className="text-lg md:text-xl font-medium text-white/80">
+            Membres
+          </span>
+          {activeTab !== "annuaire" && (
+            <>
+              <span className="mx-2 text-white/60">/</span>
+              <span className="text-sm md:text-xl font-semibold text-white">
+                {activeTab === "avantages"
+                  ? "Avantages"
+                  : activeTab === "pass-pme"
+                  ? "Pass PME"
+                  : activeTab === "adhesion"
+                  ? "Adhérer"
+                  : ""}
+              </span>
+            </>
+          )}
         </div>
-
-        {/* CONTENU */}
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center w-full h-full px-4 text-center text-white bg-transparent">
-          <div className="mb-4">
-            <span className="text-lg md:text-xl font-medium text-white/80">
-              Membres
-            </span>
-            {activeTab !== "annuaire" && (
-              <>
-                <span className="mx-2 text-white/60">/</span>
-                <span className="text-sm md:text-xl font-semibold text-white">
-                  {activeTab === "avantages"
-                    ? "Avantages"
-                    : activeTab === "pass-pme"
-                    ? "Pass PME"
-                    : activeTab === "adhesion"
-                    ? "Adhérer"
-                    : ""}
-                </span>
-              </>
-            )}
-          </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in drop-shadow-md">
-            {getPageTitle()}
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 animate-fade-in drop-shadow">
-            {getPageDescription()}
-          </p>
-        </div>
-      </section>
+      </DynamicHeroBanner>
 
       {/* Titre et Navigation par Onglets */}
       <section className="bg-white py-8 sm:py-10">
@@ -3270,7 +3257,7 @@ const MembersContent = () => {
                             <span className="text-xs text-cpu-orange font-semibold">À propos</span>
                           </div>
                           <p className={`text-sm text-[#6F6F6F] leading-relaxed ${expandedMembers.has(recentMembers[featuredIndex].id) ? '' : 'line-clamp-2'}`}>
-                            {recentMembers[featuredIndex].description}
+                            {decodeHtmlEntities(recentMembers[featuredIndex].description)}
                           </p>
                         </div>
 
@@ -3428,7 +3415,7 @@ const MembersContent = () => {
                       <SelectItem value="all">Tous les secteurs</SelectItem>
                       {directorySectors.map((sector) => (
                         <SelectItem key={sector} value={sector}>
-                          {sector}
+                          {decodeHtmlEntities(sector)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -3444,7 +3431,7 @@ const MembersContent = () => {
                       <SelectItem value="all">Toutes les régions</SelectItem>
                       {directoryRegions.map((region) => (
                         <SelectItem key={region} value={region}>
-                          {region}
+                          {decodeHtmlEntities(region)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -3771,11 +3758,11 @@ const MembersContent = () => {
                                 {/* Nom et localisation */}
                                 <div className="flex-1 min-w-0">
                                   <h3 className="text-xl font-bold text-[#221F1F] mb-2 line-clamp-2 min-h-[56px] group-hover:text-cpu-green transition-colors">
-                                    {member.name}
+                                    {decodeHtmlEntities(member.name)}
                                   </h3>
                                   <div className="flex items-start text-sm text-[#6F6F6F] mb-1">
                                     <MapPin className="h-4 w-4 mr-1.5 flex-shrink-0 text-cpu-orange mt-0.5" />
-                                    <span className="break-words">{member.fullAddress || member.region}</span>
+                                    <span className="break-words">{decodeHtmlEntities(member.fullAddress || member.region)}</span>
                                   </div>
                                 </div>
                               </div>
@@ -3802,7 +3789,7 @@ const MembersContent = () => {
                                     }
                                     return (
                                       <div className="text-sm font-semibold text-[#221F1F] line-clamp-2 min-h-[40px]">
-                                        {filiereName || member.sector}
+                                        {decodeHtmlEntities(filiereName || member.sector)}
                                       </div>
                                     );
                                   })()}
@@ -3830,7 +3817,7 @@ const MembersContent = () => {
                                     }
                                     return (
                                       <div className="text-sm font-semibold text-[#221F1F] line-clamp-2 min-h-[40px]">
-                                        {sousFiliereName || '-'}
+                                        {decodeHtmlEntities(sousFiliereName) || '-'}
                                       </div>
                                     );
                                   })()}
@@ -3878,7 +3865,7 @@ const MembersContent = () => {
                                           key={idx} 
                                           className="text-xs bg-cpu-green text-white font-medium px-3 py-1.5 rounded-md hover:bg-white hover:text-cpu-green hover:border-cpu-green border-2 border-cpu-green transition-all hover:scale-105"
                                         >
-                                          {activite}
+                                          {decodeHtmlEntities(activite)}
                                         </Badge>
                                       ))}
                                       {!isExpanded && remainingCount > 0 && (
@@ -3901,7 +3888,7 @@ const MembersContent = () => {
                                 <span className="text-xs text-gray-500 font-medium">À propos</span>
                               </div>
                               <p className={`text-sm text-[#6F6F6F] leading-relaxed ${expandedMembers.has(member.id) ? '' : 'line-clamp-2'} min-h-[60px]`}>
-                                {member.description}
+                                {decodeHtmlEntities(member.description)}
                               </p>
                             </div>
 
@@ -4038,7 +4025,7 @@ const MembersContent = () => {
                               <div className="mb-2">
                                 <div className="flex items-start justify-between gap-3 mb-2">
                                   <h3 className="text-lg md:text-xl font-bold text-[#221F1F] group-hover:text-cpu-orange transition-colors line-clamp-2">
-                                    {member.name}
+                                    {decodeHtmlEntities(member.name)}
                                   </h3>
                                   {member.interventionScope && (
                                     <Badge className={`text-xs font-medium px-2.5 py-1 whitespace-nowrap ${
@@ -4178,7 +4165,7 @@ const MembersContent = () => {
                                   <span className="text-xs text-cpu-orange font-semibold">À propos</span>
                                 </div>
                                 <p className={`text-sm text-[#6F6F6F] leading-relaxed ${expandedMembers.has(member.id) ? '' : 'line-clamp-2'}`}>
-                                  {member.description}
+                                  {decodeHtmlEntities(member.description)}
                                 </p>
                               </div>
 

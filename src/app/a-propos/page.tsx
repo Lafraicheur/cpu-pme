@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { usePartenairesForSiteWeb, useEquipeForSiteWeb } from "@/hooks/use-api";
+import { DynamicHeroBanner } from "@/components/DynamicHeroBanner";
 
 function AProposContent() {
   const searchParams = useSearchParams();
@@ -41,28 +42,11 @@ function AProposContent() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative h-64 sm:h-72 md:h-80 lg:h-150 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#1a1a1a]">
-        {/* BACKGROUND IMAGE */}
-        <div className="absolute inset-0 opacity-50">
-          <img
-            src="/logo.png"
-            alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-            className="w-full h-full"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
-        </div>
-
-        {/* CONTENU */}
-        <div className="relative z-10 container mx-auto px-4 text-center text-white">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 tracking-tight">
-            À Propos de CPU-PME.CI
-          </h1>
-          <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 max-w-2xl mx-auto text-white/80 font-light px-4">
-            Découvrez l'histoire, la mission et la vision de la Confédération
-            Patronale Unique des PME de Côte d'Ivoire
-          </p>
-        </div>
-      </section>
+      <DynamicHeroBanner
+        position="about"
+        title="À Propos de CPU-PME.CI"
+        subtitle="Découvrez l'histoire, la mission et la vision de la Confédération Patronale Unique des PME de Côte d'Ivoire"
+      />
 
       {/* Tabs Section */}
       <section className="py-16 sm:py-20 bg-white">

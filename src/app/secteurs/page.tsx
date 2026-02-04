@@ -25,22 +25,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useSecteursForSiteWeb } from "@/hooks/use-api";
 import { Secteur, Filiere, SousFiliere, Activite } from "@/lib/api/services/secteurs.service";
-
-// Fonction pour décoder les entités HTML
-const decodeHtmlEntities = (text: string): string => {
-  const textarea = typeof document !== 'undefined' ? document.createElement('textarea') : null;
-  if (textarea) {
-    textarea.innerHTML = text;
-    return textarea.value;
-  }
-  // Fallback pour SSR
-  return text
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
-};
+import { decodeHtmlEntities } from "@/lib/utils/decodeHtmlEntities";
+import { DynamicHeroBanner } from "@/components/DynamicHeroBanner";
 
 // Fonction pour obtenir l'icône par nom de filière
 const getFiliereIcon = (filiereNom: string): string => {
@@ -432,27 +418,11 @@ const SecteursContent = () => {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative h-64 sm:h-72 md:h-80 lg:h-150 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#1a1a1a]">
-        <div className="absolute inset-0 opacity-50">
-          <img
-            src="/logo.png"
-            alt="Confédération Patronale Unique des PME de Côte d'Ivoire"
-            className="w-full h-full"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
-        </div>
-
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center w-full h-full px-4 text-center text-white bg-transparent">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 tracking-tight">
-            Secteurs & Filières
-          </h1>
-          <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 max-w-2xl mx-auto text-white/80 font-light px-4">
-            Classification sectorielle des PME en Côte d'Ivoire
-          </p>
-        </div>
-      </section>
-
-
+      <DynamicHeroBanner
+        position="category"
+        title="Secteurs & Filières"
+        subtitle="Classification sectorielle des PME en Côte d'Ivoire"
+      />
 
       {/* Bannière du Secteur Actif */}
       {activeSecteur && (
