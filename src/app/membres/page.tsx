@@ -2431,10 +2431,10 @@ const MembersContent = () => {
       const centresInteretIds = resolveCentresInteretIds();
       const filieresPrioritairesIds = resolveFilieresPrioritairesIds();
       const regionsInterventionIds = resolveRegionIds(selectedRegions);
-      const adhesionName =
-        selectedAdhesionType === "individuel"
-          ? formName
-          : orgName || formName;
+      
+      // Pour les individuels : name = nom de la personne, pas de customOrganisationName
+      // Pour les autres : name = nom du représentant, customOrganisationName = nom de l'organisation
+      const adhesionName = formName; // Toujours le nom du représentant/personne
       const companyName =
         selectedAdhesionType === "individuel" ? undefined : orgName || undefined;
 
@@ -2472,7 +2472,7 @@ const MembersContent = () => {
         organisationName: hasAffiliation
           ? selectedOrganisation || undefined
           : undefined,
-        customOrganisationName: companyName,
+        customOrganisationName: companyName, // Nom de l'entreprise/organisation
         isCompetitionSubcontractor:
           isCompetitionSubcontractor ?? undefined,
         hasFinancingProject: hasFinancingProject ?? undefined,
