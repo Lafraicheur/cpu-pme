@@ -6000,10 +6000,11 @@ const MembersContent = () => {
                               className="min-h-[120px] border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 py-3 text-gray-900 resize-none"
                               value={formMessage}
                               onChange={(e) => setFormMessage(e.target.value)}
+                              maxLength={100}
                             />
                             <p className="text-xs text-gray-500 flex items-center gap-1">
                               <Lightbulb className="h-3 w-3" />
-                              Optionnel mais recommandé pour mieux vous connaître
+                              {formMessage.length}/100 caractères
                             </p>
                           </div>
                         </div>
