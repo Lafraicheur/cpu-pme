@@ -14,7 +14,6 @@ export const metadata: Metadata = {
     'font-preconnect-gstatic': 'https://fonts.gstatic.com',
   },
   metadataBase: new URL('https://cpu-pme.ci'),
-  charset: 'UTF-8',
 };
 
 export default function RootLayout({

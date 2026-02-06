@@ -2092,6 +2092,10 @@ const MembersContent = () => {
   }, [sortOrder, membersFromApi, membersSignature]);
 
   const filteredMembers = membersFromApi.filter((member) => {
+    // Filtre sur le type de membre : uniquement "associatif" et "entreprise"
+    const matchesMemberType = 
+      member.memberType === "associatif" || member.memberType === "entreprise";
+    
     // Recherche insensible à la casse
     const searchLower = searchTerm.toLowerCase().trim();
     const filiereName = member.filiereId
@@ -2119,7 +2123,7 @@ const MembersContent = () => {
       selectedSector === "all" || member.sector === selectedSector;
     const matchesRegion =
       selectedRegion === "all" || member.region === selectedRegion;
-    return matchesSearch && matchesSector && matchesRegion;
+    return matchesMemberType && matchesSearch && matchesSector && matchesRegion;
   });
 
   // Appliquer le tri ou le mélange aléatoire
@@ -2159,8 +2163,11 @@ const MembersContent = () => {
   const endIndex = startIndex + membersPerPage;
   const paginatedMembers = filteredMembers.slice(startIndex, endIndex);
 
-  // Membres récemment inscrits (les 5 derniers de la liste)
-  const recentMembers = [...membersFromApi].slice(-5).reverse();
+  // Membres récemment inscrits (les 5 derniers de la liste) - uniquement "associatif" et "entreprise"
+  const recentMembers = [...membersFromApi]
+    .filter((member) => member.memberType === "associatif" || member.memberType === "entreprise")
+    .slice(-5)
+    .reverse();
 
   useEffect(() => {
     if (recentMembers.length === 0) return;
@@ -3128,7 +3135,7 @@ const MembersContent = () => {
                         <div className="mb-2">
                           <div className="flex items-start justify-between gap-3 mb-2">
                             <h3 className="text-lg md:text-xl font-bold text-[#221F1F] hover:text-cpu-orange transition-colors line-clamp-2">
-                              {recentMembers[featuredIndex].name}
+                              {decodeHtmlEntities(recentMembers[featuredIndex].name)}
                             </h3>
                             <Badge className="bg-green-600 text-white text-xs whitespace-nowrap px-2.5 py-1">
                               Nouveau
@@ -3138,7 +3145,7 @@ const MembersContent = () => {
                           {/* Localisation */}
                           <div className="flex items-start text-sm text-[#6F6F6F] mb-2">
                             <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-cpu-orange mt-0.5" />
-                            <span className="break-words">{recentMembers[featuredIndex].fullAddress || recentMembers[featuredIndex].region}</span>
+                            <span className="break-words">{decodeHtmlEntities(recentMembers[featuredIndex].fullAddress || recentMembers[featuredIndex].region)}</span>
                           </div>
 
                           {/* Filière et Sous-filière */}
@@ -3160,7 +3167,7 @@ const MembersContent = () => {
                                 }
                                 return (
                                   <div className="text-sm font-semibold text-[#221F1F] line-clamp-1">
-                                    {filiereName || recentMembers[featuredIndex].sector}
+                                    {decodeHtmlEntities(filiereName || recentMembers[featuredIndex].sector)}
                                   </div>
                                 );
                               })()}
@@ -3187,7 +3194,7 @@ const MembersContent = () => {
                                 }
                                 return (
                                   <div className="text-sm font-semibold text-[#221F1F] line-clamp-1">
-                                    {sousFiliereName || '-'}
+                                    {decodeHtmlEntities(sousFiliereName || '-')}
                                   </div>
                                 );
                               })()}
@@ -3233,7 +3240,7 @@ const MembersContent = () => {
                                         key={idx} 
                                         className="text-xs bg-cpu-orange text-white font-medium px-2.5 py-1 rounded-md hover:bg-white hover:text-cpu-orange hover:border-cpu-orange border-2 border-cpu-orange transition-all hover:scale-105"
                                       >
-                                        {activite}
+                                        {decodeHtmlEntities(activite)}
                                       </Badge>
                                     ))}
                                     {remainingCount > 0 && (
