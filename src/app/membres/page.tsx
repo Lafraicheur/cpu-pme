@@ -756,6 +756,11 @@ const MembersContent = () => {
   const [formEmail, setFormEmail] = useState<string>("");
   const [formPhone, setFormPhone] = useState<string>("");
   const [formMessage, setFormMessage] = useState<string>("");
+  const [formWebsite, setFormWebsite] = useState<string>("");
+  const [nombreEmploye, setNombreEmploye] = useState<string>("");
+  const [internationalAddress, setInternationalAddress] = useState<string>("");
+  const [internationalCity, setInternationalCity] = useState<string>("");
+  const [internationalCountry, setInternationalCountry] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] =
@@ -767,6 +772,7 @@ const MembersContent = () => {
   const [selectedFilieresPrioritaires, setSelectedFilieresPrioritaires] =
     useState<string[]>([]);
   const [hasBureauCI, setHasBureauCI] = useState<boolean>(false);
+  const [hasBureauInternational, setHasBureauInternational] = useState<boolean>(false);
 
   // États pour validation temps réel
   const [emailError, setEmailError] = useState<string>("");
@@ -1087,6 +1093,10 @@ const MembersContent = () => {
     setSelectedAxesInteret([]);
     setSelectedFilieresPrioritaires([]);
     setHasBureauCI(false);
+    setHasBureauInternational(false);
+    setInternationalAddress("");
+    setInternationalCity("");
+    setInternationalCountry("");
   }, [selectedAdhesionType]);
 
   // Déterminer automatiquement le secteur quand une filière est sélectionnée
@@ -1476,6 +1486,7 @@ const MembersContent = () => {
         formPosition,
         formPhone,
         formMessage,
+        formWebsite,
         selectedFiliere,
         selectedSubCategory,
         selectedActivities,
@@ -1489,6 +1500,11 @@ const MembersContent = () => {
         selectedBadge,
         selectedAxesInteret,
         hasBureauCI,
+        hasBureauInternational,
+        internationalAddress,
+        internationalCity,
+        internationalCountry,
+        nombreEmploye,
         timestamp: new Date().toISOString(),
       };
       
@@ -1511,6 +1527,7 @@ const MembersContent = () => {
     formPosition,
     formPhone,
     formMessage,
+    formWebsite,
     selectedFiliere,
     selectedSubCategory,
     selectedActivities,
@@ -1524,6 +1541,11 @@ const MembersContent = () => {
     selectedBadge,
     selectedAxesInteret,
     hasBureauCI,
+    hasBureauInternational,
+    internationalAddress,
+    internationalCity,
+    internationalCountry,
+    nombreEmploye,
   ]);
 
   // Restauration du brouillon au chargement
@@ -1554,6 +1576,7 @@ const MembersContent = () => {
                     setFormPosition(parsed.formPosition || "");
                     setFormPhone(parsed.formPhone || "");
                     setFormMessage(parsed.formMessage || "");
+                    setFormWebsite(parsed.formWebsite || "");
                     setSelectedFiliere(parsed.selectedFiliere || "");
                     setSelectedSubCategory(parsed.selectedSubCategory || "");
                     setSelectedActivities(parsed.selectedActivities || []);
@@ -1567,6 +1590,11 @@ const MembersContent = () => {
                     setSelectedBadge(parsed.selectedBadge || "");
                     setSelectedAxesInteret(parsed.selectedAxesInteret || []);
                     setHasBureauCI(parsed.hasBureauCI || false);
+                    setHasBureauInternational(parsed.hasBureauInternational || false);
+                    setInternationalAddress(parsed.internationalAddress || "");
+                    setInternationalCity(parsed.internationalCity || "");
+                    setInternationalCountry(parsed.internationalCountry || "");
+                    setNombreEmploye(parsed.nombreEmploye || "");
                     setIsDraftRestored(true);
                     toast({
                       title: "Brouillon restauré",
@@ -2502,6 +2530,11 @@ const MembersContent = () => {
         isCompetitionSubcontractor:
           isCompetitionSubcontractor ?? undefined,
         hasFinancingProject: hasFinancingProject ?? undefined,
+        nombre_employee: nombreEmploye ? nombreEmploye : undefined,
+        website: formWebsite || undefined,
+        internationalAddress: selectedAdhesionType === "institutionnel" && hasBureauInternational && internationalAddress ? internationalAddress : undefined,
+        internationalCity: selectedAdhesionType === "institutionnel" && hasBureauInternational && internationalCity ? internationalCity : undefined,
+        internationalCountry: selectedAdhesionType === "institutionnel" && hasBureauInternational && internationalCountry ? internationalCountry : undefined,
       };
 
       await adhesionsService.create(adhesionPayload);
@@ -2523,10 +2556,15 @@ const MembersContent = () => {
       setFormEmail("");
       setFormPhone("");
       setFormMessage("");
+      setFormWebsite("");
       setSiegeCommune("");
       setSiegeRegion("");
       setSiegeVille("");
       setSiegeVillage("");
+      setNombreEmploye("");
+      setInternationalAddress("");
+      setInternationalCity("");
+      setInternationalCountry("");
     } catch (error) {
       console.error("Erreur lors de la soumission:", error);
       const apiErrorMessage =
@@ -5927,6 +5965,24 @@ const MembersContent = () => {
                             )}
                           </div>
 
+                          {/* Site Web de l'entreprise */}
+                          <div className="space-y-3">
+                            <Label
+                              htmlFor="website"
+                              className="text-sm font-semibold text-gray-700"
+                            >
+                              Site Web de l'entreprise
+                            </Label>
+                            <Input
+                              id="website"
+                              type="url"
+                              placeholder="https://www.entreprise.ci"
+                              className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900"
+                              value={formWebsite}
+                              onChange={(e) => setFormWebsite(e.target.value)}
+                            />
+                          </div>
+
                           {/* Téléphone de l'entreprise et Nombre d'employés */}
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Téléphone de l'entreprise */}
@@ -5984,7 +6040,7 @@ const MembersContent = () => {
                                 >
                                   Nombre d'employés
                                 </Label>
-                                <Select>
+                                <Select value={nombreEmploye} onValueChange={setNombreEmploye}>
                                   <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium">
                                     <SelectValue placeholder="Sélectionnez" />
                                   </SelectTrigger>
@@ -6287,6 +6343,109 @@ const MembersContent = () => {
 
                       {/* SECTION: Localisation du siège / bureaux */}
                       <div className="pb-8 p-6 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {/* Section Adresse Internationale (uniquement pour institutionnels) */}
+                        {selectedAdhesionType === "institutionnel" && (
+                          <div className="mb-8">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
+                                <Globe className="h-5 w-5 text-cpu-orange" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold text-gray-900">
+                                  Adresse Internationale
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Renseignez l'adresse de votre siège international
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Question pour bureau international */}
+                            <div className="mb-6 p-5 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border-2 border-orange-100">
+                              <div className="flex items-center space-x-3">
+                                <input
+                                  type="checkbox"
+                                  id="hasBureauInternational"
+                                  checked={hasBureauInternational}
+                                  onChange={(e) =>
+                                    setHasBureauInternational(e.target.checked)
+                                  }
+                                  className="h-5 w-5 border-2 border-cpu-orange rounded-md focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange transition-all"
+                                  style={{
+                                    accentColor: "#F27A20",
+                                    colorScheme: "light",
+                                  }}
+                                />
+                                <Label
+                                  htmlFor="hasBureauInternational"
+                                  className="text-sm cursor-pointer font-medium text-gray-800"
+                                >
+                                  Avez-vous un bureau à l'international ?
+                                </Label>
+                              </div>
+                            </div>
+
+                            {/* Afficher les champs seulement si hasBureauInternational est coché */}
+                            {hasBureauInternational && (
+                              <div className="p-6 bg-white rounded-2xl border-2 border-gray-200">
+                                <div className="space-y-5">
+                                  {/* Adresse */}
+                                  <div className="space-y-3">
+                                    <Label
+                                      htmlFor="internationalAddress"
+                                      className="text-sm font-semibold text-gray-700"
+                                    >
+                                      Adresse
+                                    </Label>
+                                    <Input
+                                      id="internationalAddress"
+                                      value={internationalAddress}
+                                      onChange={(e) => setInternationalAddress(e.target.value)}
+                                      placeholder="Ex: 123 Main Street, Suite 100"
+                                      className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900 bg-white"
+                                    />
+                                  </div>
+
+                                  {/* Ville et Pays */}
+                                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div className="space-y-3">
+                                      <Label
+                                        htmlFor="internationalCity"
+                                        className="text-sm font-semibold text-gray-700"
+                                      >
+                                        Ville
+                                      </Label>
+                                      <Input
+                                        id="internationalCity"
+                                        value={internationalCity}
+                                        onChange={(e) => setInternationalCity(e.target.value)}
+                                        placeholder="Ex: Paris, London, New York"
+                                        className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900 bg-white"
+                                      />
+                                    </div>
+
+                                    <div className="space-y-3">
+                                      <Label
+                                        htmlFor="internationalCountry"
+                                        className="text-sm font-semibold text-gray-700"
+                                      >
+                                        Pays
+                                      </Label>
+                                      <Input
+                                        id="internationalCountry"
+                                        value={internationalCountry}
+                                        onChange={(e) => setInternationalCountry(e.target.value)}
+                                        placeholder="Ex: France, Royaume-Uni, États-Unis"
+                                        className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 text-gray-900 bg-white"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         <div className="flex items-center gap-3 mb-6">
                           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
                             <MapPin className="h-5 w-5 text-cpu-orange" />

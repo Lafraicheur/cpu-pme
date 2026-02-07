@@ -32,6 +32,11 @@ export interface CreateAdhesionDto {
   customOrganisationName?: string;
   isCompetitionSubcontractor?: boolean;
   hasFinancingProject?: boolean;
+  nombre_employee?: string;
+  website?: string;
+  internationalAddress?: string;
+  internationalCity?: string;
+  internationalCountry?: string;
 }
 
 export interface AdhesionForSiteWeb {
@@ -39,6 +44,8 @@ export interface AdhesionForSiteWeb {
   name?: string;
   email?: string;
   phone?: string;
+  position?: string;
+  message?: string;
   hasAffiliation?: boolean;
   statut?: string;
   status?: string;
@@ -51,6 +58,37 @@ export interface AdhesionForSiteWeb {
   profil?: {
     name?: string;
   };
+  secteurPrincipal?: {
+    id?: string;
+    name?: string;
+  };
+  filiereId?: string;
+  sousFiliereId?: string;
+  activitesIds?: string[];
+  siegeRegion?: {
+    id?: string;
+    name?: string;
+  };
+  siegeCommune?: {
+    id?: string;
+    name?: string;
+  };
+  siegeVille?: string;
+  siegeVillage?: string;
+  interventionScope?: string;
+  abonnement?: {
+    id?: string;
+    plan?: string;
+    libelle?: string;
+  };
+  created_at?: string;
+  createdAt?: string;
+  updated_at?: string;
+  updatedAt?: string;
+  approved_at?: string;
+  approvedAt?: string;
+  validated_at?: string;
+  validatedAt?: string;
 }
 
 export interface GetAdhesionsForSiteWebParams {

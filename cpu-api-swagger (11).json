@@ -11092,6 +11092,26 @@
             "type": "object",
             "description": "A un projet de financement",
             "example": true
+          },
+          "internationalAddress": {
+            "type": "object",
+            "description": "Adresse internationale",
+            "example": "123 Main Street, Suite 100"
+          },
+          "internationalCity": {
+            "type": "object",
+            "description": "Ville internationale",
+            "example": "Paris"
+          },
+          "internationalCountry": {
+            "type": "object",
+            "description": "Pays international",
+            "example": "France"
+          },
+          "nombre_employee": {
+            "type": "object",
+            "description": "Nombre d'employés",
+            "example": 50
           }
         },
         "required": [
@@ -11278,6 +11298,26 @@
             "type": "object",
             "description": "A un projet de financement",
             "example": true
+          },
+          "internationalAddress": {
+            "type": "object",
+            "description": "Adresse internationale",
+            "example": "123 Main Street, Suite 100"
+          },
+          "internationalCity": {
+            "type": "object",
+            "description": "Ville internationale",
+            "example": "Paris"
+          },
+          "internationalCountry": {
+            "type": "object",
+            "description": "Pays international",
+            "example": "France"
+          },
+          "nombre_employee": {
+            "type": "object",
+            "description": "Nombre d'employés",
+            "example": 50
           }
         }
       },
