@@ -945,7 +945,16 @@ const MembersContent = () => {
         // Informations complémentaires
         interventionScope: adhesion?.interventionScope || undefined,
         fullAddress: addressParts.join(", ") || undefined,
-        createdAt: adhesion?.created_at || undefined,
+        createdAt:
+          adhesion?.approved_at ||
+          adhesion?.approvedAt ||
+          adhesion?.validated_at ||
+          adhesion?.validatedAt ||
+          adhesion?.updated_at ||
+          adhesion?.updatedAt ||
+          adhesion?.created_at ||
+          adhesion?.createdAt ||
+          undefined,
       };
     });
   }, [adhesionsApi]);
@@ -2163,11 +2172,21 @@ const MembersContent = () => {
   const endIndex = startIndex + membersPerPage;
   const paginatedMembers = filteredMembers.slice(startIndex, endIndex);
 
-  // Membres récemment inscrits (les 5 derniers de la liste) - uniquement "associatif" et "entreprise"
+  // Membres récemment inscrits (les 5 plus récents) - uniquement "associatif" et "entreprise"
+  const recentCutoff = Date.now() - 5 * 24 * 60 * 60 * 1000;
   const recentMembers = [...membersFromApi]
     .filter((member) => member.memberType === "associatif" || member.memberType === "entreprise")
-    .slice(-5)
-    .reverse();
+    .filter((member) => {
+      if (!member.createdAt) return false;
+      const createdAtMs = new Date(member.createdAt).getTime();
+      return createdAtMs >= recentCutoff;
+    })
+    .sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    })
+    .slice(0, 5);
 
   useEffect(() => {
     if (recentMembers.length === 0) return;
