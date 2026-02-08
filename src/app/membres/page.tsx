@@ -6402,7 +6402,7 @@ const MembersContent = () => {
 
                 {/* Form Card */}
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100">
-                  <div className="p-8 md:p-10 lg:p-12 overflow-hidden">
+                  <div className="p-8 md:p-10 lg:p-12">
                     <form onSubmit={handleSubmit} className="space-y-0">
                       {/* Indicateur de progression */}
                       {selectedAdhesionType && (
@@ -7011,12 +7011,15 @@ const MembersContent = () => {
                           </div>
 
                           <div className="space-y-3">
-                            <Label
-                              htmlFor="position"
-                              className="text-sm font-semibold text-gray-700"
-                            >
-                              Fonction
-                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Label
+                                htmlFor="position"
+                                className="text-sm font-semibold text-gray-700"
+                              >
+                                Fonction
+                              </Label>
+                              <span className="text-red-500 text-base invisible">*</span>
+                            </div>
                             <div className="relative">
                               <Input
                                 id="position"
@@ -7053,121 +7056,127 @@ const MembersContent = () => {
                         </div>
 
                         <div className="space-y-6">
-                          {/* Nom de l'organisation */}
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                              <Label
-                                htmlFor="orgName"
-                                className="text-sm font-semibold text-gray-700"
-                              >
-                                Nom de l'organisation
-                              </Label>
-                              <span className="text-red-500 text-base">*</span>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="max-w-xs">Le nom officiel de votre entreprise ou organisation</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                            <div className="relative">
-                              <Input
-                                id="orgName"
-                                placeholder="Ex: Ma Société SARL"
-                                required
-                                className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 pr-10 text-gray-900"
-                                value={orgName}
-                                onChange={(e) => setOrgName(e.target.value)}
-                              />
-                              {orgName && (
-                                <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-cpu-green animate-in zoom-in duration-200" />
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Email de l'entreprise avec validation */}
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                              <Label
-                                htmlFor="email"
-                                className="text-sm font-semibold text-gray-700"
-                              >
-                                Email de l'entreprise
-                              </Label>
-                              <span className="text-red-500 text-base">*</span>
-                            </div>
-                            <div className="relative">
-                              <Input
-                                id="email"
-                                type="email"
-                                placeholder="contact@entreprise.ci"
-                                required
-                                className={`h-12 border-2 transition-colors rounded-xl px-4 pr-10 text-gray-900 ${
-                                  emailError
-                                    ? 'border-red-500 hover:border-red-600 focus:border-red-600'
-                                    : emailValid
-                                    ? 'border-green-500 hover:border-green-600 focus:border-green-600'
-                                    : 'border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green'
-                                }`}
-                                value={formEmail}
-                                onChange={(e) => {
-                                  setFormEmail(e.target.value);
-                                  validateEmail(e.target.value);
-                                }}
-                                onBlur={() => validateEmail(formEmail)}
-                                suppressHydrationWarning
-                              />
-                              {emailValid && !emailError && (
-                                <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-green-600 animate-in zoom-in duration-200" />
-                              )}
-                              {emailError && (
-                                <AlertCircle className="absolute right-3 top-3.5 h-5 w-5 text-red-600 animate-in zoom-in duration-200" />
-                              )}
-                            </div>
-                            {emailError && (
-                              <p className="text-sm text-red-600 flex items-center gap-1 animate-in slide-in-from-top-2 duration-200">
-                                <AlertCircle className="h-4 w-4" />
-                                {emailError}
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Site Web de l'entreprise */}
-                          <div className="space-y-3">
-                            <Label
-                              htmlFor="website"
-                              className="text-sm font-semibold text-gray-700"
-                            >
-                              Site Web de l'entreprise
-                            </Label>
-                            <Input
-                              id="website"
-                              type="text"
-                              placeholder="https://www.entreprise.ci"
-                              className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900"
-                              value={formWebsite}
-                              onChange={(e) => {
-                                // Récupérer la valeur brute et la décoder si elle est HTML-encodée
-                                let rawValue = e.currentTarget.value;
-                                // Supprimer tout HTML encoding
-                                rawValue = rawValue
-                                  .replace(/&amp;/g, '&')
-                                  .replace(/&lt;/g, '<')
-                                  .replace(/&gt;/g, '>')
-                                  .replace(/&quot;/g, '"')
-                                  .replace(/&#x2F;/g, '/')
-                                  .replace(/&#47;/g, '/');
-                                setFormWebsite(rawValue);
-                              }}
-                            />
-                          </div>
-
-                          {/* Téléphone de l'entreprise et Nombre d'employés */}
+                          {/* Ligne 1: Nom de l'organisation + Email */}
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Nom de l'organisation */}
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <Label
+                                  htmlFor="orgName"
+                                  className="text-sm font-semibold text-gray-700"
+                                >
+                                  Nom de l'organisation
+                                </Label>
+                                <span className="text-red-500 text-base">*</span>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="max-w-xs">Le nom officiel de votre entreprise ou organisation</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                              <div className="relative">
+                                <Input
+                                  id="orgName"
+                                  placeholder="Ex: Ma Société SARL"
+                                  required
+                                  className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 pr-10 text-gray-900"
+                                  value={orgName}
+                                  onChange={(e) => setOrgName(e.target.value)}
+                                />
+                                {orgName && (
+                                  <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-cpu-green animate-in zoom-in duration-200" />
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Email de l'entreprise avec validation */}
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <Label
+                                  htmlFor="email"
+                                  className="text-sm font-semibold text-gray-700"
+                                >
+                                  Email de l'entreprise
+                                </Label>
+                                <span className="text-red-500 text-base">*</span>
+                              </div>
+                              <div className="relative">
+                                <Input
+                                  id="email"
+                                  type="email"
+                                  placeholder="contact@entreprise.ci"
+                                  required
+                                  className={`h-12 border-2 transition-colors rounded-xl px-4 pr-10 text-gray-900 ${
+                                    emailError
+                                      ? 'border-red-500 hover:border-red-600 focus:border-red-600'
+                                      : emailValid
+                                      ? 'border-green-500 hover:border-green-600 focus:border-green-600'
+                                      : 'border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green'
+                                  }`}
+                                  value={formEmail}
+                                  onChange={(e) => {
+                                    setFormEmail(e.target.value);
+                                    validateEmail(e.target.value);
+                                  }}
+                                  onBlur={() => validateEmail(formEmail)}
+                                  suppressHydrationWarning
+                                />
+                                {emailValid && !emailError && (
+                                  <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-green-600 animate-in zoom-in duration-200" />
+                                )}
+                                {emailError && (
+                                  <AlertCircle className="absolute right-3 top-3.5 h-5 w-5 text-red-600 animate-in zoom-in duration-200" />
+                                )}
+                              </div>
+                              {emailError && (
+                                <p className="text-sm text-red-600 flex items-center gap-1 animate-in slide-in-from-top-2 duration-200">
+                                  <AlertCircle className="h-4 w-4" />
+                                  {emailError}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Ligne 2: Site Web + Téléphone */}
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Site Web de l'entreprise */}
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <Label
+                                  htmlFor="website"
+                                  className="text-sm font-semibold text-gray-700"
+                                >
+                                  Site Web de l'entreprise
+                                </Label>
+                                <span className="text-red-500 text-base invisible">*</span>
+                              </div>
+                              <Input
+                                id="website"
+                                type="text"
+                                placeholder="https://www.entreprise.ci"
+                                className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900"
+                                value={formWebsite}
+                                onChange={(e) => {
+                                  // Récupérer la valeur brute et la décoder si elle est HTML-encodée
+                                  let rawValue = e.currentTarget.value;
+                                  // Supprimer tout HTML encoding
+                                  rawValue = rawValue
+                                    .replace(/&amp;/g, '&')
+                                    .replace(/&lt;/g, '<')
+                                    .replace(/&gt;/g, '>')
+                                    .replace(/&quot;/g, '"')
+                                    .replace(/&#x2F;/g, '/')
+                                    .replace(/&#47;/g, '/');
+                                  setFormWebsite(rawValue);
+                                }}
+                              />
+                            </div>
+
                             {/* Téléphone de l'entreprise */}
                             <div className="space-y-3">
                               <div className="flex items-center gap-2">
@@ -7213,9 +7222,11 @@ const MembersContent = () => {
                                 </p>
                               )}
                             </div>
+                          </div>
 
-                            {/* Nombre d'employés */}
-                            {selectedAdhesionType !== "institutionnel" && (
+                          {/* Ligne 3: Nombre d'employés */}
+                          {selectedAdhesionType !== "institutionnel" && (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                               <div className="space-y-3">
                                 <Label
                                   htmlFor="employees"
@@ -7236,8 +7247,8 @@ const MembersContent = () => {
                                   </SelectContent>
                                 </Select>
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          )}
 
                           {/* Description de l'entreprise */}
                           <div className="space-y-3">
