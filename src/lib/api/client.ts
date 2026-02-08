@@ -23,7 +23,7 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<{ data: T }> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const config: RequestInit = {
       ...options,
       headers: {
@@ -33,16 +33,14 @@ class ApiClient {
     };
 
     try {
-     
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
         let errorData = {};
         try {
           const text = await response.text();
           errorData = text ? JSON.parse(text) : {};
         } catch (e) {
-          // Si la réponse n'est pas du JSON, on garde un objet vide
           errorData = {};
         }
         console.error('❌ [DEBUG CLIENT] Erreur HTTP:', {
@@ -59,18 +57,19 @@ class ApiClient {
       }
 
       const rawData = await response.json();
-      
-      // Normaliser automatiquement les données pour corriger les problèmes d'encodage
-      const normalizedData = normalizeObject(rawData);
-      
-      // Log si des problèmes d'encodage ont été détectés (en développement)
+
+      // Normalise toutes les données reçues pour corriger les problèmes d'encodage
+      // (GET, POST, PATCH, DELETE - tous les verbes)
+      let normalizedData: any = rawData;
+      normalizedData = normalizeObject(rawData);
+
       if (process.env.NODE_ENV === 'development') {
         const dataStr = JSON.stringify(rawData);
         if (hasEncodingIssues(dataStr)) {
           console.warn('⚠️ [API CLIENT] Problèmes d\'encodage détectés et corrigés pour:', endpoint);
         }
       }
-      
+
       return { data: normalizedData };
     } catch (error) {
       if (error && typeof error === 'object' && 'message' in error) {

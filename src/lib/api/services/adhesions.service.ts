@@ -33,7 +33,7 @@ export interface CreateAdhesionDto {
   isCompetitionSubcontractor?: boolean;
   hasFinancingProject?: boolean;
   nombre_employee?: string;
-  website?: string;
+  website_url?: string;
   internationalAddress?: string;
   internationalCity?: string;
   internationalCountry?: string;

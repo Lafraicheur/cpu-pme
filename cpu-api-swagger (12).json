@@ -11083,16 +11083,6 @@
             "description": "Nom personnalisé de l'organisation",
             "example": "Mon Organisation"
           },
-          "isCompetitionSubcontractor": {
-            "type": "object",
-            "description": "Est sous-traitant en concurrence",
-            "example": false
-          },
-          "hasFinancingProject": {
-            "type": "object",
-            "description": "A un projet de financement",
-            "example": true
-          },
           "internationalAddress": {
             "type": "object",
             "description": "Adresse internationale",
@@ -11112,6 +11102,21 @@
             "type": "object",
             "description": "Nombre d'employés",
             "example": 50
+          },
+          "website_url": {
+            "type": "object",
+            "description": "URL du site web",
+            "example": "https://www.example.com"
+          },
+          "isCompetitionSubcontractor": {
+            "type": "object",
+            "description": "Est sous-traitant en concurrence",
+            "example": false
+          },
+          "hasFinancingProject": {
+            "type": "object",
+            "description": "A un projet de financement",
+            "example": true
           }
         },
         "required": [
@@ -11289,16 +11294,6 @@
             "description": "Nom personnalisé de l'organisation",
             "example": "Mon Organisation"
           },
-          "isCompetitionSubcontractor": {
-            "type": "object",
-            "description": "Est sous-traitant en concurrence",
-            "example": false
-          },
-          "hasFinancingProject": {
-            "type": "object",
-            "description": "A un projet de financement",
-            "example": true
-          },
           "internationalAddress": {
             "type": "object",
             "description": "Adresse internationale",
@@ -11318,6 +11313,21 @@
             "type": "object",
             "description": "Nombre d'employés",
             "example": 50
+          },
+          "website_url": {
+            "type": "object",
+            "description": "URL du site web",
+            "example": "https://www.example.com"
+          },
+          "isCompetitionSubcontractor": {
+            "type": "object",
+            "description": "Est sous-traitant en concurrence",
+            "example": false
+          },
+          "hasFinancingProject": {
+            "type": "object",
+            "description": "A un projet de financement",
+            "example": true
           }
         }
       },

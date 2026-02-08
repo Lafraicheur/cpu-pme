@@ -52,6 +52,7 @@ import {
   Check,
   MapPin,
   Globe,
+  Mail,
   Star,
   ChevronLeft,
   ChevronRight,
@@ -938,7 +939,7 @@ const MembersContent = () => {
           adhesion?.siegeRegion?.name
         ].filter(Boolean).join(", ") || "Non renseignée",
         description: adhesion?.message || "Membre CPU-PME",
-        website: undefined,
+        website: adhesion?.website_url || adhesion?.website || undefined,
         featured: false,
         memberType,
         badge: mapBadge(adhesion?.abonnement?.plan, adhesion?.abonnement?.libelle, memberType),
@@ -1569,6 +1570,16 @@ const MembersContent = () => {
                 <Button 
                   size="sm" 
                   onClick={() => {
+                    const decodeHtmlEntities = (str: string) => {
+                      if (!str) return str;
+                      return str
+                        .replace(/&amp;/g, '&')
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&quot;/g, '"')
+                        .replace(/&#x2F;/g, '/')
+                        .replace(/&#47;/g, '/');
+                    };
                     setSelectedAdhesionType(parsed.selectedAdhesionType || "");
                     setOrgName(parsed.orgName || "");
                     setFormEmail(parsed.formEmail || "");
@@ -1576,7 +1587,7 @@ const MembersContent = () => {
                     setFormPosition(parsed.formPosition || "");
                     setFormPhone(parsed.formPhone || "");
                     setFormMessage(parsed.formMessage || "");
-                    setFormWebsite(parsed.formWebsite || "");
+                    setFormWebsite(decodeHtmlEntities(parsed.formWebsite || ""));
                     setSelectedFiliere(parsed.selectedFiliere || "");
                     setSelectedSubCategory(parsed.selectedSubCategory || "");
                     setSelectedActivities(parsed.selectedActivities || []);
@@ -2531,7 +2542,15 @@ const MembersContent = () => {
           isCompetitionSubcontractor ?? undefined,
         hasFinancingProject: hasFinancingProject ?? undefined,
         nombre_employee: nombreEmploye ? nombreEmploye : undefined,
-        website: formWebsite || undefined,
+        website_url: formWebsite && formWebsite.trim().length > 0 
+          ? formWebsite.trim()
+              .replace(/&amp;/g, '&')
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>')
+              .replace(/&quot;/g, '"')
+              .replace(/&#x2F;/g, '/')
+              .replace(/&#47;/g, '/')
+          : undefined,
         internationalAddress: selectedAdhesionType === "institutionnel" && hasBureauInternational && internationalAddress ? internationalAddress : undefined,
         internationalCity: selectedAdhesionType === "institutionnel" && hasBureauInternational && internationalCity ? internationalCity : undefined,
         internationalCountry: selectedAdhesionType === "institutionnel" && hasBureauInternational && internationalCountry ? internationalCountry : undefined,
@@ -3171,7 +3190,7 @@ const MembersContent = () => {
                 </div>
                 {recentMembers.length > 0 ? (
                   <div className="relative">
-                    <div className="border-2 border-gray-200 rounded-xl transition-all duration-300 bg-white flex flex-col md:flex-row hover:shadow-2xl hover:scale-[1.01] hover:border-cpu-orange cursor-pointer relative overflow-hidden">
+                    <div className="border-2 border-gray-200 rounded-xl transition-all duration-300 bg-white flex flex-col md:flex-row hover:shadow-2xl hover:border-cpu-orange cursor-pointer relative overflow-hidden">
                       {/* Barre latérale orange */}
                       <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-cpu-orange hover:w-2 transition-all duration-300"></div>
 
@@ -3200,7 +3219,7 @@ const MembersContent = () => {
                           </div>
 
                           {/* Localisation */}
-                          <div className="flex items-start text-sm text-[#6F6F6F] mb-2">
+                          <div className="flex items-start text-sm text-[#221F1F] mb-2">
                             <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-cpu-orange mt-0.5" />
                             <span className="break-words">{decodeHtmlEntities(recentMembers[featuredIndex].fullAddress || recentMembers[featuredIndex].region)}</span>
                           </div>
@@ -3320,13 +3339,13 @@ const MembersContent = () => {
                             <Users className="h-3.5 w-3.5 text-cpu-orange" />
                             <span className="text-xs text-cpu-orange font-semibold">À propos</span>
                           </div>
-                          <p className={`text-sm text-[#6F6F6F] leading-relaxed ${expandedMembers.has(recentMembers[featuredIndex].id) ? '' : 'line-clamp-2'}`}>
+                          <p className={`text-sm text-[#221F1F] leading-relaxed ${expandedMembers.has(recentMembers[featuredIndex].id) ? '' : 'line-clamp-2'}`}>
                             {decodeHtmlEntities(recentMembers[featuredIndex].description)}
                           </p>
                         </div>
 
                         {/* Boutons d'action */}
-                        <div className="mt-auto">
+                        <div className="mt-auto pt-3 border-t border-gray-100">
                           {!expandedMembers.has(recentMembers[featuredIndex].id) ? (
                             <Button
                               onClick={() => {
@@ -3334,37 +3353,60 @@ const MembersContent = () => {
                                 newExpanded.add(recentMembers[featuredIndex].id);
                                 setExpandedMembers(newExpanded);
                               }}
-                              className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                              className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold transition-all hover:shadow-lg"
                             >
                               <Eye className="h-4 w-4 mr-2" />
                               En savoir plus
                             </Button>
                           ) : (
-                            <>
-                              <div className="grid grid-cols-2 gap-3 mb-3">
+                            <div className="space-y-3">
+                              {/* Grille des boutons d'action principaux */}
+                              <div className={`grid gap-3 ${recentMembers[featuredIndex].website ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2'}`}>
+                                {/* Bouton Visiter le site web */}
+                                {recentMembers[featuredIndex].website && (
+                                  <a
+                                    href={recentMembers[featuredIndex].website}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full"
+                                  >
+                                    <Button
+                                      variant="outline"
+                                      className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:shadow-lg"
+                                    >
+                                      <Globe className="h-4 w-4 mr-2" />
+                                      <span className="hidden sm:inline">Visiter</span>
+                                      <span className="sm:hidden">Site</span>
+                                    </Button>
+                                  </a>
+                                )}
+                                
+                                {/* Bouton Contacter */}
                                 {recentMembers[featuredIndex].email ? (
                                   <a
                                     href={`mailto:${recentMembers[featuredIndex].email}`}
                                     className="w-full"
                                   >
                                     <Button
-                                      className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-lg"
+                                      variant="outline"
+                                      className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:shadow-lg"
                                     >
-                                      <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
-                                      <Globe className="h-4 w-4 mr-2" />
+                                      <Mail className="h-4 w-4 mr-2" />
                                       Contacter
                                     </Button>
                                   </a>
                                 ) : (
                                   <Button
+                                    variant="outline"
                                     disabled
-                                    className="w-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed"
+                                    className="w-full border-gray-300 text-gray-400 font-semibold cursor-not-allowed"
                                   >
-                                    <Globe className="h-4 w-4 mr-2" />
+                                    <Mail className="h-4 w-4 mr-2" />
                                     Contacter
                                   </Button>
                                 )}
                                 
+                                {/* Bouton Appeler */}
                                 {recentMembers[featuredIndex].phone ? (
                                   <a
                                     href={`tel:${recentMembers[featuredIndex].phone}`}
@@ -3372,7 +3414,7 @@ const MembersContent = () => {
                                   >
                                     <Button
                                       variant="outline"
-                                      className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                                      className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:shadow-lg"
                                     >
                                       <span className="mr-2">📞</span>
                                       Appeler
@@ -3389,6 +3431,8 @@ const MembersContent = () => {
                                   </Button>
                                 )}
                               </div>
+                              
+                              {/* Bouton Voir moins */}
                               <Button
                                 onClick={() => {
                                   const newExpanded = new Set(expandedMembers);
@@ -3401,7 +3445,7 @@ const MembersContent = () => {
                                 <EyeOff className="h-4 w-4 mr-2" />
                                 Voir moins
                               </Button>
-                            </>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -3801,7 +3845,7 @@ const MembersContent = () => {
                       paginatedMembers.map((member, index) => (
                           <div
                             key={member.id}
-                            className={`member-card group border border-gray-200 rounded-2xl transition-all duration-300 bg-white grid grid-rows-[auto_auto_auto_auto_auto_auto] animate-fade-in-up hover:shadow-2xl hover:scale-[1.02] hover:border-cpu-green/30 cursor-pointer relative overflow-hidden`}
+                            className={`member-card group border border-gray-200 rounded-2xl transition-all duration-300 bg-white grid grid-rows-[auto_auto_auto_auto_auto_auto] animate-fade-in-up hover:shadow-md hover:border-cpu-green/30 cursor-pointer relative overflow-hidden`}
                             style={{
                               animationDelay: `${0.4 + index * 0.1}s`,
                               opacity: 0,
@@ -3824,7 +3868,7 @@ const MembersContent = () => {
                                   <h3 className="text-xl font-bold text-[#221F1F] mb-2 line-clamp-2 min-h-[56px] group-hover:text-cpu-green transition-colors">
                                     {decodeHtmlEntities(member.name)}
                                   </h3>
-                                  <div className="flex items-start text-sm text-[#6F6F6F] mb-1">
+                                  <div className="flex items-start text-sm text-[#221F1F] mb-1">
                                     <MapPin className="h-4 w-4 mr-1.5 flex-shrink-0 text-cpu-orange mt-0.5" />
                                     <span className="break-words">{decodeHtmlEntities(member.fullAddress || member.region)}</span>
                                   </div>
@@ -3927,13 +3971,13 @@ const MembersContent = () => {
                                       {visibleActivites.map((activite, idx) => (
                                         <Badge 
                                           key={idx} 
-                                          className="text-xs bg-cpu-green text-white font-medium px-3 py-1.5 rounded-md hover:bg-white hover:text-cpu-green hover:border-cpu-green border-2 border-cpu-green transition-all hover:scale-105"
+                                          className="text-xs bg-cpu-green text-white font-medium px-3 py-1.5 rounded-md hover:bg-white hover:text-cpu-green hover:border-cpu-green border-2 border-cpu-green transition-all"
                                         >
                                           {decodeHtmlEntities(activite)}
                                         </Badge>
                                       ))}
                                       {!isExpanded && remainingCount > 0 && (
-                                        <Badge className="text-xs bg-cpu-green text-white font-medium px-3 py-1.5 rounded-md hover:bg-white hover:text-cpu-green hover:border-cpu-green border-2 border-cpu-green transition-all hover:scale-105">
+                                        <Badge className="text-xs bg-cpu-green text-white font-medium px-3 py-1.5 rounded-md hover:bg-white hover:text-cpu-green hover:border-cpu-green border-2 border-cpu-green transition-all">
                                           +{remainingCount}
                                         </Badge>
                                       )}
@@ -3946,12 +3990,13 @@ const MembersContent = () => {
                             </div>
 
                             {/* Section À propos - ROW 4 */}
-                            <div className="px-6 pb-4 min-h-[100px]">
+                            <div className="px-6 pb-4">
                               <div className="flex items-center gap-2 mb-2">
                                 <Users className="h-4 w-4 text-gray-500" />
                                 <span className="text-xs text-gray-500 font-medium">À propos</span>
                               </div>
-                              <p className={`text-sm text-[#6F6F6F] leading-relaxed ${expandedMembers.has(member.id) ? '' : 'line-clamp-2'} min-h-[60px]`}>
+                              <p className={`text-sm text-[#221F1F] ${expandedMembers.has(member.id) ? '' : 'line-clamp-2'}`}
+                                 style={{ lineHeight: '1.5rem' }}>
                                 {decodeHtmlEntities(member.description)}
                               </p>
                             </div>
@@ -3965,13 +4010,29 @@ const MembersContent = () => {
                                     newExpanded.add(member.id);
                                     setExpandedMembers(newExpanded);
                                   }}
-                                  className="w-full bg-cpu-green hover:bg-white hover:text-cpu-green text-white hover:border-cpu-green border-2 border-cpu-green font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                                  className="w-full bg-cpu-green hover:bg-white hover:text-cpu-green text-white hover:border-cpu-green border-2 border-cpu-green font-semibold transition-all hover:shadow-sm"
                                 >
                                   <Eye className="h-4 w-4 mr-2" />
                                   En savoir plus
                                 </Button>
                               ) : (
                                 <>
+                                  {member.website && (
+                                    <a
+                                      href={member.website.startsWith('http') ? member.website : `https://${member.website}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="w-full mb-3 block"
+                                    >
+                                      <Button
+                                        className="w-full bg-cpu-green hover:bg-white hover:text-cpu-green text-white hover:border-cpu-green border-2 border-cpu-green font-semibold relative overflow-hidden group/btn transition-all hover:shadow-sm"
+                                      >
+                                        <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
+                                        <Globe className="h-4 w-4 mr-2" />
+                                        Visiter le site web
+                                      </Button>
+                                    </a>
+                                  )}
                                   <div className="grid grid-cols-2 gap-3 mb-3">
                                     {member.email ? (
                                       <a
@@ -3979,10 +4040,10 @@ const MembersContent = () => {
                                         className="w-full"
                                       >
                                         <Button
-                                          className="w-full bg-cpu-green hover:bg-white hover:text-cpu-green text-white hover:border-cpu-green border-2 border-cpu-green font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-lg"
+                                          className="w-full bg-cpu-green hover:bg-white hover:text-cpu-green text-white hover:border-cpu-green border-2 border-cpu-green font-semibold relative overflow-hidden group/btn transition-all hover:shadow-sm"
                                         >
                                           <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
-                                          <Globe className="h-4 w-4 mr-2" />
+                                          <Mail className="h-4 w-4 mr-2" />
                                           Contacter
                                         </Button>
                                       </a>
@@ -3991,7 +4052,7 @@ const MembersContent = () => {
                                         disabled
                                         className="w-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed"
                                       >
-                                        <Globe className="h-4 w-4 mr-2" />
+                                        <Mail className="h-4 w-4 mr-2" />
                                         Contacter
                                       </Button>
                                     )}
@@ -4003,7 +4064,7 @@ const MembersContent = () => {
                                       >
                                         <Button
                                           variant="outline"
-                                          className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                                          className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:shadow-sm"
                                         >
                                           <span className="mr-2">📞</span>
                                           Appeler
@@ -4063,7 +4124,7 @@ const MembersContent = () => {
                         paginatedMembers.map((member, index) => (
                           <div
                             key={member.id}
-                            className={`member-card group border-2 border-gray-200 rounded-xl transition-all duration-300 bg-white flex flex-col md:flex-row animate-fade-in-up hover:shadow-2xl hover:scale-[1.01] hover:border-cpu-orange cursor-pointer relative overflow-hidden`}
+                            className={`member-card group border-2 border-gray-200 rounded-xl transition-all duration-300 bg-white flex flex-col md:flex-row animate-fade-in-up hover:shadow-md hover:border-cpu-orange cursor-pointer relative overflow-hidden`}
                             style={{
                               animationDelay: `${0.4 + index * 0.05}s`,
                               opacity: 0,
@@ -4107,7 +4168,7 @@ const MembersContent = () => {
                                 </div>
 
                                 {/* Localisation */}
-                                <div className="flex items-start text-sm text-[#6F6F6F] mb-2">
+                                <div className="flex items-start text-sm text-[#221F1F] mb-2">
                                   <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-cpu-orange mt-0.5" />
                                   <span className="break-words">{member.fullAddress || member.region}</span>
                                 </div>
@@ -4203,13 +4264,13 @@ const MembersContent = () => {
                                           {visibleActivites.map((activite, idx) => (
                                             <Badge 
                                               key={idx} 
-                                              className="text-xs bg-cpu-orange text-white font-medium px-2.5 py-1 rounded-md hover:bg-white hover:text-cpu-orange hover:border-cpu-orange border-2 border-cpu-orange transition-all hover:scale-105"
+                                              className="text-xs bg-cpu-orange text-white font-medium px-2.5 py-1 rounded-md hover:bg-white hover:text-cpu-orange hover:border-cpu-orange border-2 border-cpu-orange transition-all"
                                             >
                                               {activite}
                                             </Badge>
                                           ))}
                                           {!isExpanded && remainingCount > 0 && (
-                                            <Badge className="text-xs bg-cpu-orange text-white font-medium px-2.5 py-1 rounded-md hover:bg-white hover:text-cpu-orange hover:border-cpu-orange border-2 border-cpu-orange transition-all hover:scale-105">
+                                            <Badge className="text-xs bg-cpu-orange text-white font-medium px-2.5 py-1 rounded-md hover:bg-white hover:text-cpu-orange hover:border-cpu-orange border-2 border-cpu-orange transition-all">
                                               +{remainingCount}
                                             </Badge>
                                           )}
@@ -4228,7 +4289,7 @@ const MembersContent = () => {
                                   <Users className="h-3.5 w-3.5 text-cpu-orange" />
                                   <span className="text-xs text-cpu-orange font-semibold">À propos</span>
                                 </div>
-                                <p className={`text-sm text-[#6F6F6F] leading-relaxed ${expandedMembers.has(member.id) ? '' : 'line-clamp-2'}`}>
+                                <p className={`text-sm text-[#221F1F] leading-relaxed ${expandedMembers.has(member.id) ? '' : 'line-clamp-2'}`}>
                                   {decodeHtmlEntities(member.description)}
                                 </p>
                               </div>
@@ -4242,13 +4303,29 @@ const MembersContent = () => {
                                       newExpanded.add(member.id);
                                       setExpandedMembers(newExpanded);
                                     }}
-                                    className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                                    className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold transition-all hover:scale-105 hover:shadow-sm"
                                   >
                                     <Eye className="h-4 w-4 mr-2" />
                                     En savoir plus
                                   </Button>
                                 ) : (
                                   <>
+                                    {member.website && (
+                                      <a
+                                        href={member.website.startsWith('http') ? member.website : `https://${member.website}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full mb-3 block"
+                                      >
+                                        <Button
+                                          className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-sm"
+                                        >
+                                          <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
+                                          <Globe className="h-4 w-4 mr-2" />
+                                          Visiter le site web
+                                        </Button>
+                                      </a>
+                                    )}
                                     <div className="grid grid-cols-2 gap-3 mb-3">
                                       {member.email ? (
                                         <a
@@ -4256,10 +4333,10 @@ const MembersContent = () => {
                                           className="w-full"
                                         >
                                           <Button
-                                            className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-lg"
+                                            className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-sm"
                                           >
                                             <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
-                                            <Globe className="h-4 w-4 mr-2" />
+                                            <Mail className="h-4 w-4 mr-2" />
                                             Contacter
                                           </Button>
                                         </a>
@@ -4268,7 +4345,7 @@ const MembersContent = () => {
                                           disabled
                                           className="w-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed"
                                         >
-                                          <Globe className="h-4 w-4 mr-2" />
+                                          <Mail className="h-4 w-4 mr-2" />
                                           Contacter
                                         </Button>
                                       )}
@@ -4280,7 +4357,7 @@ const MembersContent = () => {
                                         >
                                           <Button
                                             variant="outline"
-                                            className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                                            className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:scale-105 hover:shadow-sm"
                                           >
                                             <span className="mr-2">📞</span>
                                             Appeler
@@ -5975,11 +6052,23 @@ const MembersContent = () => {
                             </Label>
                             <Input
                               id="website"
-                              type="url"
+                              type="text"
                               placeholder="https://www.entreprise.ci"
                               className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900"
                               value={formWebsite}
-                              onChange={(e) => setFormWebsite(e.target.value)}
+                              onChange={(e) => {
+                                // Récupérer la valeur brute et la décoder si elle est HTML-encodée
+                                let rawValue = e.currentTarget.value;
+                                // Supprimer tout HTML encoding
+                                rawValue = rawValue
+                                  .replace(/&amp;/g, '&')
+                                  .replace(/&lt;/g, '<')
+                                  .replace(/&gt;/g, '>')
+                                  .replace(/&quot;/g, '"')
+                                  .replace(/&#x2F;/g, '/')
+                                  .replace(/&#47;/g, '/');
+                                setFormWebsite(rawValue);
+                              }}
                             />
                           </div>
 
@@ -6082,11 +6171,11 @@ const MembersContent = () => {
                               className="min-h-[120px] border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 py-3 text-gray-900 resize-none"
                               value={formMessage}
                               onChange={(e) => setFormMessage(e.target.value)}
-                              maxLength={100}
+                              maxLength={1500}
                             />
                             <p className="text-xs text-gray-500 flex items-center gap-1">
                               <Lightbulb className="h-3 w-3" />
-                              {formMessage.length}/100 caractères
+                              {formMessage.length}/1500 caractères • ~{Math.ceil(formMessage.split(/\s+/).filter(word => word.length > 0).length)} mots
                             </p>
                           </div>
                         </div>
@@ -7277,9 +7366,7 @@ const MembersContent = () => {
                               : "Soumettre ma demande"}
                           </span>
                         </Button>
-                        <p className="text-center text-sm text-gray-500 mt-4">
-                          Notre équipe vous contactera sous 48 heures
-                        </p>
+                       
                       </div>
                     </form>
                   </div>

@@ -169,17 +169,26 @@ function decodeHtmlEntities(text: string): string {
   
   let decoded = text;
   
-  // Entités nommées
+  // ÉTAPE 1 : Décoder d'abord les entités HTML courantes (pour gérer le double-encodage)
+  // Particulièrement important pour &amp; qui est souvent le culprit
+  // Faire ceci AVANT de traiter les entités numériques
+  decoded = decoded.replace(/&amp;/g, '&');
+  decoded = decoded.replace(/&lt;/g, '<');
+  decoded = decoded.replace(/&gt;/g, '>');
+  decoded = decoded.replace(/&quot;/g, '"');
+  decoded = decoded.replace(/&apos;/g, "'");
+  
+  // ÉTAPE 2 : Entités nommées du dictionnaire HTML_ENTITIES
   Object.entries(HTML_ENTITIES).forEach(([entity, char]) => {
     decoded = decoded.replace(new RegExp(entity, 'g'), char);
   });
   
-  // Entités numériques décimales (&#233; -> é)
+  // ÉTAPE 3 : Entités numériques décimales (&#233; -> é)
   decoded = decoded.replace(/&#(\d+);/g, (match, dec) => {
     return String.fromCharCode(parseInt(dec, 10));
   });
   
-  // Entités numériques hexadécimales (&#xE9; -> é)
+  // ÉTAPE 4 : Entités numériques hexadécimales (&#xE9; -> é)
   decoded = decoded.replace(/&#x([0-9a-fA-F]+);/g, (match, hex) => {
     return String.fromCharCode(parseInt(hex, 16));
   });
@@ -410,3 +419,53 @@ export function normalizeTextWithReport(text: string): NormalizationReport {
     },
   };
 }
+
+/**
+ * Nettoie une URL pour s'assurer qu'elle est envoyée correctement au serveur
+ * Supprime tous les encodages HTML ou URL superflus
+ * Préserve la structure exacte de l'URL
+ */
+export function cleanUrlForSubmission(url: string | undefined | null): string | undefined {
+  if (!url || typeof url !== 'string') {
+    return undefined;
+  }
+
+  // Trim l'URL
+  let cleaned = url.trim();
+
+  if (cleaned.length === 0) {
+    return undefined;
+  }
+
+  // Décoder les entités HTML si présentes
+  cleaned = cleaned.replace(/&amp;/g, '&');
+  cleaned = cleaned.replace(/&lt;/g, '<');
+  cleaned = cleaned.replace(/&gt;/g, '>');
+  cleaned = cleaned.replace(/&quot;/g, '"');
+  cleaned = cleaned.replace(/&#(.+?);/g, (match, code) => {
+    const codeNum = parseInt(code, 10);
+    return isNaN(codeNum) ? match : String.fromCharCode(codeNum);
+  });
+  cleaned = cleaned.replace(/&#x(.+?);/g, (match, code) => {
+    const codeNum = parseInt(code, 16);
+    return isNaN(codeNum) ? match : String.fromCharCode(codeNum);
+  });
+
+  // Décoder les séquences %xx d'URL encoding
+  try {
+    cleaned = decodeURIComponent(cleaned);
+  } catch (e) {
+    // Si decodeURIComponent échoue, continuer avec la version actuelle
+    console.warn('Erreur lors du décodage URL:', e);
+  }
+
+  // S'assurer qu'il y a un protocole (http:// ou https://)
+  if (cleaned && !cleaned.match(/^https?:\/\//i)) {
+    if (cleaned.match(/^www\./i) || cleaned.match(/^\w+\./)) {
+      cleaned = 'https://' + cleaned;
+    }
+  }
+
+  return cleaned || undefined;
+}
+
