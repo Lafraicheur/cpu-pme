@@ -665,12 +665,12 @@ const SecteursContent = () => {
                                           <Checkbox
                                             checked={selectedSousFiliere.has(sousFiliere.id)}
                                             onCheckedChange={() => toggleSousFiliere(sousFiliere.id)}
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="h-5 w-5 rounded-none border-2 border-gray-300 data-[state=checked]:bg-cpu-orange data-[state=checked]:border-cpu-orange transition-all shadow-sm flex-shrink-0"
-                                          />
-                                          <Link
-                                            href={`/membres?sector=${encodeURIComponent(secteur.name)}&subsector=${encodeURIComponent(sousFiliere.name)}&filiere=${encodeURIComponent(filiere.name)}`}
-                                            onClick={(e) => {
+                                          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                          className="h-5 w-5 rounded-none border-2 border-gray-300 data-[state=checked]:bg-cpu-orange data-[state=checked]:border-cpu-orange transition-all shadow-sm flex-shrink-0"
+                                        />
+                                        <Link
+                                          href={`/membres?sector=${encodeURIComponent(secteur.name)}&subsector=${encodeURIComponent(sousFiliere.name)}&filiere=${encodeURIComponent(filiere.name)}`}
+                                          onClick={(e: React.MouseEvent) => {
                                               e.stopPropagation();
                                               setBreadcrumb({
                                                 secteur: secteur.name,
@@ -702,12 +702,12 @@ const SecteursContent = () => {
                                                     <Checkbox
                                                       checked={isSelected}
                                                       onCheckedChange={() => toggleActivite(activite.id)}
-                                                      onClick={(e) => e.stopPropagation()}
+                                                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
                                                       className="h-4 w-4 rounded-none border-2 border-gray-300 data-[state=checked]:bg-cpu-orange data-[state=checked]:border-cpu-orange transition-all flex-shrink-0 shadow-sm"
                                                     />
                                                     <Link
                                                       href={`/membres?sector=${encodeURIComponent(secteur.name)}&filiere=${encodeURIComponent(filiere.name)}&subsector=${encodeURIComponent(sousFiliere.name)}&tag=${encodeURIComponent(activite.name)}`}
-                                                      onClick={(e) => e.stopPropagation()}
+                                                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
                                                       className={`text-sm font-medium whitespace-nowrap cursor-pointer transition-colors duration-200 ${
                                                         isSelected
                                                           ? "text-cpu-orange font-semibold"
@@ -786,7 +786,7 @@ const SecteursContent = () => {
                                           />
                                           <Link
                                             href={`/membres?sector=${encodeURIComponent(secteur.name)}&filiere=${encodeURIComponent(filiere.name)}&subsector=${encodeURIComponent(sousFiliere.name)}`}
-                                            onClick={(e) => {
+                                          onClick={(e: React.MouseEvent) => {
                                               e.stopPropagation();
                                             }}
                                             className="flex-1 font-inter text-lg font-semibold text-[#221F1F] hover:text-cpu-orange transition-colors cursor-pointer"
@@ -814,12 +814,12 @@ const SecteursContent = () => {
                                                     <Checkbox
                                                       checked={isSelected}
                                                       onCheckedChange={() => toggleActivite(activite.id)}
-                                                      onClick={(e) => e.stopPropagation()}
+                                                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
                                                       className="h-4 w-4 rounded-none border-2 border-gray-300 data-[state=checked]:bg-cpu-orange data-[state=checked]:border-cpu-orange transition-all flex-shrink-0 shadow-sm"
                                                     />
                                                     <Link
                                                       href={`/membres?sector=${encodeURIComponent(secteur.name)}&filiere=${encodeURIComponent(filiere.name)}&subsector=${encodeURIComponent(sousFiliere.name)}&tag=${encodeURIComponent(activite.name)}`}
-                                                      onClick={(e) => e.stopPropagation()}
+                                                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
                                                       className={`text-sm font-medium whitespace-nowrap cursor-pointer transition-colors duration-200 ${
                                                         isSelected
                                                           ? "text-cpu-orange font-semibold"

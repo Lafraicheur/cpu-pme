@@ -376,3 +376,20 @@ button.active:not([disabled]) {
 [data-state="open"] .accordion-content-enter {
   animation: accordionContentFadeIn 0.4s ease-out forwards;
 }
+
+/* Animation shimmer pour les skeletons - Phase 1 */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Hide scrollbar - Phase 3 */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}

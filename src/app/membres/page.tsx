@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Head from "next/head";
 import Image from "next/image";
 import {
   Card,
@@ -39,6 +40,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Users,
   Building2,
   Search,
@@ -53,6 +60,7 @@ import {
   MapPin,
   Globe,
   Mail,
+  Phone,
   Star,
   ChevronLeft,
   ChevronRight,
@@ -88,6 +96,7 @@ import {
   Save,
   Eye,
   EyeOff,
+  Bookmark,
 } from "lucide-react";
 import {
   membershipBenefits,
@@ -132,21 +141,78 @@ import {
 import { decodeHtmlEntities } from "@/lib/utils/decodeHtmlEntities";
 import "./member-cards.css";
 import { DynamicHeroBanner } from "@/components/DynamicHeroBanner";
+import { motion, AnimatePresence, useSpring, useTransform } from "framer-motion";
+import Fuse from "fuse.js";
+import Confetti from "react-confetti";
 
-// Composant Skeleton pour les cartes
+// Phase 9: Animation variants (définis en dehors du composant pour éviter les re-créations)
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    }
+  }
+};
+
+const cardVariants = {
+  hidden: { 
+    opacity: 0, 
+    y: 30,
+    scale: 0.95 
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+      duration: 0.5
+    }
+  },
+  hover: {
+    scale: 1.02,
+    y: -5,
+    transition: {
+      type: "spring" as const,
+      stiffness: 400,
+      damping: 10
+    }
+  }
+};
+
+// Composant Skeleton pour les cartes avec animation shimmer
 const MemberCardSkeleton = () => (
-  <div className="border border-gray-200 rounded-lg overflow-hidden bg-white flex flex-col animate-pulse">
-    <div className="h-40 bg-gray-200"></div>
+  <div className="border border-gray-200 rounded-lg overflow-hidden bg-white flex flex-col">
+    <div className="h-40 bg-gray-200 relative overflow-hidden">
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+    </div>
     <div className="p-6 flex flex-col flex-1 space-y-4">
       <div className="flex gap-2">
-        <div className="h-5 w-16 bg-gray-200 rounded"></div>
-        <div className="h-5 w-20 bg-gray-200 rounded"></div>
+        <div className="h-5 w-16 bg-gray-200 rounded relative overflow-hidden">
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+        </div>
+        <div className="h-5 w-20 bg-gray-200 rounded relative overflow-hidden">
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+        </div>
       </div>
-      <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+      <div className="h-6 bg-gray-200 rounded w-3/4 relative overflow-hidden">
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+      </div>
       <div className="space-y-2">
-        <div className="h-4 bg-gray-200 rounded w-full"></div>
-        <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-        <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+        <div className="h-4 bg-gray-200 rounded w-full relative overflow-hidden">
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+        </div>
+        <div className="h-4 bg-gray-200 rounded w-5/6 relative overflow-hidden">
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+        </div>
+        <div className="h-4 bg-gray-200 rounded w-4/6 relative overflow-hidden">
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+        </div>
       </div>
       <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
         <div className="h-4 bg-gray-200 rounded w-20"></div>
@@ -717,9 +783,18 @@ const MembersContent = () => {
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
-  const membersPerPage = 9;
+  const [membersPerPage, setMembersPerPage] = useState(9);
   const [isLoading, setIsLoading] = useState(true);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const [carouselProgress, setCarouselProgress] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  
+  // Phase 3: Filtres avancés - Modifiés
+  const [selectedFiliereFilter, setSelectedFiliereFilter] = useState<string>("all");
+  const [selectedActivitiesFilter, setSelectedActivitiesFilter] = useState<string[]>([]);
 
   // États pour le formulaire d'adhésion
   const [selectedAdhesionType, setSelectedAdhesionType] = useState<
@@ -764,6 +839,19 @@ const MembersContent = () => {
   const [internationalCountry, setInternationalCountry] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState<boolean>(false);
+  
+  // Phase 9: États avancés UX
+  const [focusedMember, setFocusedMember] = useState<Member | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightedText, setHighlightedText] = useState("");
+  const [userPreferences, setUserPreferences] = useState({
+    defaultView: "grid" as "grid" | "list",
+    defaultSort: "random",
+    defaultPerPage: 9,
+  });
+  const [isLoadingPreferences, setIsLoadingPreferences] = useState(true);
   const [isSuccessModalOpen, setIsSuccessModalOpen] =
     useState<boolean>(false);
   const [hasSubmittedSuccess, setHasSubmittedSuccess] =
@@ -790,6 +878,13 @@ const MembersContent = () => {
   // Récupérer les partenaires Pass PME depuis l'API
   const { data: partenairesPassPME = [], isLoading: isLoadingPartenairesPME } =
     usePartenairesForSiteWeb({ type: "simple" });
+
+  // Phase 9: Styles mémorisés pour éviter les re-renders
+  const glassmorphismStyle = useMemo(() => ({
+    backdropFilter: 'blur(20px) saturate(180%)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    border: '1px solid rgba(209, 213, 219, 0.3)',
+  }), []);
 
   // Récupérer les types de membres depuis l'API
   const {
@@ -1007,6 +1102,47 @@ const MembersContent = () => {
       Array.from(new Set(membersFromApi.map((member) => member.region))).sort(),
     [membersFromApi]
   );
+
+  // Listes pour les nouveaux filtres
+  const directoryFilieres = useMemo(() => {
+    const filieres: Array<{id: string, name: string}> = [];
+    if (secteursApi && Array.isArray(secteursApi)) {
+      secteursApi.forEach(secteur => {
+        if (secteur.filieres && Array.isArray(secteur.filieres)) {
+          secteur.filieres.forEach(filiere => {
+            if (filiere.id && filiere.name) {
+              filieres.push({id: String(filiere.id), name: filiere.name});
+            }
+          });
+        }
+      });
+    }
+    return filieres.sort((a, b) => a.name.localeCompare(b.name));
+  }, [secteursApi]);
+
+  const directoryActivites = useMemo(() => {
+    const activites: Array<{id: string, name: string}> = [];
+    if (secteursApi && Array.isArray(secteursApi)) {
+      secteursApi.forEach(secteur => {
+        if (secteur.filieres && Array.isArray(secteur.filieres)) {
+          secteur.filieres.forEach(filiere => {
+            if (filiere.sousFiliere && Array.isArray(filiere.sousFiliere)) {
+              filiere.sousFiliere.forEach(sf => {
+                if (sf.activites && Array.isArray(sf.activites)) {
+                  sf.activites.forEach(activite => {
+                    if (activite.id && activite.name && !activites.find(a => a.id === String(activite.id))) {
+                      activites.push({id: String(activite.id), name: activite.name});
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+    return activites.sort((a, b) => a.name.localeCompare(b.name));
+  }, [secteursApi]);
 
   const isLoadingMembers = isLoading || isLoadingAdhesions;
 
@@ -2094,8 +2230,16 @@ const MembersContent = () => {
     switch (sortOrder) {
       case "alphabetical":
         return a.name.localeCompare(b.name, "fr", { sensitivity: "base" });
+      case "alphabetical-desc":
+        return b.name.localeCompare(a.name, "fr", { sensitivity: "base" });
+      case "recent":
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
       case "sector":
         return a.sector.localeCompare(b.sector, "fr", { sensitivity: "base" });
+      case "region":
+        return a.region.localeCompare(b.region, "fr", { sensitivity: "base" });
       case "random":
         // Pour le tri aléatoire, on utilise l'ordre du tableau shuffledMembers
         const indexA = shuffledMembers.findIndex((m) => m.id === a.id);
@@ -2139,40 +2283,78 @@ const MembersContent = () => {
     return () => clearInterval(interval);
   }, [sortOrder, membersFromApi, membersSignature]);
 
-  const filteredMembers = membersFromApi.filter((member) => {
-    // Filtre sur le type de membre : uniquement "associatif" et "entreprise"
-    const matchesMemberType = 
-      member.memberType === "associatif" || member.memberType === "entreprise";
-    
-    // Recherche insensible à la casse
-    const searchLower = searchTerm.toLowerCase().trim();
-    const filiereName = member.filiereId
-      ? filiereNameById.get(member.filiereId) || ""
-      : "";
-    const sousFiliereName = member.sousFiliereId
-      ? filiereNameById.get(member.sousFiliereId) || ""
-      : "";
-    const activiteNames = Array.isArray(member.activitesIds)
-      ? member.activitesIds
-          .map((id) => filiereNameById.get(id))
-          .filter((name): name is string => Boolean(name))
-          .join(" ")
-      : "";
-    const matchesSearch =
-      searchTerm === "" ||
-      member.name.toLowerCase().includes(searchLower) ||
-      member.description.toLowerCase().includes(searchLower) ||
-      member.sector.toLowerCase().includes(searchLower) ||
-      member.region.toLowerCase().includes(searchLower) ||
-      filiereName.toLowerCase().includes(searchLower) ||
-      sousFiliereName.toLowerCase().includes(searchLower) ||
-      activiteNames.toLowerCase().includes(searchLower);
-    const matchesSector =
-      selectedSector === "all" || member.sector === selectedSector;
-    const matchesRegion =
-      selectedRegion === "all" || member.region === selectedRegion;
-    return matchesMemberType && matchesSearch && matchesSector && matchesRegion;
-  });
+  // Phase 9: Configuration de Fuse.js pour la recherche fuzzy (doit être avant filteredMembers)
+  const fuseOptions = {
+    keys: [
+      { name: 'name', weight: 0.4 },
+      { name: 'description', weight: 0.2 },
+      { name: 'sector', weight: 0.15 },
+      { name: 'region', weight: 0.15 },
+      { name: 'fullAddress', weight: 0.1 },
+    ],
+    threshold: 0.3,
+    includeScore: true,
+    minMatchCharLength: 2,
+    ignoreLocation: true,
+  };
+
+  const fuse = useMemo(() => new Fuse(membersFromApi, fuseOptions), [membersFromApi]);
+
+  // Phase 9: Recherche fuzzy avec Fuse.js
+  const filteredMembers = useMemo(() => {
+    let results = membersFromApi;
+
+    // Filtre sur le type de membre
+    results = results.filter(
+      (member) =>
+        member.memberType === "associatif" || member.memberType === "entreprise"
+    );
+
+    // Phase 9: Recherche fuzzy si terme de recherche
+    if (searchTerm.trim() !== "") {
+      const fuseResults = fuse.search(searchTerm);
+      const memberIds = new Set(fuseResults.map((result) => result.item.id));
+      results = results.filter((member) => memberIds.has(member.id));
+    }
+
+    // Phase 3: Filtre filière
+    if (selectedFiliereFilter !== "all") {
+      results = results.filter(
+        (member) => String(member.filiereId) === selectedFiliereFilter
+      );
+    }
+
+    // Phase 3: Filtre activités
+    if (selectedActivitiesFilter.length > 0) {
+      results = results.filter(
+        (member) =>
+          member.activitesIds &&
+          member.activitesIds.some((id) =>
+            selectedActivitiesFilter.includes(String(id))
+          )
+      );
+    }
+
+    // Filtre secteur
+    if (selectedSector !== "all") {
+      results = results.filter((member) => member.sector === selectedSector);
+    }
+
+    // Filtre région
+    if (selectedRegion !== "all") {
+      results = results.filter((member) => member.region === selectedRegion);
+    }
+
+    return results;
+  }, [
+    membersFromApi,
+    searchTerm,
+    selectedFiliereFilter,
+    selectedActivitiesFilter,
+    selectedSector,
+    selectedRegion,
+    fuse,
+  ]);
 
   // Appliquer le tri ou le mélange aléatoire
   const sortedMembers =
@@ -2190,20 +2372,26 @@ const MembersContent = () => {
 
   // Vérifier si des filtres sont actifs
   const hasActiveFilters =
-    searchTerm !== "" || selectedSector !== "all" || selectedRegion !== "all";
+    searchTerm !== "" || 
+    selectedSector !== "all" || 
+    selectedRegion !== "all" ||
+    selectedFiliereFilter !== "all" ||
+    selectedActivitiesFilter.length > 0;
 
-  // Fonction pour réinitialiser tous les filtres
-  const resetFilters = () => {
+  // Fonction pour réinitialiser tous les filtres (optimisée avec useCallback)
+  const resetFilters = useCallback(() => {
     setSearchTerm("");
     setSelectedSector("all");
     setSelectedRegion("all");
+    setSelectedFiliereFilter("all");
+    setSelectedActivitiesFilter([]);
     setCurrentPage(1);
-  };
+  }, []);
 
   // Réinitialiser la page quand les filtres changent
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedSector, selectedRegion, sortOrder]);
+  }, [searchTerm, selectedSector, selectedRegion, sortOrder, selectedFiliereFilter, selectedActivitiesFilter]);
 
   // Calculer la pagination
   const totalPages = Math.ceil(filteredMembers.length / membersPerPage);
@@ -2227,15 +2415,171 @@ const MembersContent = () => {
     })
     .slice(0, 5);
 
+  // Phase 5: Auto-rotation du carousel avec indicateur de progression
   useEffect(() => {
-    if (recentMembers.length === 0) return;
+    if (recentMembers.length === 0 || isCarouselPaused) {
+      setCarouselProgress(0);
+      return;
+    }
 
     const interval = setInterval(() => {
       setFeaturedIndex((prev) => (prev + 1) % recentMembers.length);
-    }, 5000); // Auto-advance every 5 seconds
+      setCarouselProgress(0);
+    }, 5000);
 
-    return () => clearInterval(interval);
+    const progressInterval = setInterval(() => {
+      setCarouselProgress((prev) => Math.min(prev + 1, 100));
+    }, 50);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(progressInterval);
+    };
+  }, [recentMembers.length, isCarouselPaused, featuredIndex]);
+
+  // Phase 5: Raccourcis clavier pour le carousel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (recentMembers.length === 0) return;
+      
+      if (e.key === 'ArrowLeft') {
+        setFeaturedIndex((prev) => (prev - 1 + recentMembers.length) % recentMembers.length);
+        setCarouselProgress(0);
+      } else if (e.key === 'ArrowRight') {
+        setFeaturedIndex((prev) => (prev + 1) % recentMembers.length);
+        setCarouselProgress(0);
+      } else if (e.key === ' ' && e.target === document.body) {
+        e.preventDefault();
+        setIsCarouselPaused((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [recentMembers.length]);
+
+  // Phase 5: Gestion du swipe sur mobile (optimisé avec useCallback)
+  const minSwipeDistance = 50;
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      setFeaturedIndex((prev) => (prev + 1) % recentMembers.length);
+      setCarouselProgress(0);
+    } else if (isRightSwipe) {
+      setFeaturedIndex((prev) => (prev - 1 + recentMembers.length) % recentMembers.length);
+      setCarouselProgress(0);
+    }
+  }, [touchStart, touchEnd, recentMembers.length]);
+
+  // Scroll to top quand la page change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
+
+  // Phase 9: Charger les préférences utilisateur depuis localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('cpu-pme-preferences');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setViewMode(parsed.defaultView || 'grid');
+          setSortOrder(parsed.defaultSort || 'random');
+          setMembersPerPage(parsed.defaultPerPage || 9);
+        } catch (e) {
+          console.error('Erreur lors du chargement des préférences:', e);
+        }
+      }
+      setIsLoadingPreferences(false);
+    }
+  }, []);
+
+  // Phase 9: Sauvegarder les préférences utilisateur (sans setUserPreferences pour éviter la boucle)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && isMounted && !isLoadingPreferences) {
+      const prefs = {
+        defaultView: viewMode,
+        defaultSort: sortOrder,
+        defaultPerPage: membersPerPage,
+      };
+      localStorage.setItem('cpu-pme-preferences', JSON.stringify(prefs));
+    }
+  }, [viewMode, sortOrder, membersPerPage, isMounted, isLoadingPreferences]);
+
+  // Phase 9: Générer les suggestions de recherche
+  useEffect(() => {
+    if (searchTerm.length >= 2 && fuse) {
+      const results = fuse.search(searchTerm, { limit: 5 });
+      const suggestions = results.map(result => result.item.name);
+      setSearchSuggestions([...new Set(suggestions)]);
+      setHighlightedText(searchTerm);
+    } else {
+      setSearchSuggestions([]);
+      setHighlightedText("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
+
+  // Charger les favoris depuis localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('cpu-pme-favorites');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setFavorites(new Set(parsed));
+        } catch (e) {
+          console.error('Erreur lors du chargement des favoris:', e);
+        }
+      }
+    }
+  }, []);
+
+  // Sauvegarder les favoris dans localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cpu-pme-favorites', JSON.stringify(Array.from(favorites)));
+    }
+  }, [favorites]);
+
+  // Toggle favori (optimisé avec useCallback)
+  const toggleFavorite = useCallback((memberId: string) => {
+    setFavorites(prev => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(memberId)) {
+        newFavorites.delete(memberId);
+        toast({
+          title: "Retiré des favoris",
+          description: "Le membre a été retiré de vos favoris.",
+        });
+      } else {
+        newFavorites.add(memberId);
+        // Phase 9: Afficher confetti lors de l'ajout aux favoris
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3000);
+        toast({
+          title: "Ajouté aux favoris",
+          description: "Le membre a été ajouté à vos favoris.",
+        });
+      }
+      return newFavorites;
+    });
+  }, [toast]);
 
   const isUuid = (value?: string) =>
     Boolean(
@@ -3018,6 +3362,49 @@ const MembersContent = () => {
       });
   };
 
+  // Phase 9: Gestionnaires pour le mode Focus (optimisés avec useCallback)
+  const openFocusMode = useCallback((member: Member) => {
+    setFocusedMember(member);
+  }, []);
+
+  const closeFocusMode = useCallback(() => {
+    setFocusedMember(null);
+  }, []);
+
+  const navigateFocusMode = useCallback((direction: 'prev' | 'next') => {
+    if (!focusedMember) return;
+    
+    const currentIndex = paginatedMembers.findIndex(m => m.id === focusedMember.id);
+    let newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+    
+    // Boucler si on atteint les limites
+    if (newIndex < 0) newIndex = paginatedMembers.length - 1;
+    if (newIndex >= paginatedMembers.length) newIndex = 0;
+    
+    setFocusedMember(paginatedMembers[newIndex]);
+  }, [focusedMember, paginatedMembers]);
+
+  // Phase 9: Navigation clavier pour le mode Focus
+  useEffect(() => {
+    if (!focusedMember) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateFocusMode('prev');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateFocusMode('next');
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeFocusMode();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedMember, navigateFocusMode, closeFocusMode]);
+
   // Fonction pour filtrer les plans d'abonnement selon le type de membre et le sous-profil
   const getAvailablePlans = () => {
     if (!selectedAdhesionType) {
@@ -3060,6 +3447,256 @@ const MembersContent = () => {
 
   return (
     <div className="flex flex-col">
+      {/* Phase 9: Confetti pour les célébrations */}
+      {showConfetti && typeof window !== 'undefined' && (
+        <Confetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          recycle={false}
+          numberOfPieces={200}
+          gravity={0.3}
+        />
+      )}
+      
+      {/* Phase 9: Mode Focus - Vue détaillée d'un membre */}
+      <AnimatePresence>
+        {focusedMember && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={closeFocusMode}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl"
+              style={glassmorphismStyle}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header avec boutons de navigation */}
+              <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-gray-200/50"
+                   style={{ backdropFilter: 'blur(20px)', backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigateFocusMode('prev')}
+                  className="hover:bg-cpu-green/10"
+                  title="Membre précédent (←)"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+                
+                <div className="text-sm text-slate-600 font-medium">
+                  {paginatedMembers.findIndex(m => m.id === focusedMember.id) + 1} / {paginatedMembers.length}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigateFocusMode('next')}
+                    className="hover:bg-cpu-green/10"
+                    title="Membre suivant (→)"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={closeFocusMode}
+                    className="hover:bg-red-50 hover:text-red-600"
+                    title="Fermer (Esc)"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Contenu du membre */}
+              <div className="p-8">
+                {/* En-tête avec icône et nom */}
+                <div className="flex items-start gap-6 mb-8">
+                  <div className="flex-shrink-0">
+                    <div className="w-24 h-24 rounded-2xl bg-cpu-green/10 flex items-center justify-center">
+                      <div className="text-cpu-green scale-110">
+                        {getMemberIcon(focusedMember)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-3xl font-bold text-slate-800 mb-3">
+                      {decodeHtmlEntities(focusedMember.name)}
+                    </h2>
+                    <div className="flex flex-wrap gap-3">
+                      <Badge className="bg-cpu-green/10 text-cpu-green border-cpu-green/20">
+                        {focusedMember.sector}
+                      </Badge>
+                      {focusedMember.region && (
+                        <Badge variant="outline" className="border-slate-300">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {focusedMember.region}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(focusedMember.id);
+                    }}
+                    className="flex-shrink-0"
+                  >
+                    <Bookmark
+                      className={`h-5 w-5 ${
+                        favorites.has(focusedMember.id)
+                          ? 'fill-cpu-orange text-cpu-orange'
+                          : 'text-gray-400'
+                      }`}
+                    />
+                  </Button>
+                </div>
+
+                {/* Informations de contact */}
+                <div className="grid md:grid-cols-2 gap-6 mb-8">
+                  {focusedMember.email && (
+                    <div className="flex items-center gap-3 p-4 rounded-xl bg-white/50 border border-gray-200/50">
+                      <Mail className="h-5 w-5 text-cpu-green flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs text-slate-500 mb-1">Email</div>
+                        <a 
+                          href={`mailto:${focusedMember.email}`}
+                          className="text-sm text-slate-800 hover:text-cpu-green truncate block"
+                        >
+                          {focusedMember.email}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {focusedMember.phone && (
+                    <div className="flex items-center gap-3 p-4 rounded-xl bg-white/50 border border-gray-200/50">
+                      <Phone className="h-5 w-5 text-cpu-green flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs text-slate-500 mb-1">Téléphone</div>
+                        <a 
+                          href={`tel:${focusedMember.phone}`}
+                          className="text-sm text-slate-800 hover:text-cpu-green"
+                        >
+                          {focusedMember.phone}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {focusedMember.website && (
+                    <div className="flex items-center gap-3 p-4 rounded-xl bg-white/50 border border-gray-200/50 md:col-span-2">
+                      <Globe className="h-5 w-5 text-cpu-green flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs text-slate-500 mb-1">Site web</div>
+                        <a 
+                          href={focusedMember.website.startsWith('http') ? focusedMember.website : `https://${focusedMember.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-slate-800 hover:text-cpu-green truncate block"
+                        >
+                          {focusedMember.website}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {focusedMember.fullAddress && (
+                    <div className="flex items-start gap-3 p-4 rounded-xl bg-white/50 border border-gray-200/50 md:col-span-2">
+                      <MapPin className="h-5 w-5 text-cpu-green flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs text-slate-500 mb-1">Adresse</div>
+                        <div className="text-sm text-slate-800">
+                          {focusedMember.fullAddress}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Description */}
+                {focusedMember.description && (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                      <Users className="h-5 w-5 text-cpu-green" />
+                      À propos
+                    </h3>
+                    <div className="prose prose-slate max-w-none">
+                      <p className="text-slate-600 leading-relaxed">
+                        {decodeHtmlEntities(focusedMember.description)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex flex-wrap gap-3">
+                  {focusedMember.website && (
+                    <a
+                      href={focusedMember.website.startsWith('http') ? focusedMember.website : `https://${focusedMember.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button className="bg-cpu-green hover:bg-cpu-green/90 text-white">
+                        <Globe className="h-4 w-4 mr-2" />
+                        Visiter le site web
+                      </Button>
+                    </a>
+                  )}
+                  {focusedMember.email && (
+                    <a href={`mailto:${focusedMember.email}`}>
+                      <Button variant="outline" className="border-cpu-green text-cpu-green hover:bg-cpu-green/10">
+                        <Mail className="h-4 w-4 mr-2" />
+                        Envoyer un email
+                      </Button>
+                    </a>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/membres?id=${focusedMember.id}`;
+                      navigator.clipboard.writeText(url);
+                      toast({
+                        title: "Lien copié !",
+                        description: "Le lien du membre a été copié.",
+                      });
+                    }}
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Partager
+                  </Button>
+                </div>
+
+                {/* Hint pour la navigation clavier */}
+                <div className="mt-8 pt-6 border-t border-gray-200/50">
+                  <div className="flex items-center justify-center gap-6 text-xs text-slate-500">
+                    <span className="flex items-center gap-2">
+                      <kbd className="px-2 py-1 bg-white rounded border border-gray-300">←</kbd>
+                      <kbd className="px-2 py-1 bg-white rounded border border-gray-300">→</kbd>
+                      Naviguer
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <kbd className="px-2 py-1 bg-white rounded border border-gray-300">Esc</kbd>
+                      Fermer
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       <Dialog
         open={isSuccessModalOpen}
         onOpenChange={(open) => {
@@ -3117,17 +3754,78 @@ const MembersContent = () => {
         </div>
       </DynamicHeroBanner>
 
+      {/* Scripts JSON-LD pour SEO et Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'Confédération des PME du Cameroun',
+            alternateName: 'CPU',
+            url: process.env.NEXT_PUBLIC_BASE_URL || 'https://cpu-cameroun.org',
+            description: 'La Confédération des PME du Cameroun regroupe et représente les petites et moyennes entreprises camerounaises',
+            address: {
+              '@type': 'PostalAddress',
+              addressCountry: 'CM',
+              addressLocality: 'Yaoundé',
+            },
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            url: process.env.NEXT_PUBLIC_BASE_URL || 'https://cpu-cameroun.org',
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: {
+                '@type': 'EntryPoint',
+                urlTemplate: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://cpu-cameroun.org'}/membres?search={search_term_string}`,
+              },
+              'query-input': 'required name=search_term_string',
+            },
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Accueil',
+                item: process.env.NEXT_PUBLIC_BASE_URL || 'https://cpu-cameroun.org',
+              },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Membres',
+                item: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://cpu-cameroun.org'}/membres`,
+              },
+            ],
+          }),
+        }}
+      />
+
       {/* Titre et Navigation par Onglets */}
-      <section className="bg-white py-8 sm:py-10">
+      <section className="bg-white py-8 sm:py-10" role="region" aria-label="En-tête de la page membres">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
-          <h2 className="font-montserrat text-2xl sm:text-3xl md:text-4xl font-bold text-[#221F1F] text-center mb-10">
+          <h1 className="font-montserrat text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 text-center mb-10">
             {getPageTitle()}
-          </h2>
+          </h1>
         </div>
       </section>
 
       {/* Main Content */}
-      <section className="bg-white border-b border-gray-200 pt-8 pb-16">
+      <section className="bg-white border-b border-gray-200 pt-8 pb-16" role="main" aria-label="Contenu principal">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <Tabs
             value={activeTab}
@@ -3146,59 +3844,111 @@ const MembersContent = () => {
             className="w-full"
           >
             {/* Navigation par Onglets */}
-            <div className="flex justify-center mb-8 w-full px-4 sm:px-0">
+            <div className="flex justify-center mb-8 w-full px-4 sm:px-0" role="navigation" aria-label="Navigation par onglets">
               <TabsList className="!grid grid-cols-2 sm:!inline-flex sm:items-center sm:justify-center gap-2 sm:gap-4 md:gap-6 px-3 sm:px-6 md:px-8 py-3 sm:py-3 md:py-4 bg-gray-50/50 rounded-xl border border-gray-100 shadow-sm h-auto w-full sm:w-auto max-w-md sm:max-w-none !flex-none">
                 <TabsTrigger
                   value="annuaire"
-                  className="flex items-center justify-center gap-2 px-3 sm:px-6 md:px-8 py-2.5 sm:py-2.5 md:py-3 rounded-lg font-inter text-xs sm:text-sm md:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
+                  aria-label="Onglet Annuaire des membres"
+                  className="flex items-center justify-center gap-2 px-3 sm:px-6 md:px-8 py-2.5 sm:py-2.5 md:py-3 rounded-lg font-inter text-xs sm:text-sm md:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-slate-800 data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
                 >
-                  <Users className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 flex-shrink-0" />
+                  <Users className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 flex-shrink-0" aria-hidden="true" />
                   <span>Annuaire</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="pass-pme"
-                  className="flex items-center justify-center gap-2 px-3 sm:px-6 md:px-8 py-2.5 sm:py-2.5 md:py-3 rounded-lg font-inter text-xs sm:text-sm md:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
+                  aria-label="Onglet Pass PME"
+                  className="flex items-center justify-center gap-2 px-3 sm:px-6 md:px-8 py-2.5 sm:py-2.5 md:py-3 rounded-lg font-inter text-xs sm:text-sm md:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-slate-800 data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
                 >
-                  <CreditCard className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 flex-shrink-0" />
+                  <CreditCard className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 flex-shrink-0" aria-hidden="true" />
                   <span>Pass PME</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="avantages"
-                  className="flex items-center justify-center gap-2 px-3 sm:px-6 md:px-8 py-2.5 sm:py-2.5 md:py-3 rounded-lg font-inter text-xs sm:text-sm md:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
+                  aria-label="Onglet Avantages membres"
+                  className="flex items-center justify-center gap-2 px-3 sm:px-6 md:px-8 py-2.5 sm:py-2.5 md:py-3 rounded-lg font-inter text-xs sm:text-sm md:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-slate-800 data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
                 >
-                  <Award className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 flex-shrink-0" />
+                  <Award className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 flex-shrink-0" aria-hidden="true" />
                   <span>Avantages</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="adhesion"
-                  className="flex items-center justify-center gap-2 px-3 sm:px-6 md:px-8 py-2.5 sm:py-2.5 md:py-3 rounded-lg font-inter text-xs sm:text-sm md:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-[#221F1F] data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
+                  aria-label="Onglet Formulaire d'adhésion"
+                  className="flex items-center justify-center gap-2 px-3 sm:px-6 md:px-8 py-2.5 sm:py-2.5 md:py-3 rounded-lg font-inter text-xs sm:text-sm md:text-base font-semibold transition-all duration-300 ease-in-out data-[state=active]:bg-white data-[state=active]:text-slate-800 data-[state=active]:shadow-md data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-600 hover:bg-white/50 hover:text-gray-700 whitespace-nowrap"
                 >
-                  <Building2 className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 flex-shrink-0" />
+                  <Building2 className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 flex-shrink-0" aria-hidden="true" />
                   <span>Adhérer</span>
                 </TabsTrigger>
               </TabsList>
             </div>
             {/* Annuaire Tab */}
-            <TabsContent value="annuaire" className="mt-8">
+            <TabsContent value="annuaire" className="mt-8" role="tabpanel" aria-label="Contenu de l'annuaire">
               {/* Recent Members Section */}
-              <div className="mb-20 animate-fade-in-up">
-                <div className="flex items-center gap-4 mb-10">
-                  <div className="w-1 h-10 bg-cpu-orange rounded-full"></div>
-                  <h2 className="text-3xl font-bold text-[#221F1F]">
-                    Membres Récents
-                  </h2>
+              <div className="mb-20 animate-fade-in-up" role="region" aria-label="Section membres récents">
+                <div className="flex items-center justify-between mb-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-1 h-10 bg-cpu-orange rounded-full" aria-hidden="true"></div>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-800">
+                      Membres Récents
+                    </h2>
+                  </div>
+                  {/* Phase 5: Compteur et contrôles */}
+                  <div className="flex items-center gap-3" role="group" aria-label="Contrôles du carousel">
+                    <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full" role="status" aria-live="polite">
+                      <Users className="h-4 w-4 text-cpu-orange" aria-hidden="true" />
+                      <span className="text-sm font-bold text-gray-700" aria-label={`Membre ${featuredIndex + 1} sur ${recentMembers.length}`}>
+                        {featuredIndex + 1} / {recentMembers.length}
+                      </span>
+                    </div>
+                    <Button
+                      onClick={() => setIsCarouselPaused(!isCarouselPaused)}
+                      variant="outline"
+                      size="icon"
+                      className="border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white transition-all"
+                      aria-label={isCarouselPaused ? 'Reprendre le défilement automatique' : 'Mettre en pause le défilement automatique'}
+                      aria-pressed={!isCarouselPaused}
+                      title={isCarouselPaused ? 'Lecture' : 'Pause'}
+                    >
+                      {isCarouselPaused ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+                          <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                        </svg>
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 {recentMembers.length > 0 ? (
-                  <div className="relative">
-                    <div className="border-2 border-gray-200 rounded-xl transition-all duration-300 bg-white flex flex-col md:flex-row hover:shadow-2xl hover:border-cpu-orange cursor-pointer relative overflow-hidden">
+                  <div 
+                    className="relative"
+                    role="region"
+                    aria-label="Carousel de membres récents"
+                    aria-roledescription="carousel"
+                    onMouseEnter={() => setIsCarouselPaused(true)}
+                    onMouseLeave={() => setIsCarouselPaused(false)}
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                  >
+                    {/* Phase 5: Barre de progression */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200 rounded-t-xl overflow-hidden z-20" role="progressbar" aria-label="Progression du carousel" aria-valuenow={carouselProgress} aria-valuemin={0} aria-valuemax={100}>
+                      <div 
+                        className="h-full bg-cpu-orange transition-all duration-100 ease-linear"
+                        style={{ width: `${carouselProgress}%` }}
+                      />
+                    </div>
+
+                    <div className="border-2 border-gray-200 rounded-xl transition-all duration-500 bg-white flex flex-col md:flex-row hover:shadow-2xl hover:border-cpu-orange cursor-pointer relative overflow-hidden group">
                       {/* Barre latérale orange */}
-                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-cpu-orange hover:w-2 transition-all duration-300"></div>
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-cpu-orange group-hover:w-2 transition-all duration-300"></div>
 
                       {/* Image avec icône */}
-                      <div className="member-image bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 w-full md:w-36 h-36 md:h-auto flex-shrink-0 flex items-center justify-center overflow-hidden relative group/image">
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-[85%] h-[85%] rounded-2xl bg-cpu-orange/10 flex items-center justify-center group-hover/image:bg-cpu-orange/20 transition-all duration-300 group-hover/image:scale-105 group-hover/image:rotate-6">
-                            <div className="scale-90 text-cpu-orange">
+                      <div className="member-image bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 w-full md:w-40 lg:w-44 h-32 sm:h-40 md:h-auto flex-shrink-0 flex items-center justify-center overflow-hidden relative group/image">
+                        <div className="absolute inset-0 flex items-center justify-center transition-transform duration-500">
+                          <div className="w-[75%] sm:w-[85%] h-[75%] sm:h-[85%] rounded-2xl bg-cpu-orange/10 flex items-center justify-center group-hover/image:bg-cpu-orange transition-all duration-500 group-hover/image:scale-110 group-hover/image:rotate-12 shadow-md group-hover/image:shadow-xl">
+                            <div className="scale-75 sm:scale-90 text-cpu-orange group-hover/image:text-white transition-colors duration-500">
                               {getMemberIcon(recentMembers[featuredIndex])}
                             </div>
                           </div>
@@ -3206,28 +3956,28 @@ const MembersContent = () => {
                       </div>
 
                       {/* Contenu principal */}
-                      <div className="flex-1 p-3 md:p-4 flex flex-col min-w-0">
+                      <div className="flex-1 p-3 sm:p-4 md:p-5 flex flex-col min-w-0">
                         {/* Header avec nom et badge */}
-                        <div className="mb-2">
-                          <div className="flex items-start justify-between gap-3 mb-2">
-                            <h3 className="text-lg md:text-xl font-bold text-[#221F1F] hover:text-cpu-orange transition-colors line-clamp-2">
+                        <div className="mb-2 sm:mb-3">
+                          <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2">
+                            <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors duration-300 line-clamp-2 leading-tight">
                               {decodeHtmlEntities(recentMembers[featuredIndex].name)}
                             </h3>
-                            <Badge className="bg-green-600 text-white text-xs whitespace-nowrap px-2.5 py-1">
+                            <Badge className="bg-green-600 text-white text-xs whitespace-nowrap px-2 sm:px-2.5 py-1 shadow-md">
                               Nouveau
                             </Badge>
                           </div>
 
                           {/* Localisation */}
-                          <div className="flex items-start text-sm text-[#221F1F] mb-2">
-                            <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-cpu-orange mt-0.5" />
+                          <div className="flex items-start text-sm text-slate-600 mb-2 font-medium">
+                            <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-cpu-orange mt-0.5 group-hover:scale-110 transition-transform duration-300" />
                             <span className="break-words">{decodeHtmlEntities(recentMembers[featuredIndex].fullAddress || recentMembers[featuredIndex].region)}</span>
                           </div>
 
                           {/* Filière et Sous-filière */}
-                          <div className="grid grid-cols-2 gap-2 mb-2">
-                            <div className="rounded-lg p-2.5 bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 transition-all">
-                              <div className="text-xs text-cpu-orange font-medium mb-1">Filière</div>
+                          <div className="grid grid-cols-2 gap-2 mb-2 sm:mb-3">
+                            <div className="rounded-lg p-2 sm:p-2.5 bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 border-2 border-transparent group-hover:border-cpu-orange/30 transition-all duration-300">
+                              <div className="text-xs font-medium text-slate-500 mb-1">Filière</div>
                               {(() => {
                                 let filiereName = '';
                                 if (recentMembers[featuredIndex].filiereId && secteursApi && Array.isArray(secteursApi)) {
@@ -3242,15 +3992,15 @@ const MembersContent = () => {
                                   }
                                 }
                                 return (
-                                  <div className="text-sm font-semibold text-[#221F1F] line-clamp-1">
+                                  <div className="text-sm text-slate-600 line-clamp-1 group-hover:text-primary transition-colors">
                                     {decodeHtmlEntities(filiereName || recentMembers[featuredIndex].sector)}
                                   </div>
                                 );
                               })()}
                             </div>
 
-                            <div className="rounded-lg p-2.5 bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 transition-all">
-                              <div className="text-xs text-cpu-orange font-medium mb-1">Sous Filière</div>
+                            <div className="rounded-lg p-2 sm:p-2.5 bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 border-2 border-transparent group-hover:border-cpu-orange/30 transition-all duration-300">
+                              <div className="text-xs font-medium text-slate-500 mb-1">Sous Filière</div>
                               {(() => {
                                 let sousFiliereName = '';
                                 if (recentMembers[featuredIndex].sousFiliereId && secteursApi && Array.isArray(secteursApi)) {
@@ -3269,7 +4019,7 @@ const MembersContent = () => {
                                   }
                                 }
                                 return (
-                                  <div className="text-sm font-semibold text-[#221F1F] line-clamp-1">
+                                  <div className="text-sm text-slate-600 line-clamp-1 group-hover:text-primary transition-colors">
                                     {decodeHtmlEntities(sousFiliereName || '-')}
                                   </div>
                                 );
@@ -3280,8 +4030,8 @@ const MembersContent = () => {
                           {/* Activités */}
                           <div className="mb-2">
                             <div className="flex items-center gap-2 mb-2">
-                              <Briefcase className="h-3.5 w-3.5 text-cpu-orange" />
-                              <span className="text-xs text-cpu-orange font-semibold">Activités</span>
+                              <Briefcase className="h-4 w-4 text-cpu-orange group-hover:scale-110 transition-transform duration-300" />
+                              <span className="text-xs font-medium text-slate-500">Activités</span>
                             </div>
                             <div className="flex flex-wrap gap-2">
                               {(() => {
@@ -3314,13 +4064,13 @@ const MembersContent = () => {
                                     {visibleActivites.map((activite, idx) => (
                                       <Badge 
                                         key={idx} 
-                                        className="text-xs bg-cpu-orange text-white font-medium px-2.5 py-1 rounded-md hover:bg-white hover:text-cpu-orange hover:border-cpu-orange border-2 border-cpu-orange transition-all hover:scale-105"
+                                        className="text-xs bg-white/95 text-slate-900 font-medium px-2.5 py-1 rounded-md hover:bg-slate-100 border border-slate-200 transition-all duration-300"
                                       >
                                         {decodeHtmlEntities(activite)}
                                       </Badge>
                                     ))}
                                     {remainingCount > 0 && (
-                                      <Badge className="text-xs bg-cpu-orange text-white font-medium px-2.5 py-1 rounded-md hover:bg-white hover:text-cpu-orange hover:border-cpu-orange border-2 border-cpu-orange transition-all hover:scale-105">
+                                      <Badge className="text-xs bg-white/95 text-slate-900 font-medium px-2.5 py-1 rounded-md hover:bg-slate-100 border border-slate-200 transition-all duration-300">
                                         +{remainingCount}
                                       </Badge>
                                     )}
@@ -3336,10 +4086,10 @@ const MembersContent = () => {
                         {/* Description */}
                         <div className="mb-2">
                           <div className="flex items-center gap-2 mb-2">
-                            <Users className="h-3.5 w-3.5 text-cpu-orange" />
-                            <span className="text-xs text-cpu-orange font-semibold">À propos</span>
+                            <Users className="h-4 w-4 text-slate-500 group-hover:scale-110 transition-transform duration-300" />
+                            <span className="text-xs font-medium text-slate-500">À propos</span>
                           </div>
-                          <p className={`text-sm text-[#221F1F] leading-relaxed ${expandedMembers.has(recentMembers[featuredIndex].id) ? '' : 'line-clamp-2'}`}>
+                          <p className={`text-sm text-slate-600 leading-relaxed ${expandedMembers.has(recentMembers[featuredIndex].id) ? '' : 'line-clamp-2'}`}>
                             {decodeHtmlEntities(recentMembers[featuredIndex].description)}
                           </p>
                         </div>
@@ -3451,43 +4201,60 @@ const MembersContent = () => {
                       </div>
                     </div>
 
-                    {/* Navigation Arrows */}
+                    {/* Navigation Arrows - Phase 5: Améliorés */}
                     <button
-                      onClick={() =>
+                      onClick={() => {
                         setFeaturedIndex(
                           (prev) =>
                             (prev - 1 + recentMembers.length) %
                             recentMembers.length
-                        )
-                      }
-                      className="hidden md:absolute md:block left-4 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-3 rounded-full hover:bg-orange-700 transition-all hover:scale-110 z-10 cursor-pointer"
+                        );
+                        setCarouselProgress(0);
+                      }}
+                      className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-2 sm:p-3 rounded-full hover:bg-orange-700 hover:scale-110 transition-all shadow-lg hover:shadow-xl z-10 cursor-pointer"
+                      aria-label="Membre précédent"
                     >
-                      <ChevronLeft className="h-5 w-5" />
+                      <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                     <button
-                      onClick={() =>
+                      onClick={() => {
                         setFeaturedIndex(
                           (prev) => (prev + 1) % recentMembers.length
-                        )
-                      }
-                      className="hidden md:absolute md:block right-4 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-3 rounded-full hover:bg-orange-700 transition-all hover:scale-110 z-10 cursor-pointer"
+                        );
+                        setCarouselProgress(0);
+                      }}
+                      className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 bg-cpu-orange text-white p-2 sm:p-3 rounded-full hover:bg-orange-700 hover:scale-110 transition-all shadow-lg hover:shadow-xl z-10 cursor-pointer"
+                      aria-label="Membre suivant"
                     >
-                      <ChevronRight className="h-5 w-5" />
+                      <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
 
-                    {/* Dots Indicator */}
-                    <div className="flex justify-center gap-2 mt-6">
-                      {recentMembers.map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setFeaturedIndex(idx)}
-                          className={`h-2 rounded-full transition-all cursor-pointer ${
-                            idx === featuredIndex
-                              ? "bg-cpu-orange w-6"
-                              : "bg-gray-300 w-2"
-                          }`}
-                        />
-                      ))}
+                    {/* Dots Indicator - Phase 5: Amélioré avec numéro mobile */}
+                    <div className="flex flex-col items-center gap-3 mt-6">
+                      {/* Compteur mobile */}
+                      <div className="sm:hidden flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full">
+                        <span className="text-xs font-bold text-gray-700">
+                          {featuredIndex + 1} / {recentMembers.length}
+                        </span>
+                      </div>
+                      {/* Dots */}
+                      <div className="flex justify-center gap-2">
+                        {recentMembers.map((_, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setFeaturedIndex(idx);
+                              setCarouselProgress(0);
+                            }}
+                            className={`h-2 rounded-full transition-all cursor-pointer hover:opacity-80 ${
+                              idx === featuredIndex
+                                ? "bg-cpu-orange w-8 shadow-md"
+                                : "bg-gray-300 w-2 hover:bg-gray-400"
+                            }`}
+                            aria-label={`Aller au membre ${idx + 1}`}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -3498,20 +4265,68 @@ const MembersContent = () => {
               </div>
 
               {/* Search and Filters Bar */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-12 animate-fade-in-up animate-delay-200">
+              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8 animate-fade-in-up animate-delay-200">
                 {/* Desktop Filters */}
-                <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="lg:col-span-2">
+                <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                  <div className="lg:col-span-2 relative">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <Input
-                        placeholder="Rechercher un membre..."
+                        placeholder="Rechercher nom, secteur, activité..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10 border-gray-300"
                       />
                     </div>
+                    
+                    {/* Phase 9: Suggestions de recherche avec glassmorphisme */}
+                    <AnimatePresence>
+                      {searchSuggestions.length > 0 && searchTerm.length >= 2 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute z-50 w-full mt-2 rounded-lg shadow-lg overflow-hidden"
+                          style={glassmorphismStyle}
+                        >
+                          <div className="p-2">
+                            <div className="text-xs text-slate-500 px-3 py-2 font-medium">
+                              Suggestions
+                            </div>
+                            {searchSuggestions.map((suggestion, idx) => (
+                              <motion.button
+                                key={idx}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                onClick={() => setSearchTerm(suggestion)}
+                                className="w-full text-left px-3 py-2 rounded-md hover:bg-cpu-green/10 text-sm text-slate-700 transition-colors flex items-center gap-2"
+                              >
+                                <Search className="h-3 w-3 text-cpu-green" />
+                                {suggestion}
+                              </motion.button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
+                  <Select
+                    value={selectedFiliereFilter}
+                    onValueChange={setSelectedFiliereFilter}
+                  >
+                    <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                      <SelectValue placeholder="Filière" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes filières</SelectItem>
+                      {directoryFilieres.map((filiere) => (
+                        <SelectItem key={filiere.id} value={filiere.id}>
+                          {decodeHtmlEntities(filiere.name)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Select
                     value={selectedSector}
                     onValueChange={setSelectedSector}
@@ -3520,7 +4335,7 @@ const MembersContent = () => {
                       <SelectValue placeholder="Secteur" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Tous les secteurs</SelectItem>
+                      <SelectItem value="all">Tous secteurs</SelectItem>
                       {directorySectors.map((sector) => (
                         <SelectItem key={sector} value={sector}>
                           {decodeHtmlEntities(sector)}
@@ -3536,10 +4351,26 @@ const MembersContent = () => {
                       <SelectValue placeholder="Région" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Toutes les régions</SelectItem>
+                      <SelectItem value="all">Toutes régions</SelectItem>
                       {directoryRegions.map((region) => (
                         <SelectItem key={region} value={region}>
                           {decodeHtmlEntities(region)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={selectedActivitiesFilter.length > 0 ? selectedActivitiesFilter[0] : "all"}
+                    onValueChange={(value) => setSelectedActivitiesFilter(value === "all" ? [] : [value])}
+                  >
+                    <SelectTrigger className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                      <SelectValue placeholder="Activité" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes activités</SelectItem>
+                      {directoryActivites.map((activite) => (
+                        <SelectItem key={activite.id} value={activite.id}>
+                          {decodeHtmlEntities(activite.name)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -3572,7 +4403,8 @@ const MembersContent = () => {
                                 searchTerm,
                                 selectedSector,
                                 selectedRegion,
-                              ].filter((f) => f !== "" && f !== "all").length
+                                selectedFiliereFilter,
+                              ].filter((f) => f !== "" && f !== "all").length + selectedActivitiesFilter.length
                             }
                           </Badge>
                         )}
@@ -3583,6 +4415,25 @@ const MembersContent = () => {
                         <SheetTitle>Filtres de recherche</SheetTitle>
                       </SheetHeader>
                       <div className="space-y-6 mt-6">
+                        <div className="space-y-2">
+                          <Label>Filière</Label>
+                          <Select
+                            value={selectedFiliereFilter}
+                            onValueChange={setSelectedFiliereFilter}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Toutes filières" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Toutes filières</SelectItem>
+                              {directoryFilieres.map((filiere) => (
+                                <SelectItem key={filiere.id} value={filiere.id}>
+                                  {decodeHtmlEntities(filiere.name)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                         <div className="space-y-2">
                           <Label>Secteur</Label>
                           <Select
@@ -3625,6 +4476,25 @@ const MembersContent = () => {
                             </SelectContent>
                           </Select>
                         </div>
+                        <div className="space-y-2">
+                          <Label>Activité</Label>
+                          <Select
+                            value={selectedActivitiesFilter.length > 0 ? selectedActivitiesFilter[0] : "all"}
+                            onValueChange={(value) => setSelectedActivitiesFilter(value === "all" ? [] : [value])}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Toutes activités" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Toutes activités</SelectItem>
+                              {directoryActivites.map((activite) => (
+                                <SelectItem key={activite.id} value={activite.id}>
+                                  {decodeHtmlEntities(activite.name)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                         <div className="flex gap-3 pt-4">
                           <Button
                             variant="outline"
@@ -3646,13 +4516,100 @@ const MembersContent = () => {
                 </div>
               </div>
 
+              {/* Chips de filtres actifs - Phase 3 */}
+              {hasActiveFilters && (
+                <div className="bg-gray-50 rounded-lg p-4 mb-6 animate-fade-in-up">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Filter className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm font-semibold text-gray-700">Filtres actifs</span>
+                    <Badge variant="outline" className="ml-1">
+                      {[
+                        searchTerm !== "",
+                        selectedSector !== "all",
+                        selectedRegion !== "all",
+                        selectedFiliereFilter !== "all",
+                        selectedActivitiesFilter.length > 0,
+                      ].filter(Boolean).length}
+                    </Badge>
+                  </div>
+                  {/* Chips scrollables horizontalement */}
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    {searchTerm !== "" && (
+                      <Badge
+                        variant="outline"
+                        className="bg-white border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white cursor-pointer flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 transition-colors"
+                        onClick={() => setSearchTerm("")}
+                      >
+                        <Search className="h-3 w-3" />
+                        {searchTerm}
+                        <X className="h-3 w-3" />
+                      </Badge>
+                    )}
+                    {selectedFiliereFilter !== "all" && (
+                      <Badge
+                        variant="outline"
+                        className="bg-white border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white cursor-pointer flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 transition-colors"
+                        onClick={() => setSelectedFiliereFilter("all")}
+                      >
+                        <Briefcase className="h-3 w-3" />
+                        {directoryFilieres.find(f => f.id === selectedFiliereFilter)?.name || "Filière"}
+                        <X className="h-3 w-3" />
+                      </Badge>
+                    )}
+                    {selectedSector !== "all" && (
+                      <Badge
+                        variant="outline"
+                        className="bg-white border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white cursor-pointer flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 transition-colors"
+                        onClick={() => setSelectedSector("all")}
+                      >
+                        <Briefcase className="h-3 w-3" />
+                        {selectedSector}
+                        <X className="h-3 w-3" />
+                      </Badge>
+                    )}
+                    {selectedRegion !== "all" && (
+                      <Badge
+                        variant="outline"
+                        className="bg-white border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white cursor-pointer flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 transition-colors"
+                        onClick={() => setSelectedRegion("all")}
+                      >
+                        <MapPin className="h-3 w-3" />
+                        {selectedRegion}
+                        <X className="h-3 w-3" />
+                      </Badge>
+                    )}
+                    {selectedActivitiesFilter.length > 0 && (
+                      <Badge
+                        variant="outline"
+                        className="bg-white border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white cursor-pointer flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 transition-colors"
+                        onClick={() => setSelectedActivitiesFilter([])}
+                      >
+                        <Target className="h-3 w-3" />
+                        {directoryActivites.find(a => a.id === selectedActivitiesFilter[0])?.name || "Activité"}
+                        <X className="h-3 w-3" />
+                      </Badge>
+                    )}
+                    {/* Bouton réinitialiser tout */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={resetFilters}
+                      className="text-cpu-orange border-cpu-orange hover:bg-cpu-orange hover:text-white whitespace-nowrap transition-colors"
+                    >
+                      <RotateCcw className="h-3 w-3 mr-1" />
+                      Tout réinitialiser
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* All Members Grid */}
               <div className="animate-fade-in-up animate-delay-300">
                 {/* Header avec titre, compteur et contrôles */}
                 <div className="flex flex-col gap-4 mb-6">
                   <div className="flex items-center justify-between flex-wrap gap-4">
                     <div className="flex items-center gap-4">
-                      <h2 className="text-3xl font-bold text-[#221F1F]">
+                      <h2 className="text-3xl font-bold text-slate-800">
                         {(() => {
                           const tagParam = searchParams.get("tag");
                           if (tagParam) {
@@ -3673,7 +4630,7 @@ const MembersContent = () => {
                             <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">
                               Résultats
                             </span>
-                            <span className="text-lg font-bold text-[#221F1F]">
+                            <span className="text-lg font-bold text-slate-800">
                               {sortedMembers.length}{" "}
                               <span className="text-sm font-normal text-gray-600">
                                 membre{sortedMembers.length > 1 ? "s" : ""}
@@ -3709,17 +4666,36 @@ const MembersContent = () => {
                           <List className="h-4 w-4" />
                         </button>
                       </div>
+                      {/* Select résultats par page */}
+                      <Select 
+                        value={membersPerPage >= 9999 ? 'all' : String(membersPerPage)} 
+                        onValueChange={(v) => {
+                          setMembersPerPage(v === 'all' ? 9999 : Number(v));
+                          setCurrentPage(1);
+                        }}
+                      >
+                        <SelectTrigger className="w-[140px] border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                          <SelectValue placeholder="Par page" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="9">9 par page</SelectItem>
+                          <SelectItem value="18">18 par page</SelectItem>
+                          <SelectItem value="36">36 par page</SelectItem>
+                          <SelectItem value="all">Tout afficher</SelectItem>
+                        </SelectContent>
+                      </Select>
                       {/* Select de tri */}
                       <Select value={sortOrder} onValueChange={setSortOrder}>
-                        <SelectTrigger className="w-[170px] border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                        <SelectTrigger className="w-[180px] border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
                           <SelectValue placeholder="Trier par" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="random">Aléatoire</SelectItem>
-                          <SelectItem value="alphabetical">
-                            Alphabétique
-                          </SelectItem>
-                          <SelectItem value="sector">Secteur</SelectItem>
+                          <SelectItem value="alphabetical">Alphabétique (A-Z)</SelectItem>
+                          <SelectItem value="alphabetical-desc">Alphabétique (Z-A)</SelectItem>
+                          <SelectItem value="recent">Plus récents</SelectItem>
+                          <SelectItem value="sector">Par secteur</SelectItem>
+                          <SelectItem value="region">Par région</SelectItem>
                         </SelectContent>
                       </Select>
                       {/* Boutons Export et Partage */}
@@ -3733,33 +4709,28 @@ const MembersContent = () => {
                         >
                           <Share2 className="h-4 w-4" />
                         </Button>
-                        <div className="relative group">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="border-gray-300 hover:bg-gray-50 group"
-                            title="Exporter les résultats"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                          {/* Menu déroulant pour CSV/PDF */}
-                          <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[140px]">
-                            <button
-                              onClick={exportToCSV}
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-t-md flex items-center gap-2 transition-colors cursor-pointer"
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-gray-300 hover:bg-gray-50"
+                              title="Exporter les résultats"
                             >
-                              <Download className="h-3 w-3" />
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-[160px]">
+                            <DropdownMenuItem onClick={exportToCSV} className="cursor-pointer">
+                              <Download className="h-4 w-4 mr-2" />
                               Exporter CSV
-                            </button>
-                            <button
-                              onClick={exportToPDF}
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-b-md flex items-center gap-2 transition-colors cursor-pointer"
-                            >
-                              <Download className="h-3 w-3" />
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={exportToPDF} className="cursor-pointer">
+                              <Download className="h-4 w-4 mr-2" />
                               Exporter PDF
-                            </button>
-                          </div>
-                        </div>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   </div>
@@ -3775,7 +4746,7 @@ const MembersContent = () => {
                         {searchTerm !== "" && (
                           <Badge
                             variant="outline"
-                            className="bg-white border-gray-300 text-[#221F1F] hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
+                            className="bg-white border-gray-300 text-slate-800 hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
                             onClick={() => setSearchTerm("")}
                           >
                             Recherche: "{searchTerm}"
@@ -3786,7 +4757,7 @@ const MembersContent = () => {
                         {selectedSector !== "all" && (
                           <Badge
                             variant="outline"
-                            className="bg-white border-gray-300 text-[#221F1F] hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
+                            className="bg-white border-gray-300 text-slate-800 hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
                             onClick={() => setSelectedSector("all")}
                           >
                             Secteur: {selectedSector}
@@ -3797,7 +4768,7 @@ const MembersContent = () => {
                         {selectedRegion !== "all" && (
                           <Badge
                             variant="outline"
-                            className="bg-white border-gray-300 text-[#221F1F] hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
+                            className="bg-white border-gray-300 text-slate-800 hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
                             onClick={() => setSelectedRegion("all")}
                           >
                             Région: {selectedRegion}
@@ -3808,7 +4779,7 @@ const MembersContent = () => {
                         {searchParams.get("tag") && (
                           <Badge
                             variant="outline"
-                            className="bg-white border-gray-300 text-[#221F1F] hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
+                            className="bg-white border-gray-300 text-slate-800 hover:bg-gray-50 cursor-pointer flex items-center gap-1.5"
                             onClick={() => {
                               window.history.pushState({}, "", "/membres");
                               setSelectedSector("all");
@@ -3834,7 +4805,12 @@ const MembersContent = () => {
                 </div>
                 {/* Vue Grille */}
                 {viewMode === "grid" ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                  <motion.div 
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
                     {isLoadingMembers ? (
                       Array.from({ length: membersPerPage }).map(
                         (_, index) => (
@@ -3842,22 +4818,26 @@ const MembersContent = () => {
                         )
                       )
                     ) : (
-                      paginatedMembers.map((member, index) => (
-                          <div
+                      <AnimatePresence mode="wait">
+                        {paginatedMembers.map((member, index) => (
+                          <motion.div
                             key={member.id}
-                            className={`member-card group border border-gray-200 rounded-2xl transition-all duration-300 bg-white grid grid-rows-[auto_auto_auto_auto_auto_auto] animate-fade-in-up hover:shadow-md hover:border-cpu-green/30 cursor-pointer relative overflow-hidden`}
-                            style={{
-                              animationDelay: `${0.4 + index * 0.1}s`,
-                              opacity: 0,
-                            }}
+                            variants={cardVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            whileHover="hover"
+                            layout
+                            className={`member-card group border border-gray-200 rounded-2xl transition-all duration-500 bg-white grid grid-rows-[auto_auto_auto_auto_auto_auto] hover:shadow-2xl hover:shadow-cpu-green/10 hover:border-cpu-green cursor-pointer relative overflow-hidden`}
+                            onClick={() => openFocusMode(member)}
                           >
                             {/* Header avec icône, nom et localisation - ROW 1 */}
-                            <div className="p-6 pb-4 min-h-[140px] flex flex-col">
-                              <div className="flex items-start gap-4 mb-3">
+                            <div className="p-4 sm:p-6 pb-3 sm:pb-4 flex flex-col">
+                              <div className="flex items-start gap-3 sm:gap-4 mb-3">
                                 {/* Icône sectorielle avec animation */}
                                 <div className="flex-shrink-0">
-                                  <div className="w-16 h-16 rounded-xl bg-cpu-green/10 flex items-center justify-center group-hover:bg-cpu-green/20 transition-all duration-300 group-hover:rotate-6">
-                                    <div className="scale-75 text-cpu-green">
+                                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-cpu-green/10 flex items-center justify-center group-hover:bg-cpu-green transition-all duration-500 group-hover:rotate-12 group-hover:scale-110 shadow-sm group-hover:shadow-lg group-hover:shadow-cpu-green/20">
+                                    <div className="scale-75 text-cpu-green group-hover:text-white transition-colors duration-500">
                                       {getMemberIcon(member)}
                                     </div>
                                   </div>
@@ -3865,11 +4845,31 @@ const MembersContent = () => {
 
                                 {/* Nom et localisation */}
                                 <div className="flex-1 min-w-0">
-                                  <h3 className="text-xl font-bold text-[#221F1F] mb-2 line-clamp-2 min-h-[56px] group-hover:text-cpu-green transition-colors">
-                                    {decodeHtmlEntities(member.name)}
-                                  </h3>
-                                  <div className="flex items-start text-sm text-[#221F1F] mb-1">
-                                    <MapPin className="h-4 w-4 mr-1.5 flex-shrink-0 text-cpu-orange mt-0.5" />
+                                  <div className="flex items-start justify-between gap-2 mb-2">
+                                    <h3 className="text-xl font-bold text-slate-800 line-clamp-3 group-hover:text-primary transition-colors duration-300 flex-1 leading-tight">
+                                      {decodeHtmlEntities(member.name)}
+                                    </h3>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="flex-shrink-0 h-8 w-8"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleFavorite(member.id);
+                                      }}
+                                      title={favorites.has(member.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+                                    >
+                                      <Bookmark
+                                        className={`h-4 w-4 transition-colors ${
+                                          favorites.has(member.id)
+                                            ? 'fill-cpu-orange text-cpu-orange'
+                                            : 'text-gray-400 hover:text-cpu-orange'
+                                        }`}
+                                      />
+                                    </Button>
+                                  </div>
+                                  <div className="flex items-start text-sm text-slate-600 mb-1 font-medium">
+                                    <MapPin className="h-4 w-4 mr-1.5 flex-shrink-0 text-cpu-orange mt-0.5 group-hover:scale-110 transition-transform duration-300" />
                                     <span className="break-words">{decodeHtmlEntities(member.fullAddress || member.region)}</span>
                                   </div>
                                 </div>
@@ -3877,11 +4877,11 @@ const MembersContent = () => {
                             </div>
 
                             {/* ROW 2 */}
-                            <div className="px-6 pb-4 min-h-[110px]">
-                              <div className="grid grid-cols-2 gap-3">
+                            <div className="px-4 sm:px-6 pb-3 sm:pb-4 min-h-[100px] sm:min-h-[110px]">
+                              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                                 {/* Filière */}
-                                <div className="border border-gray-200 rounded-lg p-3 bg-gradient-to-br from-gray-50/50 to-gray-100/30 group-hover:border-cpu-green/30 transition-all">
-                                  <div className="text-xs text-gray-500 font-medium mb-1">Filière</div>
+                                <div className="border-2 border-gray-200 rounded-lg p-2 sm:p-3 bg-gradient-to-br from-gray-50/50 to-gray-100/30 group-hover:border-cpu-green group-hover:shadow-md group-hover:bg-cpu-green/5 transition-all duration-300">
+                                  <div className="text-xs font-medium text-slate-500 mb-1">Filière</div>
                                   {(() => {
                                     let filiereName = '';
                                     if (member.filiereId && secteursApi && Array.isArray(secteursApi)) {
@@ -3896,7 +4896,7 @@ const MembersContent = () => {
                                       }
                                     }
                                     return (
-                                      <div className="text-sm font-semibold text-[#221F1F] line-clamp-2 min-h-[40px]">
+                                      <div className="text-sm text-slate-600 line-clamp-2 min-h-[36px] sm:min-h-[40px] group-hover:text-primary transition-colors">
                                         {decodeHtmlEntities(filiereName || member.sector)}
                                       </div>
                                     );
@@ -3904,8 +4904,8 @@ const MembersContent = () => {
                                 </div>
 
                                 {/* Sous-filière */}
-                                <div className="border border-gray-200 rounded-lg p-3 bg-gradient-to-br from-gray-50/50 to-gray-100/30 group-hover:border-cpu-green/30 transition-all">
-                                  <div className="text-xs text-gray-500 font-medium mb-1">Sous Filière</div>
+                                <div className="border-2 border-gray-200 rounded-lg p-2 sm:p-3 bg-gradient-to-br from-gray-50/50 to-gray-100/30 group-hover:border-cpu-green group-hover:shadow-md group-hover:bg-cpu-green/5 transition-all duration-300">
+                                  <div className="text-xs font-medium text-slate-500 mb-1">Sous Filière</div>
                                   {(() => {
                                     let sousFiliereName = '';
                                     if (member.sousFiliereId && secteursApi && Array.isArray(secteursApi)) {
@@ -3924,7 +4924,7 @@ const MembersContent = () => {
                                       }
                                     }
                                     return (
-                                      <div className="text-sm font-semibold text-[#221F1F] line-clamp-2 min-h-[40px]">
+                                      <div className="text-sm text-slate-600 line-clamp-2 min-h-[36px] sm:min-h-[40px] group-hover:text-primary transition-colors">
                                         {decodeHtmlEntities(sousFiliereName) || '-'}
                                       </div>
                                     );
@@ -3934,10 +4934,10 @@ const MembersContent = () => {
                             </div>
 
                             {/* Section Activités - ROW 3 */}
-                            <div className="px-6 pb-4 min-h-[100px]">
+                            <div className="px-4 sm:px-6 pb-3 sm:pb-4 min-h-[90px] sm:min-h-[100px]">
                               <div className="flex items-center gap-2 mb-2">
-                                <Briefcase className="h-4 w-4 text-gray-500" />
-                                <span className="text-xs text-gray-500 font-medium">Activités</span>
+                                <Briefcase className="h-4 w-4 text-cpu-green group-hover:scale-110 transition-transform duration-300" />
+                                <span className="text-xs font-medium text-slate-500">Activités</span>
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 {(() => {
@@ -3971,13 +4971,13 @@ const MembersContent = () => {
                                       {visibleActivites.map((activite, idx) => (
                                         <Badge 
                                           key={idx} 
-                                          className="text-xs bg-cpu-green text-white font-medium px-3 py-1.5 rounded-md hover:bg-white hover:text-cpu-green hover:border-cpu-green border-2 border-cpu-green transition-all"
+                                          className="text-xs bg-white/95 text-slate-900 font-medium px-3 py-1.5 rounded-md hover:bg-slate-100 border border-slate-200 transition-all duration-300"
                                         >
                                           {decodeHtmlEntities(activite)}
                                         </Badge>
                                       ))}
                                       {!isExpanded && remainingCount > 0 && (
-                                        <Badge className="text-xs bg-cpu-green text-white font-medium px-3 py-1.5 rounded-md hover:bg-white hover:text-cpu-green hover:border-cpu-green border-2 border-cpu-green transition-all">
+                                        <Badge className="text-xs bg-white/95 text-slate-900 font-medium px-3 py-1.5 rounded-md hover:bg-slate-100 border border-slate-200 transition-all">
                                           +{remainingCount}
                                         </Badge>
                                       )}
@@ -3992,10 +4992,10 @@ const MembersContent = () => {
                             {/* Section À propos - ROW 4 */}
                             <div className="px-6 pb-4">
                               <div className="flex items-center gap-2 mb-2">
-                                <Users className="h-4 w-4 text-gray-500" />
-                                <span className="text-xs text-gray-500 font-medium">À propos</span>
+                                <Users className="h-4 w-4 text-slate-500" />
+                                <span className="text-xs font-medium text-slate-500">À propos</span>
                               </div>
-                              <p className={`text-sm text-[#221F1F] ${expandedMembers.has(member.id) ? '' : 'line-clamp-2'}`}
+                              <p className={`text-sm text-slate-600 ${expandedMembers.has(member.id) ? '' : 'line-clamp-2'}`}
                                  style={{ lineHeight: '1.5rem' }}>
                                 {decodeHtmlEntities(member.description)}
                               </p>
@@ -4096,48 +5096,68 @@ const MembersContent = () => {
                                 </>
                               )}
                             </div>
-                          </div>
-                        ))
-                      )}
-                  </div>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    )}
+                  </motion.div>
                 ) : (
                   /* Vue Liste */
-                  <div className="space-y-4">
+                  <motion.div 
+                    className="space-y-4"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
                     {isLoadingMembers ? (
                       Array.from({ length: membersPerPage }).map(
                         (_, index) => (
                             <div
                               key={`skeleton-list-${index}`}
-                              className="border border-gray-200 rounded-lg bg-white flex flex-row animate-pulse"
+                              className="border border-gray-200 rounded-lg bg-white flex flex-row"
                             >
-                              <div className="w-32 md:w-40 h-32 md:h-40 bg-gray-200"></div>
+                              <div className="w-32 md:w-40 h-32 md:h-40 bg-gray-200 relative overflow-hidden">
+                                <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                              </div>
                               <div className="p-4 md:p-6 flex-1 space-y-3">
-                                <div className="h-5 bg-gray-200 rounded w-1/3"></div>
-                                <div className="h-4 bg-gray-200 rounded w-full"></div>
-                                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                                <div className="h-5 bg-gray-200 rounded w-1/3 relative overflow-hidden">
+                                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                                </div>
+                                <div className="h-4 bg-gray-200 rounded w-full relative overflow-hidden">
+                                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                                </div>
+                                <div className="h-4 bg-gray-200 rounded w-2/3 relative overflow-hidden">
+                                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                                </div>
+                                <div className="h-4 bg-gray-200 rounded w-1/4 relative overflow-hidden">
+                                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                                </div>
                               </div>
                             </div>
                           )
                         )
                       ) : (
-                        paginatedMembers.map((member, index) => (
-                          <div
-                            key={member.id}
-                            className={`member-card group border-2 border-gray-200 rounded-xl transition-all duration-300 bg-white flex flex-col md:flex-row animate-fade-in-up hover:shadow-md hover:border-cpu-orange cursor-pointer relative overflow-hidden`}
-                            style={{
-                              animationDelay: `${0.4 + index * 0.05}s`,
-                              opacity: 0,
-                            }}
-                          >
+                        <AnimatePresence mode="wait">
+                          {paginatedMembers.map((member, index) => (
+                            <motion.div
+                              key={member.id}
+                              variants={cardVariants}
+                              initial="hidden"
+                              animate="visible"
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              whileHover="hover"
+                              layout
+                              className={`member-card group border-2 border-gray-200 rounded-xl transition-all duration-500 bg-white flex flex-col md:flex-row hover:shadow-2xl hover:shadow-cpu-orange/10 hover:border-cpu-orange cursor-pointer relative overflow-hidden`}
+                              onClick={() => openFocusMode(member)}
+                            >
                             {/* Barre latérale orange */}
-                            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-cpu-orange group-hover:w-2 transition-all duration-300"></div>
+                            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-cpu-orange group-hover:w-3 transition-all duration-500 shadow-lg shadow-cpu-orange/30"></div>
 
                             {/* Image avec icône */}
-                            <div className="member-image bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 w-full md:w-36 h-36 md:h-auto flex-shrink-0 flex items-center justify-center overflow-hidden relative group/image">
+                            <div className="member-image bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 w-full md:w-40 lg:w-44 h-32 sm:h-40 md:h-auto flex-shrink-0 flex items-center justify-center overflow-hidden relative group/image">
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-[85%] h-[85%] rounded-2xl bg-cpu-orange/10 flex items-center justify-center group-hover/image:bg-cpu-orange/20 transition-all duration-300 group-hover/image:scale-105 group-hover/image:rotate-6">
-                                  <div className="scale-90 text-cpu-orange">
+                                <div className="w-[75%] sm:w-[85%] h-[75%] sm:h-[85%] rounded-2xl bg-cpu-orange/10 flex items-center justify-center group-hover/image:bg-cpu-orange transition-all duration-500 group-hover/image:scale-110 group-hover/image:rotate-12 shadow-md group-hover/image:shadow-xl group-hover/image:shadow-cpu-orange/30">
+                                  <div className="scale-75 sm:scale-90 text-cpu-orange group-hover/image:text-white transition-colors duration-500">
                                     {getMemberIcon(member)}
                                   </div>
                                 </div>
@@ -4145,38 +5165,58 @@ const MembersContent = () => {
                             </div>
 
                             {/* Contenu principal */}
-                            <div className="flex-1 p-3 md:p-4 flex flex-col min-w-0">
+                            <div className="flex-1 p-3 sm:p-4 md:p-5 flex flex-col min-w-0">
                               {/* Header avec nom et badges */}
-                              <div className="mb-2">
-                                <div className="flex items-start justify-between gap-3 mb-2">
-                                  <h3 className="text-lg md:text-xl font-bold text-[#221F1F] group-hover:text-cpu-orange transition-colors line-clamp-2">
+                              <div className="mb-2 sm:mb-3">
+                                <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2">
+                                  <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary transition-colors duration-300 line-clamp-2 flex-1 leading-tight">
                                     {decodeHtmlEntities(member.name)}
                                   </h3>
-                                  {member.interventionScope && (
-                                    <Badge className={`text-xs font-medium px-2.5 py-1 whitespace-nowrap ${
-                                      member.interventionScope === 'national' 
-                                        ? 'bg-cpu-orange/10 text-cpu-orange border-cpu-orange/30' 
-                                        : member.interventionScope === 'regions_specifiques'
-                                        ? 'bg-cpu-orange/20 text-cpu-orange border-cpu-orange/40'
-                                        : 'bg-gray-100 text-gray-700 border-gray-300'
-                                    }`}>
-                                      {member.interventionScope === 'national' && '🌍 National'}
-                                      {member.interventionScope === 'regions_specifiques' && '📍 Régional'}
-                                      {member.interventionScope === 'locale' && '🏘️ Local'}
-                                    </Badge>
-                                  )}
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleFavorite(member.id);
+                                      }}
+                                      title={favorites.has(member.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+                                    >
+                                      <Bookmark
+                                        className={`h-4 w-4 transition-colors ${
+                                          favorites.has(member.id)
+                                            ? 'fill-cpu-orange text-cpu-orange'
+                                            : 'text-gray-400 hover:text-cpu-orange'
+                                        }`}
+                                      />
+                                    </Button>
+                                    {member.interventionScope && (
+                                      <Badge className={`text-xs font-medium px-2.5 py-1 whitespace-nowrap ${
+                                        member.interventionScope === 'national' 
+                                          ? 'bg-cpu-orange/10 text-cpu-orange border-cpu-orange/30' 
+                                          : member.interventionScope === 'regions_specifiques'
+                                          ? 'bg-cpu-orange/20 text-cpu-orange border-cpu-orange/40'
+                                          : 'bg-gray-100 text-gray-700 border-gray-300'
+                                      }`}>
+                                        {member.interventionScope === 'national' && '🌍 National'}
+                                        {member.interventionScope === 'regions_specifiques' && '📍 Régional'}
+                                        {member.interventionScope === 'locale' && '🏘️ Local'}
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
 
                                 {/* Localisation */}
-                                <div className="flex items-start text-sm text-[#221F1F] mb-2">
-                                  <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-cpu-orange mt-0.5" />
+                                <div className="flex items-start text-sm text-slate-600 mb-2 font-medium">
+                                  <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-cpu-orange mt-0.5 group-hover:scale-110 transition-transform duration-300" />
                                   <span className="break-words">{member.fullAddress || member.region}</span>
                                 </div>
 
                                 {/* Filière et Sous-filière */}
-                                <div className="grid grid-cols-2 gap-2 mb-2">
-                                  <div className="rounded-lg p-2.5 bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 transition-all">
-                                    <div className="text-xs text-cpu-orange font-medium mb-1">Filière</div>
+                                <div className="grid grid-cols-2 gap-2 mb-2 sm:mb-3">
+                                  <div className="rounded-lg p-2 sm:p-2.5 bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 border-2 border-transparent group-hover:border-cpu-orange/30 group-hover:shadow-md transition-all duration-300">
+                                    <div className="text-xs font-medium text-slate-500 mb-1">Filière</div>
                                     {(() => {
                                       let filiereName = '';
                                       if (member.filiereId && secteursApi && Array.isArray(secteursApi)) {
@@ -4191,15 +5231,15 @@ const MembersContent = () => {
                                         }
                                       }
                                       return (
-                                        <div className="text-sm font-semibold text-[#221F1F] line-clamp-1">
+                                        <div className="text-sm text-slate-600 line-clamp-1 group-hover:text-primary transition-colors">
                                           {filiereName || member.sector}
                                         </div>
                                       );
                                     })()}
                                   </div>
 
-                                  <div className="rounded-lg p-2.5 bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 transition-all">
-                                    <div className="text-xs text-cpu-orange font-medium mb-1">Sous Filière</div>
+                                  <div className="rounded-lg p-2 sm:p-2.5 bg-gradient-to-br from-cpu-orange/5 to-cpu-orange/10 border-2 border-transparent group-hover:border-cpu-orange/30 group-hover:shadow-md transition-all duration-300">
+                                    <div className="text-xs font-medium text-slate-500 mb-1">Sous Filière</div>
                                     {(() => {
                                       let sousFiliereName = '';
                                       if (member.sousFiliereId && secteursApi && Array.isArray(secteursApi)) {
@@ -4218,7 +5258,7 @@ const MembersContent = () => {
                                         }
                                       }
                                       return (
-                                        <div className="text-sm font-semibold text-[#221F1F] line-clamp-1">
+                                        <div className="text-sm text-slate-600 line-clamp-1 group-hover:text-primary transition-colors">
                                           {sousFiliereName || '-'}
                                         </div>
                                       );
@@ -4229,8 +5269,8 @@ const MembersContent = () => {
                                 {/* Activités */}
                                 <div className="mb-2">
                                   <div className="flex items-center gap-2 mb-2">
-                                    <Briefcase className="h-3.5 w-3.5 text-cpu-orange" />
-                                    <span className="text-xs text-cpu-orange font-semibold">Activités</span>
+                                    <Briefcase className="h-4 w-4 text-cpu-orange group-hover:scale-110 transition-transform duration-300" />
+                                    <span className="text-xs font-medium text-slate-500">Activités</span>
                                   </div>
                                   <div className="flex flex-wrap gap-2">
                                     {(() => {
@@ -4264,13 +5304,13 @@ const MembersContent = () => {
                                           {visibleActivites.map((activite, idx) => (
                                             <Badge 
                                               key={idx} 
-                                              className="text-xs bg-cpu-orange text-white font-medium px-2.5 py-1 rounded-md hover:bg-white hover:text-cpu-orange hover:border-cpu-orange border-2 border-cpu-orange transition-all"
+                                              className="text-xs bg-white/95 text-slate-900 font-medium px-2.5 py-1 rounded-md hover:bg-slate-100 border border-slate-200 transition-all duration-300"
                                             >
                                               {activite}
                                             </Badge>
                                           ))}
                                           {!isExpanded && remainingCount > 0 && (
-                                            <Badge className="text-xs bg-cpu-orange text-white font-medium px-2.5 py-1 rounded-md hover:bg-white hover:text-cpu-orange hover:border-cpu-orange border-2 border-cpu-orange transition-all">
+                                            <Badge className="text-xs bg-white/95 text-slate-900 font-medium px-2.5 py-1 rounded-md hover:bg-slate-100 border border-slate-200 transition-all duration-300">
                                               +{remainingCount}
                                             </Badge>
                                           )}
@@ -4286,10 +5326,10 @@ const MembersContent = () => {
                               {/* Description */}
                               <div className="mb-2">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <Users className="h-3.5 w-3.5 text-cpu-orange" />
-                                  <span className="text-xs text-cpu-orange font-semibold">À propos</span>
+                                  <Users className="h-4 w-4 text-slate-500" />
+                                  <span className="text-xs font-medium text-slate-500">À propos</span>
                                 </div>
-                                <p className={`text-sm text-[#221F1F] leading-relaxed ${expandedMembers.has(member.id) ? '' : 'line-clamp-2'}`}>
+                                <p className={`text-sm text-slate-600 leading-relaxed ${expandedMembers.has(member.id) ? '' : 'line-clamp-2'}`}>
                                   {decodeHtmlEntities(member.description)}
                                 </p>
                               </div>
@@ -4390,19 +5430,73 @@ const MembersContent = () => {
                                 )}
                               </div>
                             </div>
-                          </div>
-                        ))
-                      )}
-                  </div>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    )}
+                  </motion.div>
                 )}
 
+                {/* Phase 9: État vide amélioré */}
                 {sortedMembers.length === 0 && (
-                  <div className="text-center py-12 border border-gray-200 rounded-lg bg-gray-50 animate-fade-in-up">
-                    <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 font-medium">
-                      Aucun membre trouvé avec ces critères
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center py-16 border border-gray-200 rounded-2xl bg-gradient-to-br from-gray-50 to-white"
+                  >
+                    <motion.div
+                      animate={{ 
+                        y: [0, -10, 0],
+                        rotate: [0, 5, -5, 0]
+                      }}
+                      transition={{ 
+                        repeat: Infinity, 
+                        duration: 3,
+                        ease: "easeInOut"
+                      }}
+                      className="inline-block mb-6"
+                    >
+                      <div className="w-24 h-24 mx-auto rounded-2xl bg-gradient-to-br from-cpu-green/10 to-cpu-orange/10 flex items-center justify-center">
+                        <Search className="h-12 w-12 text-gray-400" />
+                      </div>
+                    </motion.div>
+                    
+                    <h3 className="text-2xl font-bold text-slate-800 mb-3">
+                      Aucun membre trouvé
+                    </h3>
+                    <p className="text-slate-600 mb-6 max-w-md mx-auto">
+                      {searchTerm 
+                        ? `Aucun résultat pour "${searchTerm}". Essayez avec d'autres mots-clés ou filtres.`
+                        : "Essayez de modifier vos critères de recherche ou de réinitialiser les filtres."
+                      }
                     </p>
-                  </div>
+                    
+                    {searchSuggestions.length > 0 && (
+                      <div className="mb-6">
+                        <p className="text-sm text-slate-500 mb-3">Suggestions :</p>
+                        <div className="flex flex-wrap gap-2 justify-center">
+                          {searchSuggestions.slice(0, 4).map((suggestion, idx) => (
+                            <Badge
+                              key={idx}
+                              variant="outline"
+                              className="cursor-pointer hover:bg-cpu-green/10 hover:border-cpu-green transition-colors"
+                              onClick={() => setSearchTerm(suggestion)}
+                            >
+                              {suggestion}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <Button
+                      onClick={resetFilters}
+                      className="bg-cpu-green hover:bg-cpu-green/90 text-white"
+                    >
+                      <RotateCcw className="h-4 w-4 mr-2" />
+                      Réinitialiser les filtres
+                    </Button>
+                  </motion.div>
                 )}
 
                 {/* Pagination */}
