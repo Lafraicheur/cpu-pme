@@ -4686,7 +4686,7 @@ const MembersContent = () => {
                       </Select>
                       {/* Select de tri */}
                       <Select value={sortOrder} onValueChange={setSortOrder}>
-                        <SelectTrigger className="w-[180px] border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
+                        <SelectTrigger className="w-[150px] border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-cpu-orange">
                           <SelectValue placeholder="Trier par" />
                         </SelectTrigger>
                         <SelectContent>
@@ -4699,7 +4699,7 @@ const MembersContent = () => {
                         </SelectContent>
                       </Select>
                       {/* Boutons Export et Partage */}
-                      <div className="flex items-center gap-2">
+                      {/* <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
                           size="sm"
@@ -4731,7 +4731,7 @@ const MembersContent = () => {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 
