@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { QueryProvider } from "@/providers/query-provider";
+import { CookieConsentProvider, CookieBanner } from "@/components/cookie";
 import FontLoader from "@/components/FontLoader";
 
 export const metadata: Metadata = {
@@ -34,6 +35,7 @@ export default function RootLayout({
       } as React.CSSProperties}>
         <FontLoader />
         <QueryProvider>
+        <CookieConsentProvider>
         <div className="min-h-screen bg-white flex flex-col">
           <Header />
           <main className="flex-1">
@@ -41,6 +43,8 @@ export default function RootLayout({
           </main>
           <Footer />
         </div>
+        <CookieBanner />
+        </CookieConsentProvider>
         </QueryProvider>
       </body>
     </html>

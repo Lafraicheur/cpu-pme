@@ -1,9 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Mail, Phone, MapPin } from "lucide-react";
+import { useCookieConsentContext } from "@/components/cookie";
 
 export default function Footer() {
+  const { resetConsent } = useCookieConsentContext();
+
   return (
     <footer className="bg-[#221F1F] text-white">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
@@ -246,19 +250,25 @@ export default function Footer() {
               © {new Date().getFullYear()} CPU-PME.CI - Confédération Patronale Unique des
               PME de Côte d'Ivoire. Tous droits réservés.
             </p>
-            <div className="flex gap-6">
-              <a
-                href="#"
+            <div className="flex flex-wrap gap-4 sm:gap-6">
+              <Link
+                href="/politique-de-confidentialite"
                 className="font-inter text-sm text-gray-400 hover:text-[#F08223] transition-colors"
               >
                 Politique de confidentialité
-              </a>
+              </Link>
               <a
                 href="#"
                 className="font-inter text-sm text-gray-400 hover:text-[#F08223] transition-colors"
               >
                 Mentions légales
               </a>
+              <button
+                onClick={resetConsent}
+                className="font-inter text-sm text-gray-400 hover:text-[#F08223] transition-colors"
+              >
+                Gérer les cookies
+              </button>
             </div>
           </div>
         </div>
