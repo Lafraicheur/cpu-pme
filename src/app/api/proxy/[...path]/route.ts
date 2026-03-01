@@ -21,6 +21,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pat
     const segments = params?.path || [];
     const target = buildTargetUrl(segments, request.nextUrl.searchParams);
 
+    console.log('🔵 [PROXY] GET request to:', target);
+
     const upstream = await fetch(target, {
       method: 'GET',
       headers: { 'Accept': '*/*' },
@@ -29,6 +31,12 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pat
 
     if (!upstream.ok) {
       const text = await upstream.text().catch(() => '');
+      console.error('❌ [PROXY] GET upstream error:', {
+        target,
+        status: upstream.status,
+        statusText: upstream.statusText,
+        responseBody: text
+      });
       return NextResponse.json(
         { error: `API returned ${upstream.status}: ${upstream.statusText}`, body: safeJson(text) },
         { status: upstream.status }
@@ -39,7 +47,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pat
     const data = await upstream.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error('❌ [PROXY CATCH-ALL] GET error:', error);
+    console.error('❌ [PROXY CATCH-ALL] GET error:', {
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorType: error?.constructor?.name,
+      errorStack: error instanceof Error ? error.stack : undefined
+    });
     return NextResponse.json({ error: 'Failed to proxy request' }, { status: 500 });
   }
 }
@@ -62,7 +74,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ pa
     let payload = safeJson(text);
     return NextResponse.json(payload, { status: upstream.status });
   } catch (error) {
-    console.error('❌ [PROXY CATCH-ALL] POST error:', error);
+    console.error('❌ [PROXY CATCH-ALL] POST error:', {
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorType: error?.constructor?.name
+    });
     return NextResponse.json({ error: 'Failed to proxy request' }, { status: 500 });
   }
 }
@@ -85,7 +100,10 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ p
     let payload = safeJson(text);
     return NextResponse.json(payload, { status: upstream.status });
   } catch (error) {
-    console.error('❌ [PROXY CATCH-ALL] PATCH error:', error);
+    console.error('❌ [PROXY CATCH-ALL] PATCH error:', {
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorType: error?.constructor?.name
+    });
     return NextResponse.json({ error: 'Failed to proxy request' }, { status: 500 });
   }
 }
@@ -106,7 +124,10 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     let payload = safeJson(text);
     return NextResponse.json(payload, { status: upstream.status });
   } catch (error) {
-    console.error('❌ [PROXY CATCH-ALL] DELETE error:', error);
+    console.error('❌ [PROXY CATCH-ALL] DELETE error:', {
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorType: error?.constructor?.name
+    });
     return NextResponse.json({ error: 'Failed to proxy request' }, { status: 500 });
   }
 }

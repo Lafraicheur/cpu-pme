@@ -1,8 +1,9 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   Target,
   Eye,
@@ -11,15 +12,33 @@ import {
   Handshake,
   Trophy,
   History,
+  Grid3x3,
+  List,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Bookmark,
+  MapPin,
+  Phone,
+  Globe,
+  Mail,
+  Linkedin,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { usePartenairesForSiteWeb, useEquipeForSiteWeb } from "@/hooks/use-api";
 import { DynamicHeroBanner } from "@/components/DynamicHeroBanner";
+import { motion, AnimatePresence } from "framer-motion";
 
 function AProposContent() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") || "mission";
   const [activeTab, setActiveTab] = useState(initialTab);
+  
+  // États pour l'équipe
+  const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const membersPerPage = 12;
 
   // Utiliser les hooks pour récupérer les données
   const { data: partenaires = [], isLoading: isLoadingPartenaires } =
@@ -39,6 +58,56 @@ function AProposContent() {
     })
     .map(({ membre }) => membre);
 
+  // Pagination
+  const totalPages = Math.ceil(orderedEquipe.length / membersPerPage);
+  const startIndex = (currentPage - 1) * membersPerPage;
+  const endIndex = startIndex + membersPerPage;
+  const paginatedEquipe = orderedEquipe.slice(startIndex, endIndex);
+
+  // Navigation dans le drawer
+  const navigateMember = (direction: 'prev' | 'next') => {
+    if (!selectedMember) return;
+    
+    const currentIndex = paginatedEquipe.findIndex((m: any) => m.id === selectedMember.id);
+    let newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+    
+    // Boucler si on atteint les limites
+    if (newIndex < 0) newIndex = paginatedEquipe.length - 1;
+    if (newIndex >= paginatedEquipe.length) newIndex = 0;
+    
+    setSelectedMember(paginatedEquipe[newIndex]);
+  };
+
+  // Navigation clavier
+  useEffect(() => {
+    if (!selectedMember) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateMember('prev');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateMember('next');
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setSelectedMember(null);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedMember, paginatedEquipe]);
+
+  // Réinitialiser la page quand on change d'onglet
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === "equipe") {
+      setCurrentPage(1);
+      setSelectedMember(null);
+    }
+  };
+
   return (
     <>
       {/* Hero Section */}
@@ -53,7 +122,7 @@ function AProposContent() {
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
           <Tabs
             value={activeTab}
-            onValueChange={setActiveTab}
+            onValueChange={handleTabChange}
             className="w-full"
           >
             <div className="flex justify-center mb-12 sm:mb-16 px-4 sm:px-6">
@@ -637,19 +706,49 @@ function AProposContent() {
               {/* Direction */}
               <div>
                 <br />
-                <div className="flex items-center mb-6">
-                  <div
-                    className="p-3 rounded-full mr-4"
-                    style={{ backgroundColor: "rgba(240, 130, 35, 0.1)" }}
-                  >
-                    <Users
-                      className="h-8 w-8"
-                      style={{ color: "var(--color-primary)" }}
-                    />
+                <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+                  <div className="flex items-center">
+                    <div
+                      className="p-3 rounded-full mr-4"
+                      style={{ backgroundColor: "rgba(240, 130, 35, 0.1)" }}
+                    >
+                      <Users
+                        className="h-8 w-8"
+                        style={{ color: "var(--color-primary)" }}
+                      />
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-bold">
+                      Équipe Dirigeante
+                    </h2>
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-bold">
-                    Équipe Dirigeante
-                  </h2>
+
+                  {/* Toggle Vue Grille/Liste */}
+                  {!isLoadingEquipe && orderedEquipe.length > 0 && (
+                    <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+                      <button
+                        onClick={() => setViewMode("grid")}
+                        className={`flex items-center gap-2 px-4 py-2 rounded transition-all ${
+                          viewMode === "grid"
+                            ? "bg-white shadow-md text-gray-900"
+                            : "text-gray-600 hover:text-gray-900"
+                        }`}
+                      >
+                        <Grid3x3 className="h-4 w-4" />
+                        <span className="text-sm font-medium">Grille</span>
+                      </button>
+                      <button
+                        onClick={() => setViewMode("list")}
+                        className={`flex items-center gap-2 px-4 py-2 rounded transition-all ${
+                          viewMode === "list"
+                            ? "bg-white shadow-md text-gray-900"
+                            : "text-gray-600 hover:text-gray-900"
+                        }`}
+                      >
+                        <List className="h-4 w-4" />
+                        <span className="text-sm font-medium">Liste</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {isLoadingEquipe ? (
@@ -657,11 +756,14 @@ function AProposContent() {
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                   </div>
                 ) : orderedEquipe.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {orderedEquipe.map((membre) => (
+                  <>
+                    {/* Vue Grille */}
+                    {viewMode === "grid" && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {paginatedEquipe.map((membre) => (
                       <Card
                         key={membre.id}
-                        className="overflow-hidden border-0 transition-all duration-300 bg-white hover:shadow-lg"
+                        className="overflow-hidden border-0 transition-all duration-300 bg-white hover:shadow-lg flex flex-col"
                       >
                         <div className="h-64 relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
                           <img
@@ -674,7 +776,7 @@ function AProposContent() {
                           />
                         </div>
 
-                        <CardContent className="pt-6 pb-6">
+                        <CardContent className="pt-6 pb-6 flex flex-col flex-1">
                           <h3 className="text-lg font-bold mb-2 text-gray-900">
                             {membre.nom}
                           </h3>
@@ -685,7 +787,7 @@ function AProposContent() {
                             {membre.role}
                           </p>
                           <p
-                            className="text-sm leading-relaxed mb-4"
+                            className="text-sm leading-relaxed mb-4 line-clamp-2"
                             style={{ color: "var(--color-text-secondary)" }}
                           >
                             {membre.bio}
@@ -732,10 +834,140 @@ function AProposContent() {
                               )}
                             </div>
                           )}
+                          <button
+                            onClick={() => setSelectedMember(membre)}
+                            className="w-full mt-auto px-4 py-2 bg-cpu-green text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+                          >
+                            <Eye className="h-4 w-4" />
+                            Voir plus
+                          </button>
                         </CardContent>
                       </Card>
                     ))}
-                  </div>
+                      </div>
+                    )}
+
+                    {/* Vue Liste */}
+                    {viewMode === "list" && (
+                      <div className="space-y-4">
+                        {paginatedEquipe.map((membre) => (
+                          <Card
+                            key={membre.id}
+                            className="overflow-hidden border-0 transition-all duration-300 bg-white hover:shadow-lg"
+                          >
+                            <CardContent className="p-6">
+                              <div className="flex items-center gap-6">
+                                <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+                                  <img
+                                    src={membre.photo}
+                                    alt={membre.nom}
+                                    className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
+                                    onError={(e) => {
+                                      e.currentTarget.src = "/logo.png";
+                                    }}
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-lg font-bold mb-2 text-gray-900">
+                                    {membre.nom}
+                                  </h3>
+                                  <p
+                                    className="font-semibold mb-2 text-sm"
+                                    style={{ color: "var(--color-primary)" }}
+                                  >
+                                    {membre.role}
+                                  </p>
+                                  <p
+                                    className="text-sm leading-relaxed line-clamp-1"
+                                    style={{ color: "var(--color-text-secondary)" }}
+                                  >
+                                    {membre.bio}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => setSelectedMember(membre)}
+                                  className="flex-shrink-0 px-4 py-2 bg-cpu-green text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300 flex items-center gap-2 whitespace-nowrap cursor-pointer"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                  Voir plus
+                                </button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="mt-12 flex flex-col items-center gap-4">
+                        <div className="flex items-center gap-2 flex-wrap justify-center">
+                          <button
+                            onClick={() => setCurrentPage(1)}
+                            disabled={currentPage === 1}
+                            className="hidden sm:flex px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Première
+                          </button>
+                          <button
+                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </button>
+                          
+                          {/* Numéros de page */}
+                          <div className="flex gap-2">
+                            {[...Array(totalPages)].map((_, i) => {
+                              const page = i + 1;
+                              // Afficher max 5 pages autour de la page courante
+                              if (
+                                page === 1 ||
+                                page === totalPages ||
+                                (page >= currentPage - 1 && page <= currentPage + 1)
+                              ) {
+                                return (
+                                  <button
+                                    key={page}
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                                      currentPage === page
+                                        ? "bg-cpu-green text-white shadow-md"
+                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                    }`}
+                                  >
+                                    {page}
+                                  </button>
+                                );
+                              } else if (page === currentPage - 2 || page === currentPage + 2) {
+                                return <span key={page} className="px-2 text-gray-500">...</span>;
+                              }
+                              return null;
+                            })}
+                          </div>
+
+                          <button
+                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                            disabled={currentPage === totalPages}
+                            className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => setCurrentPage(totalPages)}
+                            disabled={currentPage === totalPages}
+                            className="hidden sm:flex px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Dernière
+                          </button>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          Page {currentPage} sur {totalPages} • {orderedEquipe.length} membre{orderedEquipe.length > 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="text-center py-12">
                     <p style={{ color: "var(--color-text-secondary)" }}>
@@ -745,6 +977,164 @@ function AProposContent() {
                 )}
               </div>
             </TabsContent>
+
+            {/* Drawer Détails Membre Glassmorphism */}
+            <AnimatePresence>
+              {selectedMember && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                  onClick={() => setSelectedMember(null)}
+                >
+                  <motion.div
+                    initial={{ scale: 0.9, y: 20 }}
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0.9, y: 20 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                    className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl"
+                    style={{
+                      backdropFilter: 'blur(20px) saturate(180%)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                      border: '1px solid rgba(209, 213, 219, 0.3)',
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Header avec navigation */}
+                    <div 
+                      className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-gray-200/50"
+                      style={{ backdropFilter: 'blur(20px)', backgroundColor: 'rgba(255, 255, 255, 0.9)' }}
+                    >
+                      <button
+                        onClick={() => navigateMember('prev')}
+                        className="p-2 hover:bg-cpu-orange/10 rounded-lg transition-colors"
+                        title="Membre précédent (←)"
+                      >
+                        <ChevronLeft className="h-5 w-5" />
+                      </button>
+                      
+                      <div className="text-sm text-slate-600 font-medium">
+                        {paginatedEquipe.findIndex((m: any) => m.id === selectedMember.id) + 1} / {paginatedEquipe.length}
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => navigateMember('next')}
+                          className="p-2 hover:bg-cpu-orange/10 rounded-lg transition-colors"
+                          title="Membre suivant (→)"
+                        >
+                          <ChevronRight className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => setSelectedMember(null)}
+                          className="p-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                          title="Fermer (Esc)"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Contenu du membre */}
+                    <div className="p-8">
+                      {/* En-tête avec photo et nom */}
+                      <div className="flex flex-col md:flex-row items-start gap-8 mb-8">
+                        <div className="flex-shrink-0">
+                          <div className="w-48 h-48 rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-50 to-gray-100">
+                            <img
+                              src={selectedMember.photo}
+                              alt={selectedMember.nom}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = "/logo.png";
+                              }}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="flex-1">
+                          <h2 className="text-4xl font-bold text-slate-800 mb-4">
+                            {selectedMember.nom}
+                          </h2>
+                          <Badge className="bg-cpu-green text-white border-0 px-4 py-2 text-base font-bold shadow-lg mb-6">
+                            {selectedMember.role}
+                          </Badge>
+                          
+                          {/* Bio complète */}
+                          <div className="mt-6">
+                            <p className="text-slate-600 leading-relaxed text-base">
+                              {selectedMember.bio}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section Contact */}
+                      {selectedMember.reseauxSociaux && (
+                        <div className="mt-8 pt-8 border-t border-gray-200/50">
+                          <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                            <div className="p-2 rounded-lg bg-cpu-green/10">
+                              <Mail className="h-5 w-5 text-cpu-green" />
+                            </div>
+                            Contact & Réseaux sociaux
+                          </h3>
+                          
+                          <div className="grid md:grid-cols-2 gap-4">
+                            {selectedMember.reseauxSociaux.linkedin && (
+                              <a
+                                href={selectedMember.reseauxSociaux.linkedin}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 hover:shadow-lg transition-all duration-300 group"
+                              >
+                                <div className="p-3 rounded-xl bg-blue-600 text-white group-hover:scale-110 transition-transform">
+                                  <Linkedin className="h-6 w-6" />
+                                </div>
+                                <div>
+                                  <div className="text-xs text-blue-600 font-medium mb-1">LINKEDIN</div>
+                                  <div className="text-sm font-bold text-blue-900">Voir le profil</div>
+                                </div>
+                              </a>
+                            )}
+                            
+                            {selectedMember.reseauxSociaux.email && (
+                              <a
+                                href={`mailto:${selectedMember.reseauxSociaux.email}`}
+                                className="flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 hover:shadow-lg transition-all duration-300 group"
+                              >
+                                <div className="p-3 rounded-xl bg-gray-700 text-white group-hover:scale-110 transition-transform">
+                                  <Mail className="h-6 w-6" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-xs text-gray-600 font-medium mb-1">EMAIL</div>
+                                  <div className="text-sm font-bold text-gray-900 truncate">{selectedMember.reseauxSociaux.email}</div>
+                                </div>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Hint navigation clavier */}
+                      <div className="mt-10 pt-6 border-t border-gray-200/50">
+                        <div className="flex items-center justify-center gap-6 text-xs text-slate-500">
+                          <span className="flex items-center gap-2">
+                            <kbd className="px-3 py-1.5 bg-white rounded-lg border-2 border-gray-300 font-bold shadow-sm">←</kbd>
+                            <kbd className="px-3 py-1.5 bg-white rounded-lg border-2 border-gray-300 font-bold shadow-sm">→</kbd>
+                            Naviguer
+                          </span>
+                          <span className="flex items-center gap-2">
+                            <kbd className="px-3 py-1.5 bg-white rounded-lg border-2 border-gray-300 font-bold shadow-sm">Esc</kbd>
+                            Fermer
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Partenaires Content */}
             <TabsContent value="partenaires" className="mt-0">

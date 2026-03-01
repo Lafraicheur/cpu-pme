@@ -302,40 +302,23 @@ const SecteursContent = () => {
   const buildMembresUrl = (): string => {
     const params = new URLSearchParams();
     
-    // Récupérer les noms des activités sélectionnées
+    // Récupérer UNIQUEMENT les noms des activités sélectionnées
     const selectedActiviteNames: string[] = [];
-    const selectedSubsectorNames: string[] = [];
-    const selectedSecteurNames = new Set<string>();
     
     secteursAPI.forEach((secteur) => {
       secteur.filieres.forEach((filiere) => {
         filiere.sousFiliere.forEach((sf) => {
-          // Si la sous-filière est sélectionnée
-          if (selectedSousFiliere.has(sf.id)) {
-            selectedSubsectorNames.push(sf.name);
-            selectedSecteurNames.add(secteur.name);
-          }
-          
           // Récupérer les activités sélectionnées
           sf.activites?.forEach((act) => {
             if (selectedActivites.has(act.id)) {
               selectedActiviteNames.push(act.name);
-              selectedSecteurNames.add(secteur.name);
             }
           });
         });
       });
     });
     
-    // Ajouter les paramètres à l'URL
-    if (selectedSecteurNames.size > 0) {
-      params.set("sector", Array.from(selectedSecteurNames).join(","));
-    }
-    
-    if (selectedSubsectorNames.length > 0) {
-      params.set("subsector", selectedSubsectorNames.join(","));
-    }
-    
+    // Ajouter SEULEMENT les activités comme paramètre
     if (selectedActiviteNames.length > 0) {
       params.set("activites", selectedActiviteNames.join(","));
     }

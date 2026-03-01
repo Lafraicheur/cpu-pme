@@ -781,7 +781,7 @@ const MembersContent = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
-  const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
+
   const [currentPage, setCurrentPage] = useState(1);
   const [membersPerPage, setMembersPerPage] = useState(9);
   const [isLoading, setIsLoading] = useState(true);
@@ -817,6 +817,7 @@ const MembersContent = () => {
   const [selectedMainSector, setSelectedMainSector] = useState<string>("");
   const [selectedFiliere, setSelectedFiliere] = useState<string>("");
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
+  const [selectedSubCategoriesMultiple, setSelectedSubCategoriesMultiple] = useState<string[]>([]);
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
   const [interventionScope, setInterventionScope] = useState<string>("");
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
@@ -1121,17 +1122,34 @@ const MembersContent = () => {
   }, [secteursApi]);
 
   const directoryActivites = useMemo(() => {
-    const activites: Array<{id: string, name: string}> = [];
+    const activitesMap = new Map<
+      string,
+      { key: string; name: string; ids: Set<string> }
+    >();
+
     if (secteursApi && Array.isArray(secteursApi)) {
-      secteursApi.forEach(secteur => {
+      secteursApi.forEach((secteur) => {
         if (secteur.filieres && Array.isArray(secteur.filieres)) {
-          secteur.filieres.forEach(filiere => {
+          secteur.filieres.forEach((filiere) => {
             if (filiere.sousFiliere && Array.isArray(filiere.sousFiliere)) {
-              filiere.sousFiliere.forEach(sf => {
+              filiere.sousFiliere.forEach((sf) => {
                 if (sf.activites && Array.isArray(sf.activites)) {
-                  sf.activites.forEach(activite => {
-                    if (activite.id && activite.name && !activites.find(a => a.id === String(activite.id))) {
-                      activites.push({id: String(activite.id), name: activite.name});
+                  sf.activites.forEach((activite) => {
+                    const activiteId = String(activite?.id || "").trim();
+                    const activiteName = String(activite?.name || "").trim();
+                    const normalizedName = activiteName.toLowerCase();
+
+                    if (!activiteId || !activiteName || !normalizedName) return;
+
+                    const existing = activitesMap.get(normalizedName);
+                    if (existing) {
+                      existing.ids.add(activiteId);
+                    } else {
+                      activitesMap.set(normalizedName, {
+                        key: normalizedName,
+                        name: activiteName,
+                        ids: new Set([activiteId]),
+                      });
                     }
                   });
                 }
@@ -1141,7 +1159,14 @@ const MembersContent = () => {
         }
       });
     }
-    return activites.sort((a, b) => a.name.localeCompare(b.name));
+
+    return Array.from(activitesMap.values())
+      .map((activite) => ({
+        key: activite.key,
+        name: activite.name,
+        ids: Array.from(activite.ids),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [secteursApi]);
 
   const isLoadingMembers = isLoading || isLoadingAdhesions;
@@ -1220,6 +1245,7 @@ const MembersContent = () => {
     setSelectedMainSector("");
     setSelectedFiliere("");
     setSelectedSubCategory("");
+    setSelectedSubCategoriesMultiple([]);
     setSelectedActivities([]);
     setInterventionScope("");
     setSelectedRegions([]);
@@ -1274,6 +1300,7 @@ const MembersContent = () => {
   // Réinitialiser sous-catégorie et activités quand la filière change
   useEffect(() => {
     setSelectedSubCategory("");
+    setSelectedSubCategoriesMultiple([]);
     setSelectedActivities([]);
   }, [selectedFiliere]);
 
@@ -1291,16 +1318,160 @@ const MembersContent = () => {
     }
   }, [hasAffiliation]);
 
+  const orgTypeKeywords: Record<string, string[]> = {
+    federation: ["fédération", "federation"],
+    cooperative: ["coopérative", "cooperative"],
+    association: ["association"],
+    groupement: ["groupement", "gie"],
+  };
+
+  const selectedAffiliationData = useMemo(() => {
+    if (
+      !hasAffiliation ||
+      !selectedOrganisation ||
+      selectedOrganisation === "Autre" ||
+      !Array.isArray(adhesionsApi)
+    ) {
+      return null;
+    }
+
+    const normalizedOrganisationName = selectedOrganisation.trim().toLowerCase();
+    const typeKeywords = selectedOrgType
+      ? orgTypeKeywords[selectedOrgType.toLowerCase()] || []
+      : [];
+
+    const matchingAdhesion = adhesionsApi.find((adhesion: any) => {
+      const status = String(adhesion?.statut || adhesion?.status || "").toLowerCase();
+      const typeMembreName = String(adhesion?.typeMembre?.name || "").toLowerCase();
+      const profilName = String(adhesion?.profil?.name || "").toLowerCase();
+      const organisationName = String(
+        adhesion?.customOrganisationName || adhesion?.organisationName || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const isApproved = status === "approved";
+      const isAssociatif = typeMembreName.includes("associatif");
+      const isSameOrganisation = organisationName === normalizedOrganisationName;
+      const matchesType =
+        typeKeywords.length === 0 ||
+        typeKeywords.some((keyword) => profilName.includes(keyword));
+
+      return isApproved && isAssociatif && isSameOrganisation && matchesType;
+    });
+
+    if (!matchingAdhesion) {
+      return null;
+    }
+
+    const secteurId = String(matchingAdhesion?.secteurPrincipal?.id || "").trim();
+    const filiereId = String(matchingAdhesion?.filiereId || "").trim();
+    const sousFiliereId = String(matchingAdhesion?.sousFiliereId || "").trim();
+    const activitesIds = Array.isArray(matchingAdhesion?.activitesIds)
+      ? matchingAdhesion.activitesIds
+          .map((id: unknown) => String(id || "").trim())
+          .filter((id: string) => id.length > 0)
+      : [];
+
+    return {
+      secteurId: secteurId || null,
+      filiereId: filiereId || null,
+      sousFiliereId: sousFiliereId || null,
+      activitesIds,
+    };
+  }, [hasAffiliation, selectedOrganisation, selectedOrgType, adhesionsApi]);
+
+  const selectedAffiliationActivityNames = useMemo(() => {
+    if (
+      !selectedAffiliationData ||
+      selectedAffiliationData.activitesIds.length === 0 ||
+      !Array.isArray(secteursApi)
+    ) {
+      return [] as string[];
+    }
+
+    const activitesIdsSet = new Set(selectedAffiliationData.activitesIds);
+    const names = new Set<string>();
+
+    secteursApi.forEach((secteur) => {
+      secteur.filieres?.forEach((filiere) => {
+        filiere.sousFiliere?.forEach((sousFiliere) => {
+          sousFiliere.activites?.forEach((activite) => {
+            const activiteId = String(activite?.id || "").trim();
+            if (activiteId && activitesIdsSet.has(activiteId)) {
+              names.add(String(activite?.name || "").trim());
+            }
+          });
+        });
+      });
+    });
+
+    return Array.from(names).filter(Boolean);
+  }, [selectedAffiliationData, secteursApi]);
+
+  useEffect(() => {
+    if (!selectedAffiliationData) {
+      return;
+    }
+
+    if (
+      selectedAffiliationData.secteurId &&
+      selectedMainSector !== selectedAffiliationData.secteurId
+    ) {
+      setSelectedMainSector(selectedAffiliationData.secteurId);
+    }
+
+    if (
+      selectedAffiliationData.filiereId &&
+      selectedFiliere !== selectedAffiliationData.filiereId
+    ) {
+      setSelectedFiliere(selectedAffiliationData.filiereId);
+    }
+  }, [selectedAffiliationData, selectedMainSector, selectedFiliere]);
+
+  useEffect(() => {
+    if (
+      !selectedAffiliationData?.filiereId ||
+      !selectedAffiliationData?.sousFiliereId ||
+      selectedFiliere !== selectedAffiliationData.filiereId
+    ) {
+      return;
+    }
+
+    if (selectedSubCategory !== selectedAffiliationData.sousFiliereId) {
+      setSelectedSubCategory(selectedAffiliationData.sousFiliereId);
+    }
+  }, [selectedAffiliationData, selectedFiliere, selectedSubCategory]);
+
+  // Auto-fill activités pour federation_filiere : combiner les activités de toutes les sous-filières sélectionnées
+  useEffect(() => {
+    if (selectedSubProfile !== "federation_filiere" || selectedSubCategoriesMultiple.length === 0) {
+      return;
+    }
+
+    const allActivities: Set<string> = new Set();
+
+    // Récupérer les activités de chaque sous-filière sélectionnée
+    selectedSubCategoriesMultiple.forEach((subFiliereName) => {
+      const activities = getActivitiesForSubCategoryById(subFiliereName);
+      activities.forEach((activity) => allActivities.add(activity));
+    });
+
+    const activitiesArray = Array.from(allActivities);
+
+    // Vérifier si la sélection a changé
+    if (
+      activitiesArray.length !== selectedActivities.length ||
+      activitiesArray.some((activity) => !selectedActivities.includes(activity))
+    ) {
+      setSelectedActivities(activitiesArray);
+    }
+  }, [selectedSubProfile, selectedSubCategoriesMultiple, selectedFiliere]);
+
   const getApprovedOrganisationsByType = (orgType?: string) => {
     if (!orgType) return [];
 
     const normalizedType = orgType.toLowerCase();
-    const orgTypeKeywords: Record<string, string[]> = {
-      federation: ["fédération", "federation"],
-      cooperative: ["coopérative", "cooperative"],
-      association: ["association"],
-      groupement: ["groupement", "gie"],
-    };
     const typeKeywords = orgTypeKeywords[normalizedType] || [];
     const namesFromApi = adhesionsApi
       .filter((adhesion) => {
@@ -1452,6 +1623,36 @@ const MembersContent = () => {
         return (filiereData.filiere as any).sousCategories;
       }
     }
+    return [];
+  };
+
+  // Obtenir les activités d'une sous-filière spécifique par ID (pour la sélection multiple en federation)
+  const getActivitiesForSubCategoryById = (sousFiliereId: string): string[] => {
+    if (!sousFiliereId || !selectedFiliere) return [];
+
+    // Utiliser les données de l'API si disponibles
+    if (secteursApi && Array.isArray(secteursApi) && secteursApi.length > 0) {
+      for (const secteur of secteursApi) {
+        if (secteur.filieres && secteur.filieres.length > 0) {
+          for (const filiere of secteur.filieres) {
+            if (filiere.id === selectedFiliere && filiere.isActive !== false && filiere.sousFiliere) {
+              const sousFiliere = filiere.sousFiliere.find(
+                (sf) =>
+                  (sf.id === sousFiliereId || sf.name === sousFiliereId) &&
+                  sf.isActive !== false
+              );
+              if (sousFiliere && sousFiliere.activites) {
+                return sousFiliere.activites
+                  .filter((a) => a.isActive !== false)
+                  .map((a) => a.name);
+              }
+            }
+          }
+        }
+      }
+      return [];
+    }
+
     return [];
   };
 
@@ -2107,6 +2308,7 @@ const MembersContent = () => {
     const subsectorsParam = searchParams.get("subsectors");
     const tagParam = searchParams.get("tag");
     const tagsParam = searchParams.get("tags");
+    const activitesParam = searchParams.get("activites");
     const tabParam = searchParams.get("tab");
 
     if (sectorParam) {
@@ -2132,7 +2334,18 @@ const MembersContent = () => {
     if (tagsParam && sectorParam) {
       setSelectedSector(sectorParam);
     }
-  }, [searchParams]);
+
+    // Filtre par activités depuis la page Secteurs
+    if (activitesParam && directoryActivites.length > 0) {
+      const activiteNames = activitesParam.split(",").map((name) => name.trim().toLowerCase());
+      const matchedActivity = directoryActivites.find((activity) =>
+        activiteNames.some((name) => activity.name.toLowerCase() === name)
+      );
+      if (matchedActivity) {
+        setSelectedActivitiesFilter([matchedActivity.key]);
+      }
+    }
+  }, [searchParams, directoryActivites]);
 
   // Déterminer l'onglet actif depuis l'URL
   const [activeTab, setActiveTab] = useState(
@@ -2326,12 +2539,20 @@ const MembersContent = () => {
 
     // Phase 3: Filtre activités
     if (selectedActivitiesFilter.length > 0) {
+      const selectedActivity = directoryActivites.find(
+        (activity) => activity.key === selectedActivitiesFilter[0]
+      );
+
       results = results.filter(
-        (member) =>
-          member.activitesIds &&
-          member.activitesIds.some((id) =>
-            selectedActivitiesFilter.includes(String(id))
-          )
+        (member) => {
+          if (!selectedActivity || !member.activitesIds) {
+            return false;
+          }
+
+          return member.activitesIds.some((id) =>
+            selectedActivity.ids.includes(String(id))
+          );
+        }
       );
     }
 
@@ -2351,6 +2572,7 @@ const MembersContent = () => {
     searchTerm,
     selectedFiliereFilter,
     selectedActivitiesFilter,
+    directoryActivites,
     selectedSector,
     selectedRegion,
     fuse,
@@ -2386,7 +2608,8 @@ const MembersContent = () => {
     setSelectedFiliereFilter("all");
     setSelectedActivitiesFilter([]);
     setCurrentPage(1);
-  }, []);
+    router.push("/membres");
+  }, [router]);
 
   // Réinitialiser la page quand les filtres changent
   useEffect(() => {
@@ -3531,7 +3754,7 @@ const MembersContent = () => {
                     <h2 className="text-3xl font-bold text-slate-800 mb-3">
                       {decodeHtmlEntities(focusedMember.name)}
                     </h2>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-3 mb-6">
                       <Badge className="bg-cpu-green/10 text-cpu-green border-cpu-green/20">
                         {focusedMember.sector}
                       </Badge>
@@ -3541,6 +3764,59 @@ const MembersContent = () => {
                           {focusedMember.region}
                         </Badge>
                       )}
+                    </div>
+                    {/* Filières, Sous-filières et Secteurs */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+                        <div className="text-xs font-medium text-slate-500 mb-2">Secteur</div>
+                        <div className="text-sm font-medium text-slate-800">
+                          {decodeHtmlEntities(focusedMember.sector) || '-'}
+                        </div>
+                      </div>
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+                        <div className="text-xs font-medium text-slate-500 mb-2">Filière</div>
+                        <div className="text-sm font-medium text-slate-800">
+                          {(() => {
+                            let filiereName = '';
+                            if (focusedMember.filiereId && secteursApi && Array.isArray(secteursApi)) {
+                              for (const secteur of secteursApi) {
+                                if (secteur.filieres && Array.isArray(secteur.filieres)) {
+                                  const filiere = secteur.filieres.find((f: any) => f.id === focusedMember.filiereId);
+                                  if (filiere) {
+                                    filiereName = filiere.name;
+                                    break;
+                                  }
+                                }
+                              }
+                            }
+                            return decodeHtmlEntities(filiereName) || '-';
+                          })()}
+                        </div>
+                      </div>
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+                        <div className="text-xs font-medium text-slate-500 mb-2">Sous-filière</div>
+                        <div className="text-sm font-medium text-slate-800">
+                          {(() => {
+                            let sousFiliereName = '';
+                            if (focusedMember.sousFiliereId && secteursApi && Array.isArray(secteursApi)) {
+                              for (const secteur of secteursApi) {
+                                if (secteur.filieres && Array.isArray(secteur.filieres)) {
+                                  for (const filiere of secteur.filieres) {
+                                    if (filiere.sousFiliere && Array.isArray(filiere.sousFiliere)) {
+                                      const sf = filiere.sousFiliere.find((sf: any) => sf.id === focusedMember.sousFiliereId);
+                                      if (sf) {
+                                        sousFiliereName = sf.name;
+                                        break;
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                            return decodeHtmlEntities(sousFiliereName) || '-';
+                          })()}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <Button
@@ -3661,20 +3937,6 @@ const MembersContent = () => {
                       </Button>
                     </a>
                   )}
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/membres?id=${focusedMember.id}`;
-                      navigator.clipboard.writeText(url);
-                      toast({
-                        title: "Lien copié !",
-                        description: "Le lien du membre a été copié.",
-                      });
-                    }}
-                  >
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Partager
-                  </Button>
                 </div>
 
                 {/* Hint pour la navigation clavier */}
@@ -4089,114 +4351,20 @@ const MembersContent = () => {
                             <Users className="h-4 w-4 text-slate-500 group-hover:scale-110 transition-transform duration-300" />
                             <span className="text-xs font-medium text-slate-500">À propos</span>
                           </div>
-                          <p className={`text-sm text-slate-600 leading-relaxed ${expandedMembers.has(recentMembers[featuredIndex].id) ? '' : 'line-clamp-2'}`}>
+                          <p className="text-sm text-slate-600 leading-relaxed line-clamp-2">
                             {decodeHtmlEntities(recentMembers[featuredIndex].description)}
                           </p>
                         </div>
 
                         {/* Boutons d'action */}
                         <div className="mt-auto pt-3 border-t border-gray-100">
-                          {!expandedMembers.has(recentMembers[featuredIndex].id) ? (
-                            <Button
-                              onClick={() => {
-                                const newExpanded = new Set(expandedMembers);
-                                newExpanded.add(recentMembers[featuredIndex].id);
-                                setExpandedMembers(newExpanded);
-                              }}
-                              className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold transition-all hover:shadow-lg"
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              En savoir plus
-                            </Button>
-                          ) : (
-                            <div className="space-y-3">
-                              {/* Grille des boutons d'action principaux */}
-                              <div className={`grid gap-3 ${recentMembers[featuredIndex].website ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2'}`}>
-                                {/* Bouton Visiter le site web */}
-                                {recentMembers[featuredIndex].website && (
-                                  <a
-                                    href={recentMembers[featuredIndex].website}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full"
-                                  >
-                                    <Button
-                                      variant="outline"
-                                      className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:shadow-lg"
-                                    >
-                                      <Globe className="h-4 w-4 mr-2" />
-                                      <span className="hidden sm:inline">Visiter</span>
-                                      <span className="sm:hidden">Site</span>
-                                    </Button>
-                                  </a>
-                                )}
-                                
-                                {/* Bouton Contacter */}
-                                {recentMembers[featuredIndex].email ? (
-                                  <a
-                                    href={`mailto:${recentMembers[featuredIndex].email}`}
-                                    className="w-full"
-                                  >
-                                    <Button
-                                      variant="outline"
-                                      className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:shadow-lg"
-                                    >
-                                      <Mail className="h-4 w-4 mr-2" />
-                                      Contacter
-                                    </Button>
-                                  </a>
-                                ) : (
-                                  <Button
-                                    variant="outline"
-                                    disabled
-                                    className="w-full border-gray-300 text-gray-400 font-semibold cursor-not-allowed"
-                                  >
-                                    <Mail className="h-4 w-4 mr-2" />
-                                    Contacter
-                                  </Button>
-                                )}
-                                
-                                {/* Bouton Appeler */}
-                                {recentMembers[featuredIndex].phone ? (
-                                  <a
-                                    href={`tel:${recentMembers[featuredIndex].phone}`}
-                                    className="w-full"
-                                  >
-                                    <Button
-                                      variant="outline"
-                                      className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:shadow-lg"
-                                    >
-                                      <span className="mr-2">📞</span>
-                                      Appeler
-                                    </Button>
-                                  </a>
-                                ) : (
-                                  <Button
-                                    variant="outline"
-                                    disabled
-                                    className="w-full border-gray-300 text-gray-400 font-semibold cursor-not-allowed"
-                                  >
-                                    <span className="mr-2">📞</span>
-                                    Appeler
-                                  </Button>
-                                )}
-                              </div>
-                              
-                              {/* Bouton Voir moins */}
-                              <Button
-                                onClick={() => {
-                                  const newExpanded = new Set(expandedMembers);
-                                  newExpanded.delete(recentMembers[featuredIndex].id);
-                                  setExpandedMembers(newExpanded);
-                                }}
-                                variant="outline"
-                                className="w-full border-gray-300 text-gray-600 hover:bg-gray-50 font-semibold transition-all"
-                              >
-                                <EyeOff className="h-4 w-4 mr-2" />
-                                Voir moins
-                              </Button>
-                            </div>
-                          )}
+                          <Button
+                            onClick={() => openFocusMode(recentMembers[featuredIndex])}
+                            className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold transition-all hover:shadow-lg"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            En savoir plus
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -4369,7 +4537,7 @@ const MembersContent = () => {
                     <SelectContent>
                       <SelectItem value="all">Toutes activités</SelectItem>
                       {directoryActivites.map((activite) => (
-                        <SelectItem key={activite.id} value={activite.id}>
+                        <SelectItem key={activite.key} value={activite.key}>
                           {decodeHtmlEntities(activite.name)}
                         </SelectItem>
                       ))}
@@ -4488,7 +4656,7 @@ const MembersContent = () => {
                             <SelectContent>
                               <SelectItem value="all">Toutes activités</SelectItem>
                               {directoryActivites.map((activite) => (
-                                <SelectItem key={activite.id} value={activite.id}>
+                                <SelectItem key={activite.key} value={activite.key}>
                                   {decodeHtmlEntities(activite.name)}
                                 </SelectItem>
                               ))}
@@ -4585,7 +4753,7 @@ const MembersContent = () => {
                         onClick={() => setSelectedActivitiesFilter([])}
                       >
                         <Target className="h-3 w-3" />
-                        {directoryActivites.find(a => a.id === selectedActivitiesFilter[0])?.name || "Activité"}
+                        {directoryActivites.find(a => a.key === selectedActivitiesFilter[0])?.name || "Activité"}
                         <X className="h-3 w-3" />
                       </Badge>
                     )}
@@ -4620,25 +4788,6 @@ const MembersContent = () => {
                             : "Tous les Membres";
                         })()}
                       </h2>
-                      {/* Compteur de résultats */}
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2.5 px-3 py-2 bg-white border-l-4 border-cpu-orange rounded-r-md shadow-sm">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-cpu-orange/10">
-                            <Users className="h-4 w-4 text-cpu-orange" />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">
-                              Résultats
-                            </span>
-                            <span className="text-lg font-bold text-slate-800">
-                              {sortedMembers.length}{" "}
-                              <span className="text-sm font-normal text-gray-600">
-                                membre{sortedMembers.length > 1 ? "s" : ""}
-                              </span>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                     <div className="flex items-center gap-3">
                       {/* Toggle vue liste/grille */}
@@ -4962,8 +5111,7 @@ const MembersContent = () => {
                                     }
                                   }
                                   
-                                  const isExpanded = expandedMembers.has(member.id);
-                                  const visibleActivites = isExpanded ? activitesNames : activitesNames.slice(0, 3);
+                                  const visibleActivites = activitesNames.slice(0, 3);
                                   const remainingCount = activitesNames.length - visibleActivites.length;
                                   
                                   return activitesNames.length > 0 ? (
@@ -4976,7 +5124,7 @@ const MembersContent = () => {
                                           {decodeHtmlEntities(activite)}
                                         </Badge>
                                       ))}
-                                      {!isExpanded && remainingCount > 0 && (
+                                      {remainingCount > 0 && (
                                         <Badge className="text-xs bg-white/95 text-slate-900 font-medium px-3 py-1.5 rounded-md hover:bg-slate-100 border border-slate-200 transition-all">
                                           +{remainingCount}
                                         </Badge>
@@ -4995,7 +5143,7 @@ const MembersContent = () => {
                                 <Users className="h-4 w-4 text-slate-500" />
                                 <span className="text-xs font-medium text-slate-500">À propos</span>
                               </div>
-                              <p className={`text-sm text-slate-600 ${expandedMembers.has(member.id) ? '' : 'line-clamp-2'}`}
+                              <p className="text-sm text-slate-600 line-clamp-2"
                                  style={{ lineHeight: '1.5rem' }}>
                                 {decodeHtmlEntities(member.description)}
                               </p>
@@ -5003,98 +5151,13 @@ const MembersContent = () => {
 
                             {/* Boutons d'action - ROW 5 */}
                             <div className="px-6 pb-6 mt-auto">
-                              {!expandedMembers.has(member.id) ? (
-                                <Button
-                                  onClick={() => {
-                                    const newExpanded = new Set(expandedMembers);
-                                    newExpanded.add(member.id);
-                                    setExpandedMembers(newExpanded);
-                                  }}
-                                  className="w-full bg-cpu-green hover:bg-white hover:text-cpu-green text-white hover:border-cpu-green border-2 border-cpu-green font-semibold transition-all hover:shadow-sm"
-                                >
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  En savoir plus
-                                </Button>
-                              ) : (
-                                <>
-                                  {member.website && (
-                                    <a
-                                      href={member.website.startsWith('http') ? member.website : `https://${member.website}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="w-full mb-3 block"
-                                    >
-                                      <Button
-                                        className="w-full bg-cpu-green hover:bg-white hover:text-cpu-green text-white hover:border-cpu-green border-2 border-cpu-green font-semibold relative overflow-hidden group/btn transition-all hover:shadow-sm"
-                                      >
-                                        <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
-                                        <Globe className="h-4 w-4 mr-2" />
-                                        Visiter le site web
-                                      </Button>
-                                    </a>
-                                  )}
-                                  <div className="grid grid-cols-2 gap-3 mb-3">
-                                    {member.email ? (
-                                      <a
-                                        href={`mailto:${member.email}`}
-                                        className="w-full"
-                                      >
-                                        <Button
-                                          className="w-full bg-cpu-green hover:bg-white hover:text-cpu-green text-white hover:border-cpu-green border-2 border-cpu-green font-semibold relative overflow-hidden group/btn transition-all hover:shadow-sm"
-                                        >
-                                          <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
-                                          <Mail className="h-4 w-4 mr-2" />
-                                          Contacter
-                                        </Button>
-                                      </a>
-                                    ) : (
-                                      <Button
-                                        disabled
-                                        className="w-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed"
-                                      >
-                                        <Mail className="h-4 w-4 mr-2" />
-                                        Contacter
-                                      </Button>
-                                    )}
-                                    
-                                    {member.phone ? (
-                                      <a
-                                        href={`tel:${member.phone}`}
-                                        className="w-full"
-                                      >
-                                        <Button
-                                          variant="outline"
-                                          className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:shadow-sm"
-                                        >
-                                          <span className="mr-2">📞</span>
-                                          Appeler
-                                        </Button>
-                                      </a>
-                                    ) : (
-                                      <Button
-                                        variant="outline"
-                                        disabled
-                                        className="w-full border-gray-300 text-gray-400 font-semibold cursor-not-allowed"
-                                      >
-                                        <span className="mr-2">📞</span>
-                                        Appeler
-                                      </Button>
-                                    )}
-                                  </div>
-                                  <Button
-                                    onClick={() => {
-                                      const newExpanded = new Set(expandedMembers);
-                                      newExpanded.delete(member.id);
-                                      setExpandedMembers(newExpanded);
-                                    }}
-                                    variant="outline"
-                                    className="w-full border-gray-300 text-gray-600 hover:bg-gray-50 font-semibold transition-all"
-                                  >
-                                    <EyeOff className="h-4 w-4 mr-2" />
-                                    Voir moins
-                                  </Button>
-                                </>
-                              )}
+                              <Button
+                                onClick={() => openFocusMode(member)}
+                                className="w-full bg-cpu-green hover:bg-white hover:text-cpu-green text-white hover:border-cpu-green border-2 border-cpu-green font-semibold transition-all hover:shadow-sm"
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                En savoir plus
+                              </Button>
                             </div>
                           </motion.div>
                         ))}
@@ -5295,8 +5358,7 @@ const MembersContent = () => {
                                         }
                                       }
                                       
-                                      const isExpanded = expandedMembers.has(member.id);
-                                      const visibleActivites = isExpanded ? activitesNames : activitesNames.slice(0, 3);
+                                      const visibleActivites = activitesNames.slice(0, 3);
                                       const remainingCount = activitesNames.length - visibleActivites.length;
                                       
                                       return activitesNames.length > 0 ? (
@@ -5309,7 +5371,7 @@ const MembersContent = () => {
                                               {activite}
                                             </Badge>
                                           ))}
-                                          {!isExpanded && remainingCount > 0 && (
+                                          {remainingCount > 0 && (
                                             <Badge className="text-xs bg-white/95 text-slate-900 font-medium px-2.5 py-1 rounded-md hover:bg-slate-100 border border-slate-200 transition-all duration-300">
                                               +{remainingCount}
                                             </Badge>
@@ -5329,105 +5391,20 @@ const MembersContent = () => {
                                   <Users className="h-4 w-4 text-slate-500" />
                                   <span className="text-xs font-medium text-slate-500">À propos</span>
                                 </div>
-                                <p className={`text-sm text-slate-600 leading-relaxed ${expandedMembers.has(member.id) ? '' : 'line-clamp-2'}`}>
+                                <p className="text-sm text-slate-600 leading-relaxed line-clamp-2">
                                   {decodeHtmlEntities(member.description)}
                                 </p>
                               </div>
 
                               {/* Boutons d'action */}
                               <div className="mt-auto">
-                                {!expandedMembers.has(member.id) ? (
-                                  <Button
-                                    onClick={() => {
-                                      const newExpanded = new Set(expandedMembers);
-                                      newExpanded.add(member.id);
-                                      setExpandedMembers(newExpanded);
-                                    }}
-                                    className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold transition-all hover:scale-105 hover:shadow-sm"
-                                  >
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    En savoir plus
-                                  </Button>
-                                ) : (
-                                  <>
-                                    {member.website && (
-                                      <a
-                                        href={member.website.startsWith('http') ? member.website : `https://${member.website}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="w-full mb-3 block"
-                                      >
-                                        <Button
-                                          className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-sm"
-                                        >
-                                          <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
-                                          <Globe className="h-4 w-4 mr-2" />
-                                          Visiter le site web
-                                        </Button>
-                                      </a>
-                                    )}
-                                    <div className="grid grid-cols-2 gap-3 mb-3">
-                                      {member.email ? (
-                                        <a
-                                          href={`mailto:${member.email}`}
-                                          className="w-full"
-                                        >
-                                          <Button
-                                            className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold relative overflow-hidden group/btn transition-all hover:scale-105 hover:shadow-sm"
-                                          >
-                                            <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
-                                            <Mail className="h-4 w-4 mr-2" />
-                                            Contacter
-                                          </Button>
-                                        </a>
-                                      ) : (
-                                        <Button
-                                          disabled
-                                          className="w-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed"
-                                        >
-                                          <Mail className="h-4 w-4 mr-2" />
-                                          Contacter
-                                        </Button>
-                                      )}
-                                      
-                                      {member.phone ? (
-                                        <a
-                                          href={`tel:${member.phone}`}
-                                          className="w-full"
-                                        >
-                                          <Button
-                                            variant="outline"
-                                            className="w-full border-2 border-cpu-orange text-cpu-orange hover:bg-cpu-orange hover:text-white font-semibold transition-all hover:scale-105 hover:shadow-sm"
-                                          >
-                                            <span className="mr-2">📞</span>
-                                            Appeler
-                                          </Button>
-                                        </a>
-                                      ) : (
-                                        <Button
-                                          variant="outline"
-                                          disabled
-                                          className="w-full border-gray-300 text-gray-400 font-semibold cursor-not-allowed"
-                                        >
-                                          <span className="mr-2">📞</span>
-                                          Appeler
-                                        </Button>
-                                      )}
-                                    </div>
-                                    <Button
-                                      onClick={() => {
-                                        const newExpanded = new Set(expandedMembers);
-                                        newExpanded.delete(member.id);
-                                        setExpandedMembers(newExpanded);
-                                      }}
-                                      variant="outline"
-                                      className="w-full border-gray-300 text-gray-600 hover:bg-gray-50 font-semibold transition-all"
-                                    >
-                                      <EyeOff className="h-4 w-4 mr-2" />
-                                      Voir moins
-                                    </Button>
-                                  </>
-                                )}
+                                <Button
+                                  onClick={() => openFocusMode(member)}
+                                  className="w-full bg-cpu-orange hover:bg-white hover:text-cpu-orange text-white hover:border-cpu-orange border-2 border-cpu-orange font-semibold transition-all hover:scale-105 hover:shadow-sm"
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  En savoir plus
+                                </Button>
                               </div>
                             </div>
                           </motion.div>
@@ -5491,7 +5468,7 @@ const MembersContent = () => {
                     
                     <Button
                       onClick={resetFilters}
-                      className="bg-cpu-green hover:bg-cpu-green/90 text-white"
+                      className="bg-cpu-green hover:bg-cpu-green hover:!bg-cpu-green !text-white hover:!text-white border-0"
                     >
                       <RotateCcw className="h-4 w-4 mr-2" />
                       Réinitialiser les filtres
@@ -6405,47 +6382,49 @@ const MembersContent = () => {
                   <div className="p-8 md:p-10 lg:p-12">
                     <form onSubmit={handleSubmit} className="space-y-0">
                       {/* Indicateur de progression */}
-                      {selectedAdhesionType && (
-                        <div className="fixed top-16 md:top-20 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm px-4 md:px-8 lg:px-12 py-4 border-b-2 border-gray-100 shadow-lg animate-in fade-in slide-in-from-top-4 duration-500">
-                          <div className="max-w-7xl mx-auto">
-                            <div className="flex justify-between items-center mb-3">
-                              <div className="flex items-center gap-2">
-                                <CheckCircle className="h-5 w-5 text-cpu-green" />
-                                <span className="text-sm font-bold text-gray-900">
-                                  Progression du formulaire
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold text-cpu-orange">
-                                  {calculateProgress().completed} / {calculateProgress().total} complétés
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  ({calculateProgress().percentage}%)
-                                </span>
-                              </div>
+                      <div 
+                        className={`fixed top-16 md:top-20 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm px-4 md:px-8 lg:px-12 py-4 border-b-2 border-gray-100 shadow-lg transition-all duration-500 ${
+                          selectedAdhesionType 
+                            ? 'opacity-100 translate-y-0 pointer-events-auto' 
+                            : 'opacity-0 -translate-y-full pointer-events-none'
+                        }`}
+                      >
+                        <div className="max-w-7xl mx-auto">
+                          <div className="flex justify-between items-center mb-3">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="h-5 w-5 text-cpu-green" />
+                              <span className="text-sm font-bold text-gray-900">
+                                Progression du formulaire
+                              </span>
                             </div>
-                            <div className="relative w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
-                              <div 
-                                className="absolute top-0 left-0 h-full bg-gradient-to-r from-cpu-green via-cpu-orange to-orange-600 rounded-full transition-all duration-700 ease-out shadow-lg"
-                                style={{ width: `${calculateProgress().percentage}%` }}
-                              >
-                                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                              </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-cpu-orange">
+                                {selectedAdhesionType ? calculateProgress().completed : 0} / {selectedAdhesionType ? calculateProgress().total : 0} complétés
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                ({selectedAdhesionType ? calculateProgress().percentage : 0}%)
+                              </span>
                             </div>
-                            {lastSaved && (
-                              <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
-                                <Save className="h-3 w-3" />
-                                <span>Sauvegardé automatiquement à {lastSaved.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
-                              </div>
-                            )}
                           </div>
+                          <div className="relative w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
+                            <div 
+                              className="absolute top-0 left-0 h-full bg-gradient-to-r from-cpu-green via-cpu-orange to-orange-600 rounded-full transition-all duration-700 ease-out shadow-lg"
+                              style={{ width: selectedAdhesionType ? `${calculateProgress().percentage}%` : '0%' }}
+                            >
+                              <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                            </div>
+                          </div>
+                          {lastSaved && selectedAdhesionType && (
+                            <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
+                              <Save className="h-3 w-3" />
+                              <span>Sauvegardé automatiquement à {lastSaved.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
 
                       {/* Spacer pour compenser la barre fixe */}
-                      {selectedAdhesionType && (
-                        <div className="h-32 md:h-36"></div>
-                      )}
+                      <div className={`transition-all duration-500 ${selectedAdhesionType ? 'h-32 md:h-36' : 'h-0'}`}></div>
 
                       {/* SECTION: Type de membre */}
                       <div className="pb-8">
@@ -7332,9 +7311,14 @@ const MembersContent = () => {
                                 options={
                                   isLoadingSecteurs || errorSecteurs
                                     ? []
-                                    : getAllFilieres().map(
-                                        ({ filiere, secteurNom }) => {
-                                          // Déterminer le nom à afficher selon la structure (API ou statique)
+                                    : getAllFilieres()
+                                        .filter(({ filiere }) => {
+                                          if (!selectedAffiliationData?.filiereId) {
+                                            return true;
+                                          }
+                                          return filiere.id === selectedAffiliationData.filiereId;
+                                        })
+                                        .map(({ filiere, secteurNom }) => {
                                           const filiereAny = filiere as any;
                                           const filiereName =
                                             filiereAny.nom ||
@@ -7345,8 +7329,7 @@ const MembersContent = () => {
                                             label: filiereName,
                                             sublabel: secteurNom,
                                           };
-                                        }
-                                      )
+                                        })
                                 }
                                 value={selectedFiliere}
                                 onValueChange={setSelectedFiliere}
@@ -7396,7 +7379,12 @@ const MembersContent = () => {
                                             label: s.nom,
                                           })
                                         );
-                                  return secteurs;
+                                  if (!selectedAffiliationData?.secteurId) {
+                                    return secteurs;
+                                  }
+                                  return secteurs.filter(
+                                    (secteur) => secteur.value === selectedAffiliationData.secteurId
+                                  );
                                 })()}
                                 value={selectedMainSector}
                                 onValueChange={setSelectedMainSector}
@@ -7423,56 +7411,118 @@ const MembersContent = () => {
 
                           {/* Sous-filière */}
                           {selectedFiliere && (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                              <div className="space-y-3 relative isolate">
-                                <div className="flex items-center gap-2">
-                                  <Label
-                                    htmlFor="subFiliere"
-                                    className="text-sm font-semibold text-gray-700"
-                                  >
-                                    Sous-filière
-                                  </Label>
-                                  <span className="text-red-500 text-base">*</span>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              {selectedSubProfile === "federation_filiere" ? (
+                                // Mode federation : checkboxes pour sélection multiple
+                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 col-span-1 lg:col-span-2">
+                                  <div className="flex items-center gap-2">
+                                    <Label className="text-base font-semibold text-gray-700">
+                                      Sous-filières
+                                    </Label>
+                                    <span className="text-red-500 text-base">*</span>
+                                  </div>
+                                  <p className="text-sm text-gray-600">
+                                    Sélectionnez les sous-filières correspondant à votre fédération
+                                  </p>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border-2 border-gray-100 rounded-2xl bg-gradient-to-br from-gray-50 to-white shadow-sm max-h-80 overflow-y-auto">
+                                    {getSubCategoriesForFiliere().map((subCat: { id?: string; nom: string }) => {
+                                      const subCatId = subCat.id || subCat.nom;
+                                      const isChecked = selectedSubCategoriesMultiple.includes(subCatId);
+                                      return (
+                                        <div
+                                          key={subCatId}
+                                          className="flex items-start space-x-3 p-3 rounded-lg hover:bg-white transition-colors"
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            id={`subFiliere-${subCatId}`}
+                                            checked={isChecked}
+                                            onChange={(e) => {
+                                              if (e.target.checked) {
+                                                setSelectedSubCategoriesMultiple([
+                                                  ...selectedSubCategoriesMultiple,
+                                                  subCatId,
+                                                ]);
+                                              } else {
+                                                setSelectedSubCategoriesMultiple(
+                                                  selectedSubCategoriesMultiple.filter(
+                                                    (id) => id !== subCatId
+                                                  )
+                                                );
+                                              }
+                                            }}
+                                            className="h-5 w-5 border-2 border-cpu-orange rounded-md focus:ring-2 focus:ring-cpu-orange focus:ring-offset-0 mt-0.5 cursor-pointer checked:bg-cpu-orange checked:border-cpu-orange transition-all"
+                                            style={{
+                                              accentColor: "#F27A20",
+                                              colorScheme: "light",
+                                            }}
+                                          />
+                                          <Label
+                                            htmlFor={`subFiliere-${subCatId}`}
+                                            className="text-sm cursor-pointer font-medium text-gray-700 leading-tight"
+                                          >
+                                            {subCat.nom}
+                                          </Label>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
                                 </div>
-                                <Combobox
-                                  options={
-                                    isLoadingSecteurs
-                                      ? []
-                                      : getSubCategoriesForFiliere().map(
-                                          (subCat: {
-                                            id?: string;
-                                            nom: string;
-                                          }) => {
-                                            // Utiliser l'ID si disponible (API), sinon le nom (données statiques)
-                                            const value =
-                                              subCat.id || subCat.nom;
-                                            const displayName = subCat.nom;
-                                            return {
-                                              value: value,
-                                              label: displayName,
-                                            };
-                                          }
-                                        )
-                                  }
-                                  value={selectedSubCategory}
-                                  onValueChange={setSelectedSubCategory}
-                                  placeholder={
-                                    isLoadingSecteurs
-                                      ? "Chargement..."
-                                      : "Sélectionnez une sous-filière"
-                                  }
-                                  searchPlaceholder="Rechercher une sous-filière..."
-                                  emptyText="Aucune sous-filière disponible pour cette filière"
-                                  disabled={isLoadingSecteurs}
-                                  loading={isLoadingSecteurs}
-                                  className="w-full min-w-[300px]"
-                                />
-                              </div>
+                              ) : (
+                                // Mode normal : dropdown pour sélection simple
+                                <div className="space-y-3 relative isolate animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                  <div className="flex items-center gap-2">
+                                    <Label
+                                      htmlFor="subFiliere"
+                                      className="text-sm font-semibold text-gray-700"
+                                    >
+                                      Sous-filière
+                                    </Label>
+                                    <span className="text-red-500 text-base">*</span>
+                                  </div>
+                                  <Combobox
+                                    options={
+                                      isLoadingSecteurs
+                                        ? []
+                                        : getSubCategoriesForFiliere()
+                                            .filter((subCat: { id?: string; nom: string }) => {
+                                              if (!selectedAffiliationData?.sousFiliereId) {
+                                                return true;
+                                              }
+                                              return (
+                                                (subCat.id || subCat.nom) ===
+                                                selectedAffiliationData.sousFiliereId
+                                              );
+                                            })
+                                            .map((subCat: { id?: string; nom: string }) => {
+                                              const value = subCat.id || subCat.nom;
+                                              const displayName = subCat.nom;
+                                              return {
+                                                value,
+                                                label: displayName,
+                                              };
+                                            })
+                                    }
+                                    value={selectedSubCategory}
+                                    onValueChange={setSelectedSubCategory}
+                                    placeholder={
+                                      isLoadingSecteurs
+                                        ? "Chargement..."
+                                        : "Sélectionnez une sous-filière"
+                                    }
+                                    searchPlaceholder="Rechercher une sous-filière..."
+                                    emptyText="Aucune sous-filière disponible pour cette filière"
+                                    disabled={isLoadingSecteurs}
+                                    loading={isLoadingSecteurs}
+                                    className="w-full min-w-[300px]"
+                                  />
+                                </div>
+                              )}
                             </div>
                           )}
 
-                          {/* Activités / Corps de métiers */}
-                          {selectedSubCategory && (
+                          {/* Activités / Corps de métiers - Affichée seulement si pas federation_filiere */}
+                          {selectedSubProfile !== "federation_filiere" && selectedSubCategory && (
                             <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
                               <div className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-100">
                                 <div className="flex items-center gap-2 mb-2">
@@ -7496,8 +7546,14 @@ const MembersContent = () => {
                               </div>
 
                               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 p-6 border-2 border-gray-100 rounded-2xl bg-gradient-to-br from-gray-50 to-white shadow-sm max-h-80 overflow-y-auto">
-                                {getActivitiesForSubCategory().map(
-                                  (activity) => (
+                                {getActivitiesForSubCategory()
+                                  .filter((activity) => {
+                                    if (selectedAffiliationActivityNames.length === 0) {
+                                      return true;
+                                    }
+                                    return selectedAffiliationActivityNames.includes(activity);
+                                  })
+                                  .map((activity) => (
                                     <div
                                       key={activity}
                                       className="flex items-start space-x-3 p-3 rounded-lg hover:bg-white transition-colors"
@@ -7524,8 +7580,7 @@ const MembersContent = () => {
                                         {activity}
                                       </Label>
                                     </div>
-                                  )
-                                )}
+                                  ))}
                               </div>
                             </div>
                           )}
@@ -7536,7 +7591,7 @@ const MembersContent = () => {
                       <div className="border-t-2 border-gray-100 my-8"></div>
 
                       {/* SECTION: Localisation du siège / bureaux */}
-                      <div className="pb-8 p-6 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                      <div className="pb-8 p-6 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-sm">
                         {/* Section Adresse Internationale (uniquement pour institutionnels) */}
                         {selectedAdhesionType === "institutionnel" && (
                           <div className="mb-8">
@@ -8020,7 +8075,7 @@ const MembersContent = () => {
                       {/* SECTION: Zones d'intervention (pour Membre institutionnel) */}
                       {selectedAdhesionType === "institutionnel" && (
                         <>
-                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm">
                             <div className="flex items-center gap-3 mb-6">
                               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
                                 <MapPin className="h-5 w-5 text-cpu-orange" />
@@ -8152,7 +8207,7 @@ const MembersContent = () => {
                       {/* SECTION: Axes d'intérêt (pour Membre institutionnel uniquement) */}
                       {selectedAdhesionType === "institutionnel" && (
                         <>
-                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                          <div className="pb-8 p-6 bg-gradient-to-br from-white to-orange-50/30 rounded-2xl border-2 border-gray-200 shadow-sm">
                             <div className="flex items-center gap-3 mb-6">
                               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cpu-orange/10">
                                 <Target className="h-5 w-5 text-cpu-orange" />

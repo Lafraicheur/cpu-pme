@@ -49,9 +49,11 @@ class ProxyApiClient {
           errorData = {};
         }
         console.error('❌ [PROXY CLIENT] Erreur HTTP:', {
+          url,
+          method,
           status: response.status,
           statusText: response.statusText,
-          errorData
+          errorData: JSON.stringify(errorData)
         });
         const error: ApiError = {
           message: (errorData as any).error || (errorData as any).message || `HTTP ${response.status}: ${response.statusText}`,
@@ -76,7 +78,13 @@ class ProxyApiClient {
       
       return { data: normalizedData };
     } catch (error) {
-      console.error('❌ [PROXY CLIENT] Fetch failed:', { url, options: { method: config.method } , error });
+      console.error('❌ [PROXY CLIENT] Fetch failed:', {
+        url,
+        method: config.method,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorType: error?.constructor?.name,
+        errorStack: error instanceof Error ? error.stack : undefined
+      });
       if (error && typeof error === 'object' && 'message' in error) {
         throw error as ApiError;
       }
