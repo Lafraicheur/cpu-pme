@@ -3039,6 +3039,29 @@ const MembersContent = () => {
     return isUuid(match?.id) ? match?.id : undefined;
   };
 
+  // Résoudre les IDs des sous-filières multiples (pour federation_filiere)
+  const resolveSousFiliereIds = () => {
+    if (selectedSubCategoriesMultiple.length === 0) {
+      return [];
+    }
+
+    const subCategories = getSubCategoriesForFiliere();
+    const ids: string[] = [];
+
+    selectedSubCategoriesMultiple.forEach((selectedValue) => {
+      const match = subCategories.find((subCat: { id?: string; nom: string }) => {
+        const value = subCat.id || subCat.nom;
+        return value === selectedValue;
+      });
+
+      if (match?.id && isUuid(match.id)) {
+        ids.push(match.id);
+      }
+    });
+
+    return ids;
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -3063,6 +3086,7 @@ const MembersContent = () => {
       const centresInteretIds = resolveCentresInteretIds();
       const filieresPrioritairesIds = resolveFilieresPrioritairesIds();
       const regionsInterventionIds = resolveRegionIds(selectedRegions);
+      const sousFiliereIds = resolveSousFiliereIds();
       
       // Pour les individuels : name = nom de la personne, pas de customOrganisationName
       // Pour les autres : name = nom du représentant, customOrganisationName = nom de l'organisation
@@ -3083,7 +3107,10 @@ const MembersContent = () => {
           ? selectedMainSector
           : undefined,
         filiereId: isUuid(selectedFiliere) ? selectedFiliere : undefined,
-        sousFiliereId: resolveSousFiliereId(),
+        // Envoyer sousFiliereIds pour federation_filiere, sinon sousFiliereId
+        ...(selectedSubProfile === "federation_filiere" && sousFiliereIds.length > 0
+          ? { sousFiliereIds }
+          : { sousFiliereId: resolveSousFiliereId() }),
         ...(activitesIds.length > 0 ? { activitesIds } : {}),
         ...(centresInteretIds.length > 0 ? { centresInteretIds } : {}),
         ...(filieresPrioritairesIds.length > 0
@@ -3136,6 +3163,20 @@ const MembersContent = () => {
       setSelectedBadge("");
       setSelectedMainSector("");
       setSelectedFiliere("");
+      setSelectedSubCategory("");
+      setSelectedSubCategoriesMultiple([]);
+      setSelectedActivities([]);
+      setHasAffiliation(false);
+      setSelectedOrgType("");
+      setSelectedOrganisation("");
+      setCustomOrganisationName("");
+      setSelectedPriorities([]);
+      setSelectedSectors([]);
+      setSelectedRegions([]);
+      setSelectedAxesInteret([]);
+      setSelectedFilieresPrioritaires([]);
+      setHasBureauCI(false);
+      setHasBureauInternational(false);
       setOrgName("");
       setFormName("");
       setFormPosition("");
