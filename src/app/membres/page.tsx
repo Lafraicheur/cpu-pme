@@ -5,6 +5,26 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Head from "next/head";
 import Image from "next/image";
 import {
+  validateRepresentativeName,
+  validatePosition,
+  validateOrganisationName,
+  validateEmail,
+  validatePhone,
+  validateWebsite,
+  validateDescription,
+  validateSectorSelection,
+  validateLocation,
+  validateActivities,
+  validateEmployeeCount,
+  validateCompleteForm,
+  formatPhoneCI,
+  sanitizeText,
+  sanitizeHtml,
+  isValidUuid,
+  type ValidationError,
+} from "@/lib/validation-helpers";
+import ValidationErrorModal from "@/components/ValidationErrorModal";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -870,6 +890,12 @@ const MembersContent = () => {
   const [emailValid, setEmailValid] = useState<boolean>(false);
   const [phoneValid, setPhoneValid] = useState<boolean>(false);
 
+  // États pour erreurs de validation (guidance utilisateur)
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [showValidationModal, setShowValidationModal] = useState<boolean>(false);
+  const [fieldHasBlurred, setFieldHasBlurred] = useState<{ [key: string]: boolean }>({});
+
   // États pour sauvegarde automatique
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isDraftRestored, setIsDraftRestored] = useState<boolean>(false);
@@ -1705,37 +1731,101 @@ const MembersContent = () => {
     return allTags;
   };
 
-  // Fonctions de validation temps réel
-  const validateEmail = (email: string) => {
-    if (!email) {
-      setEmailError("");
-      setEmailValid(false);
-      return;
-    }
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!regex.test(email)) {
-      setEmailError("Format d'email invalide");
-      setEmailValid(false);
+  // Fonctions de validation temps réel (améliorées)
+  const validateEmailField = (email: string) => {
+    const validation = validateEmail(email);
+    setEmailError(validation.error);
+    setEmailValid(validation.isValid);
+    
+    if (validation.isValid) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.formEmail;
+        return newErrors;
+      });
     } else {
-      setEmailError("");
-      setEmailValid(true);
+      setFormErrors((prev) => ({ ...prev, formEmail: validation.error }));
     }
   };
 
-  const validatePhone = (phone: string) => {
-    if (!phone) {
-      setPhoneError("");
-      setPhoneValid(false);
-      return;
-    }
-    // Validation pour format ivoirien: +225 XX XX XX XX XX ou variantes
-    const regex = /^(\+225|00225|225)?\s*\d{2}\s*\d{2}\s*\d{2}\s*\d{2}\s*\d{2}$/;
-    if (!regex.test(phone.replace(/\s/g, ''))) {
-      setPhoneError("Format invalide (ex: +225 XX XX XX XX XX)");
-      setPhoneValid(false);
+  const validatePhoneField = (phone: string) => {
+    const validation = validatePhone(phone);
+    setPhoneError(validation.error);
+    setPhoneValid(validation.isValid);
+    
+    if (validation.isValid) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.formPhone;
+        return newErrors;
+      });
     } else {
-      setPhoneError("");
-      setPhoneValid(true);
+      setFormErrors((prev) => ({ ...prev, formPhone: validation.error }));
+    }
+  };
+
+  const validateNameField = (name: string) => {
+    const validation = validateRepresentativeName(name);
+    if (validation.isValid) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.formName;
+        return newErrors;
+      });
+    } else {
+      setFormErrors((prev) => ({ ...prev, formName: validation.error }));
+    }
+  };
+
+  const validateOrgNameField = (name: string) => {
+    const validation = validateOrganisationName(name);
+    if (validation.isValid) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.orgName;
+        return newErrors;
+      });
+    } else {
+      setFormErrors((prev) => ({ ...prev, orgName: validation.error }));
+    }
+  };
+
+  const validatePositionField = (position: string) => {
+    const validation = validatePosition(position);
+    if (validation.isValid) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.formPosition;
+        return newErrors;
+      });
+    } else {
+      setFormErrors((prev) => ({ ...prev, formPosition: validation.error }));
+    }
+  };
+
+  const validateWebsiteField = (website: string) => {
+    const validation = validateWebsite(website);
+    if (validation.isValid) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.formWebsite;
+        return newErrors;
+      });
+    } else {
+      setFormErrors((prev) => ({ ...prev, formWebsite: validation.error }));
+    }
+  };
+
+  const validateDescriptionField = (description: string) => {
+    const validation = validateDescription(description);
+    if (validation.isValid) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.formMessage;
+        return newErrors;
+      });
+    } else {
+      setFormErrors((prev) => ({ ...prev, formMessage: validation.error }));
     }
   };
 
@@ -3062,11 +3152,64 @@ const MembersContent = () => {
     return ids;
   };
 
+  // Résoudre le nombre d'employés avec mapping pour l'API
+  // Mapping des options du formulaire vers les valeurs acceptées par l'API
+  const resolveEmployeeCount = () => {
+    if (!nombreEmploye) {
+      return undefined;
+    }
+
+    const employeeMapping: { [key: string]: string } = {
+      "0-10": "0-10",        // Range accepté par l'API
+      "11-50": "11-50",      // Range accepté par l'API
+      "51-200": "51-200",    // Range accepté par l'API
+      "201-500": "201-500",  // Range accepté par l'API
+      "500+": "500",         // "Plus de 500" → "500" (nombre au lieu de "500+")
+    };
+
+    return employeeMapping[nombreEmploye] || undefined;
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (isSubmitting) return;
+
+    // ===== VALIDATION COMPLÈTE AVANT SOUMISSION =====
+    const errors = validateCompleteForm({
+      selectedAdhesionType,
+      formName,
+      formPosition,
+      orgName,
+      formEmail,
+      formPhone,
+      formWebsite,
+      formMessage,
+      selectedFiliere,
+      selectedMainSector,
+      selectedSubCategory:
+        selectedSubProfile === "federation_filiere"
+          ? selectedSubCategoriesMultiple
+          : selectedSubCategory,
+      selectedActivities,
+      siegeCommune,
+      siegeRegion,
+      siegeVille,
+      siegeVillage,
+      selectedBadge,
+      numberOfEmployees: nombreEmploye,
+      selectedSubProfile,
+    });
+
+    if (errors.length > 0) {
+      // Afficher les erreurs dans le modal
+      setValidationErrors(errors);
+      setShowValidationModal(true);
+      return;
+    }
+
+    // ===== VALIDATION RÉUSSIE - PROCÉDER À LA SOUMISSION =====
     if (!selectedTypeMembre?.id) {
       toast({
         title: "Type de membre requis",
@@ -3088,66 +3231,80 @@ const MembersContent = () => {
       const regionsInterventionIds = resolveRegionIds(selectedRegions);
       const sousFiliereIds = resolveSousFiliereIds();
       
+      // ===== SANITIZATION STRICTE AVANT ENVOI API =====
       // Pour les individuels : name = nom de la personne, pas de customOrganisationName
       // Pour les autres : name = nom du représentant, customOrganisationName = nom de l'organisation
-      const adhesionName = formName; // Toujours le nom du représentant/personne
+      const adhesionName = sanitizeText(formName); // Toujours le nom du représentant/personne
       const companyName =
-        selectedAdhesionType === "individuel" ? undefined : orgName || undefined;
+        selectedAdhesionType === "individuel" 
+          ? undefined 
+          : (orgName ? sanitizeText(orgName) : undefined);
+
+      // ===== VALIDATION ET SANITIZATION DES UUIDs =====
+      const validatedTypeMembreId = isValidUuid(selectedTypeMembre.id) ? selectedTypeMembre.id : undefined;
+      const validatedProfilId = resolveProfilId() && isValidUuid(resolveProfilId()) ? resolveProfilId() : undefined;
+      const validatedAbonnementId = resolveAbonnementId() && isValidUuid(resolveAbonnementId()) ? resolveAbonnementId() : undefined;
+      const validatedSecteurId = selectedMainSector && isValidUuid(selectedMainSector) ? selectedMainSector : undefined;
+      const validatedFiliereId = selectedFiliere && isValidUuid(selectedFiliere) ? selectedFiliere : undefined;
+
+      // ===== SANITIZATION DES ARRAYS D'IDs =====
+      const safeSousFiliereIds = selectedSubProfile === "federation_filiere" 
+        ? sousFiliereIds.filter(id => isValidUuid(id))
+        : [];
+      
+      const safeActivitesIds = activitesIds.filter(id => isValidUuid(id));
+      const safeCentresInteretIds = centresInteretIds.filter(id => isValidUuid(id));
+      const safeFilieresPrioritairesIds = filieresPrioritairesIds.filter(id => isValidUuid(id));
+      const safeRegionsInterventionIds = regionsInterventionIds.filter(id => isValidUuid(id));
 
       const adhesionPayload = {
         name: adhesionName,
-        position: formPosition || undefined,
-        email: formEmail,
-        phone: formPhone,
-        message: formMessage || undefined,
-        typeMembreId: selectedTypeMembre.id,
-        profilId: resolveProfilId(),
-        abonnementId: resolveAbonnementId(),
-        secteurPrincipalId: isUuid(selectedMainSector)
-          ? selectedMainSector
-          : undefined,
-        filiereId: isUuid(selectedFiliere) ? selectedFiliere : undefined,
+        position: formPosition ? sanitizeText(formPosition) : undefined,
+        email: sanitizeText(formEmail),
+        phone: formatPhoneCI(formPhone), // Format standard CI
+        message: formMessage ? sanitizeText(formMessage) : undefined,
+        typeMembreId: validatedTypeMembreId,
+        profilId: validatedProfilId,
+        abonnementId: validatedAbonnementId,
+        secteurPrincipalId: validatedSecteurId,
+        filiereId: validatedFiliereId,
         // Envoyer sousFiliereIds pour federation_filiere, sinon sousFiliereId
-        ...(selectedSubProfile === "federation_filiere" && sousFiliereIds.length > 0
-          ? { sousFiliereIds }
-          : { sousFiliereId: resolveSousFiliereId() }),
-        ...(activitesIds.length > 0 ? { activitesIds } : {}),
-        ...(centresInteretIds.length > 0 ? { centresInteretIds } : {}),
-        ...(filieresPrioritairesIds.length > 0
-          ? { filieresPrioritairesIds }
+        ...(selectedSubProfile === "federation_filiere" && safeSousFiliereIds.length > 0
+          ? { sousFiliereIds: safeSousFiliereIds }
+          : { sousFiliereId: resolveSousFiliereId() && isValidUuid(resolveSousFiliereId()) ? resolveSousFiliereId() : undefined }),
+        ...(safeActivitesIds.length > 0 ? { activitesIds: safeActivitesIds } : {}),
+        ...(safeCentresInteretIds.length > 0 ? { centresInteretIds: safeCentresInteretIds } : {}),
+        ...(safeFilieresPrioritairesIds.length > 0
+          ? { filieresPrioritairesIds: safeFilieresPrioritairesIds }
           : {}),
-        ...(regionsInterventionIds.length > 0
-          ? { regionsInterventionIds }
+        ...(safeRegionsInterventionIds.length > 0
+          ? { regionsInterventionIds: safeRegionsInterventionIds }
           : {}),
         interventionScope: interventionScope || undefined,
-        siegeRegionId: resolveRegionId(siegeRegion),
-        siegeCommuneId: communeId,
-        siegeVille: siegeVille || undefined,
-        siegeVillage: siegeVillage || undefined,
+        siegeRegionId: resolveRegionId(siegeRegion) && isValidUuid(resolveRegionId(siegeRegion)) 
+          ? resolveRegionId(siegeRegion)
+          : undefined,
+        siegeCommuneId: communeId && isValidUuid(communeId) ? communeId : undefined,
+        siegeVille: sanitizeText(siegeVille || ""),
+        siegeVillage: sanitizeText(siegeVillage || ""),
         hasBureauCI:
           selectedAdhesionType === "institutionnel" ? hasBureauCI : undefined,
         hasAffiliation: hasAffiliation || undefined,
-        organisationType: hasAffiliation ? selectedOrgType || undefined : undefined,
+        organisationType: hasAffiliation ? sanitizeText(selectedOrgType || "") : undefined,
         organisationName: hasAffiliation
-          ? selectedOrganisation || undefined
+          ? sanitizeText(selectedOrganisation || "")
           : undefined,
         customOrganisationName: companyName, // Nom de l'entreprise/organisation
         isCompetitionSubcontractor:
           isCompetitionSubcontractor ?? undefined,
         hasFinancingProject: hasFinancingProject ?? undefined,
-        nombre_employee: nombreEmploye ? nombreEmploye : undefined,
+        nombre_employee: resolveEmployeeCount(),
         website_url: formWebsite && formWebsite.trim().length > 0 
           ? formWebsite.trim()
-              .replace(/&amp;/g, '&')
-              .replace(/&lt;/g, '<')
-              .replace(/&gt;/g, '>')
-              .replace(/&quot;/g, '"')
-              .replace(/&#x2F;/g, '/')
-              .replace(/&#47;/g, '/')
           : undefined,
-        internationalAddress: selectedAdhesionType === "institutionnel" && hasBureauInternational && internationalAddress ? internationalAddress : undefined,
-        internationalCity: selectedAdhesionType === "institutionnel" && hasBureauInternational && internationalCity ? internationalCity : undefined,
-        internationalCountry: selectedAdhesionType === "institutionnel" && hasBureauInternational && internationalCountry ? internationalCountry : undefined,
+        internationalAddress: selectedAdhesionType === "institutionnel" && hasBureauInternational && internationalAddress ? sanitizeText(internationalAddress) : undefined,
+        internationalCity: selectedAdhesionType === "institutionnel" && hasBureauInternational && internationalCity ? sanitizeText(internationalCity) : undefined,
+        internationalCountry: selectedAdhesionType === "institutionnel" && hasBureauInternational && internationalCountry ? sanitizeText(internationalCountry) : undefined,
       };
 
       await adhesionsService.create(adhesionPayload);
@@ -3192,6 +3349,7 @@ const MembersContent = () => {
       setInternationalAddress("");
       setInternationalCity("");
       setInternationalCountry("");
+      setFormErrors({}); // Effacer les erreurs
     } catch (error) {
       console.error("Erreur lors de la soumission:", error);
       const apiErrorMessage =
@@ -3692,9 +3850,32 @@ const MembersContent = () => {
     }
 
     // Filtrer les abonnements par typeMembreId
-    const filteredPlans = abonnementsApi.filter((plan) => {
+    let filteredPlans = abonnementsApi.filter((plan) => {
       return plan.isActive && plan.typeMembreId === selectedTypeMembreId;
     });
+
+    // Logique spéciale pour les membres associatifs : filtrer par profil
+    if (selectedAdhesionType === "associatif" && selectedSubProfile) {
+      if (selectedSubProfile === "federation_filiere") {
+        // Afficher uniquement "Abonnement Federation"
+        // Inclure les variantes : fédération, federation, avec/sans accents
+        filteredPlans = filteredPlans.filter((plan) => {
+          const libelle = plan.libelle.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          return libelle.includes("federation") || libelle.includes("filiere");
+        });
+      } else {
+        // Pour les autres profils associatifs (cooperative, groupement_gie, association_professionnelle)
+        // Afficher uniquement "Abonnement Association/Cooperative/Gie"
+        filteredPlans = filteredPlans.filter((plan) => {
+          const libelle = plan.libelle.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          return (
+            libelle.includes("association") ||
+            libelle.includes("cooperative") ||
+            libelle.includes("gie")
+          );
+        });
+      }
+    }
 
     // Transformer les abonnements API en format compatible avec le Select
     return filteredPlans.map((plan) => ({
@@ -7020,14 +7201,34 @@ const MembersContent = () => {
                                 id="representativeName"
                                 placeholder="Prénom et Nom"
                                 required
-                                className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 pr-10 text-gray-900"
+                                className={`h-12 border-2 transition-colors rounded-xl px-4 pr-10 text-gray-900 ${
+                                  formErrors.formName
+                                    ? "border-red-500 focus:border-red-600"
+                                    : "border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange"
+                                }`}
                                 value={formName}
-                                onChange={(e) => setFormName(e.target.value)}
+                                onChange={(e) => {
+                                  setFormName(e.target.value);
+                                  if (fieldHasBlurred.formName) validateNameField(e.target.value);
+                                }}
+                                onBlur={(e) => {
+                                  setFieldHasBlurred((prev) => ({ ...prev, formName: true }));
+                                  validateNameField(e.target.value);
+                                }}
                               />
-                              {formName && (
+                              {!formErrors.formName && formName && (
                                 <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-cpu-green animate-in zoom-in duration-200" />
                               )}
                             </div>
+                            {formErrors.formName && (
+                              <p className="text-sm text-red-600 flex items-center gap-1">
+                                <AlertCircle className="h-4 w-4" />
+                                {formErrors.formName}
+                              </p>
+                            )}
+                            <p className="text-xs text-gray-500">
+                              💡 Lettres uniquement, minimum 3 caractères
+                            </p>
                           </div>
 
                           <div className="space-y-3">
@@ -7044,14 +7245,34 @@ const MembersContent = () => {
                               <Input
                                 id="position"
                                 placeholder="Ex: Directeur Général, Gérant"
-                                className="h-12 border-2 border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange transition-colors rounded-xl px-4 pr-10 text-gray-900"
+                                className={`h-12 border-2 transition-colors rounded-xl px-4 pr-10 text-gray-900 ${
+                                  formErrors.formPosition
+                                    ? "border-red-500 focus:border-red-600"
+                                    : "border-gray-200 hover:border-cpu-orange/50 focus:border-cpu-orange"
+                                }`}
                                 value={formPosition}
-                                onChange={(e) => setFormPosition(e.target.value)}
+                                onChange={(e) => {
+                                  setFormPosition(e.target.value);
+                                  if (fieldHasBlurred.formPosition) validatePositionField(e.target.value);
+                                }}
+                                onBlur={(e) => {
+                                  setFieldHasBlurred((prev) => ({ ...prev, formPosition: true }));
+                                  validatePositionField(e.target.value);
+                                }}
                               />
-                              {formPosition && (
+                              {!formErrors.formPosition && formPosition && (
                                 <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-cpu-green animate-in zoom-in duration-200" />
                               )}
                             </div>
+                            {formErrors.formPosition && (
+                              <p className="text-sm text-red-600 flex items-center gap-1">
+                                <AlertCircle className="h-4 w-4" />
+                                {formErrors.formPosition}
+                              </p>
+                            )}
+                            <p className="text-xs text-gray-500">
+                              💡 Champ optionnel
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -7094,7 +7315,7 @@ const MembersContent = () => {
                                       <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p className="max-w-xs">Le nom officiel de votre entreprise ou organisation</p>
+                                      <p className="max-w-xs">Le nom officiel de votre entreprise ou organisation (lettres uniquement)</p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -7104,14 +7325,34 @@ const MembersContent = () => {
                                   id="orgName"
                                   placeholder="Ex: Ma Société SARL"
                                   required
-                                  className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 pr-10 text-gray-900"
+                                  className={`h-12 border-2 transition-colors rounded-xl px-4 pr-10 text-gray-900 ${
+                                    formErrors.orgName
+                                      ? "border-red-500 focus:border-red-600"
+                                      : "border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green"
+                                  }`}
                                   value={orgName}
-                                  onChange={(e) => setOrgName(e.target.value)}
+                                  onChange={(e) => {
+                                    setOrgName(e.target.value);
+                                    if (fieldHasBlurred.orgName) validateOrgNameField(e.target.value);
+                                  }}
+                                  onBlur={(e) => {
+                                    setFieldHasBlurred((prev) => ({ ...prev, orgName: true }));
+                                    validateOrgNameField(e.target.value);
+                                  }}
                                 />
-                                {orgName && (
+                                {!formErrors.orgName && orgName && (
                                   <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-cpu-green animate-in zoom-in duration-200" />
                                 )}
                               </div>
+                              {formErrors.orgName && (
+                                <p className="text-sm text-red-600 flex items-center gap-1">
+                                  <AlertCircle className="h-4 w-4" />
+                                  {formErrors.orgName}
+                                </p>
+                              )}
+                              <p className="text-xs text-gray-500">
+                                💡 Nom officiel, minimum 3 caractères, lettres et chiffres autorisés
+                              </p>
                             </div>
 
                             {/* Email de l'entreprise avec validation */}
@@ -7141,9 +7382,12 @@ const MembersContent = () => {
                                   value={formEmail}
                                   onChange={(e) => {
                                     setFormEmail(e.target.value);
-                                    validateEmail(e.target.value);
+                                    if (fieldHasBlurred.formEmail) validateEmailField(e.target.value);
                                   }}
-                                  onBlur={() => validateEmail(formEmail)}
+                                  onBlur={(e) => {
+                                    setFieldHasBlurred((prev) => ({ ...prev, formEmail: true }));
+                                    validateEmailField(e.target.value);
+                                  }}
                                   suppressHydrationWarning
                                 />
                                 {emailValid && !emailError && (
@@ -7159,6 +7403,9 @@ const MembersContent = () => {
                                   {emailError}
                                 </p>
                               )}
+                              <p className="text-xs text-gray-500">
+                                💡 Email professionnel obligatoire (pas de tempmail ou domaines temporaires)
+                              </p>
                             </div>
                           </div>
 
@@ -7175,26 +7422,44 @@ const MembersContent = () => {
                                 </Label>
                                 <span className="text-red-500 text-base invisible">*</span>
                               </div>
-                              <Input
-                                id="website"
-                                type="text"
-                                placeholder="https://www.entreprise.ci"
-                                className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 text-gray-900"
-                                value={formWebsite}
-                                onChange={(e) => {
-                                  // Récupérer la valeur brute et la décoder si elle est HTML-encodée
-                                  let rawValue = e.currentTarget.value;
-                                  // Supprimer tout HTML encoding
-                                  rawValue = rawValue
-                                    .replace(/&amp;/g, '&')
-                                    .replace(/&lt;/g, '<')
-                                    .replace(/&gt;/g, '>')
-                                    .replace(/&quot;/g, '"')
-                                    .replace(/&#x2F;/g, '/')
-                                    .replace(/&#47;/g, '/');
-                                  setFormWebsite(rawValue);
-                                }}
-                              />
+                              <div className="relative">
+                                <Input
+                                  id="website"
+                                  type="text"
+                                  placeholder="https://www.entreprise.ci"
+                                  className={`h-12 border-2 transition-colors rounded-xl px-4 pr-10 text-gray-900 ${
+                                    formErrors.formWebsite
+                                      ? "border-red-500 focus:border-red-600"
+                                      : "border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green"
+                                  }`}
+                                  value={formWebsite}
+                                  onChange={(e) => {
+                                    let rawValue = e.currentTarget.value;
+                                    rawValue = rawValue
+                                      .replace(/&amp;/g, '&')
+                                      .replace(/&lt;/g, '<')
+                                      .replace(/&gt;/g, '>')
+                                      .replace(/&quot;/g, '"')
+                                      .replace(/&#x2F;/g, '/')
+                                      .replace(/&#47;/g, '/');
+                                    setFormWebsite(rawValue);
+                                    if (fieldHasBlurred.formWebsite) validateWebsiteField(rawValue);
+                                  }}
+                                  onBlur={(e) => {
+                                    setFieldHasBlurred((prev) => ({ ...prev, formWebsite: true }));
+                                    validateWebsiteField(e.target.value);
+                                  }}
+                                />
+                              </div>
+                              {formErrors.formWebsite && (
+                                <p className="text-sm text-red-600 flex items-center gap-1">
+                                  <AlertCircle className="h-4 w-4" />
+                                  {formErrors.formWebsite}
+                                </p>
+                              )}
+                              <p className="text-xs text-gray-500">
+                                💡 Optionnel • Format: https://www.example.com
+                              </p>
                             </div>
 
                             {/* Téléphone de l'entreprise */}
@@ -7224,9 +7489,12 @@ const MembersContent = () => {
                                   value={formPhone}
                                   onChange={(e) => {
                                     setFormPhone(e.target.value);
-                                    validatePhone(e.target.value);
+                                    if (fieldHasBlurred.formPhone) validatePhoneField(e.target.value);
                                   }}
-                                  onBlur={() => validatePhone(formPhone)}
+                                  onBlur={(e) => {
+                                    setFieldHasBlurred((prev) => ({ ...prev, formPhone: true }));
+                                    validatePhoneField(e.target.value);
+                                  }}
                                 />
                                 {phoneValid && !phoneError && (
                                   <CheckCircle className="absolute right-3 top-3.5 h-5 w-5 text-green-600 animate-in zoom-in duration-200" />
@@ -7241,6 +7509,9 @@ const MembersContent = () => {
                                   {phoneError}
                                 </p>
                               )}
+                              <p className="text-xs text-gray-500">
+                                💡 Format Côte d'Ivoire requis
+                              </p>
                             </div>
                           </div>
 
@@ -7293,14 +7564,34 @@ const MembersContent = () => {
                             <Textarea
                               id="message"
                               placeholder="Décrivez brièvement votre organisation, votre activité principale, et vos attentes..."
-                              className="min-h-[120px] border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl px-4 py-3 text-gray-900 resize-none"
+                              className={`min-h-[120px] border-2 transition-colors rounded-xl px-4 py-3 text-gray-900 resize-none ${
+                                formErrors.formMessage
+                                  ? "border-red-500 focus:border-red-600"
+                                  : "border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green"
+                              }`}
                               value={formMessage}
-                              onChange={(e) => setFormMessage(e.target.value)}
+                              onChange={(e) => {
+                                setFormMessage(e.target.value);
+                                if (fieldHasBlurred.formMessage) validateDescriptionField(e.target.value);
+                              }}
+                              onBlur={(e) => {
+                                setFieldHasBlurred((prev) => ({ ...prev, formMessage: true }));
+                                validateDescriptionField(e.target.value);
+                              }}
                               maxLength={1500}
                             />
+                            {formErrors.formMessage && (
+                              <p className="text-sm text-red-600 flex items-center gap-1">
+                                <AlertCircle className="h-4 w-4" />
+                                {formErrors.formMessage}
+                              </p>
+                            )}
                             <p className="text-xs text-gray-500 flex items-center gap-1">
                               <Lightbulb className="h-3 w-3" />
                               {formMessage.length}/1500 caractères • ~{Math.ceil(formMessage.split(/\s+/).filter(word => word.length > 0).length)} mots
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              💡 Optionnel • Minimum 20 caractères si fourni
                             </p>
                           </div>
                         </div>
@@ -8569,6 +8860,13 @@ const MembersContent = () => {
                         </Button>
                        
                       </div>
+
+                      {/* Modal de validation des erreurs */}
+                      <ValidationErrorModal
+                        isOpen={showValidationModal}
+                        onClose={() => setShowValidationModal(false)}
+                        errors={validationErrors}
+                      />
                     </form>
                   </div>
                 </div>
