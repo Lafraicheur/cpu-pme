@@ -3241,11 +3241,13 @@ const MembersContent = () => {
           : (orgName ? sanitizeText(orgName) : undefined);
 
       // ===== VALIDATION ET SANITIZATION DES UUIDs =====
-      const validatedTypeMembreId = isValidUuid(selectedTypeMembre.id) ? selectedTypeMembre.id : undefined;
-      const validatedProfilId = resolveProfilId() && isValidUuid(resolveProfilId()) ? resolveProfilId() : undefined;
-      const validatedAbonnementId = resolveAbonnementId() && isValidUuid(resolveAbonnementId()) ? resolveAbonnementId() : undefined;
-      const validatedSecteurId = selectedMainSector && isValidUuid(selectedMainSector) ? selectedMainSector : undefined;
-      const validatedFiliereId = selectedFiliere && isValidUuid(selectedFiliere) ? selectedFiliere : undefined;
+      const validatedTypeMembreId = isValidUuid(selectedTypeMembre.id) ? selectedTypeMembre.id : selectedTypeMembre.id;
+      const profilIdValue = resolveProfilId();
+      const validatedProfilId = isValidUuid(profilIdValue) ? profilIdValue : profilIdValue;
+      const abonnementIdValue = resolveAbonnementId();
+      const validatedAbonnementId = isValidUuid(abonnementIdValue) ? abonnementIdValue : abonnementIdValue;
+      const validatedSecteurId = isValidUuid(selectedMainSector) ? selectedMainSector : undefined;
+      const validatedFiliereId = isValidUuid(selectedFiliere) ? selectedFiliere : undefined;
 
       // ===== SANITIZATION DES ARRAYS D'IDs =====
       const safeSousFiliereIds = selectedSubProfile === "federation_filiere" 
@@ -3281,10 +3283,11 @@ const MembersContent = () => {
           ? { regionsInterventionIds: safeRegionsInterventionIds }
           : {}),
         interventionScope: interventionScope || undefined,
-        siegeRegionId: resolveRegionId(siegeRegion) && isValidUuid(resolveRegionId(siegeRegion)) 
-          ? resolveRegionId(siegeRegion)
-          : undefined,
-        siegeCommuneId: communeId && isValidUuid(communeId) ? communeId : undefined,
+        siegeRegionId: (() => {
+          const regionId = resolveRegionId(siegeRegion);
+          return isValidUuid(regionId) ? regionId : undefined;
+        })(),
+        siegeCommuneId: isValidUuid(communeId) ? communeId : undefined,
         siegeVille: sanitizeText(siegeVille || ""),
         siegeVillage: sanitizeText(siegeVillage || ""),
         hasBureauCI:
