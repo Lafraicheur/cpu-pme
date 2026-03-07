@@ -1840,6 +1840,12 @@ const MembersContent = () => {
     }
     total++;
 
+    // Profil (obligatoire pour tous)
+    if (selectedAdhesionType) {
+      if (selectedSubProfile) completed++;
+      total++;
+    }
+
     // Organisation
     if (selectedAdhesionType) {
       if (orgName) completed++;
@@ -1850,6 +1856,12 @@ const MembersContent = () => {
     // Secteur d'activité (sauf institutionnel)
     if (selectedAdhesionType && selectedAdhesionType !== "institutionnel") {
       if (selectedFiliere || selectedMainSector) completed++;
+      total++;
+    }
+
+    // Activités / Corps de métiers (obligatoire sauf institutionnel et federation_filiere)
+    if (selectedAdhesionType && selectedAdhesionType !== "institutionnel" && selectedSubProfile !== "federation_filiere") {
+      if (selectedActivities.length > 0) completed++;
       total++;
     }
 
@@ -1881,17 +1893,24 @@ const MembersContent = () => {
       }
     }
 
-    // Zones d'intervention (pour non-institutionnel)
+    // Portée d'intervention (obligatoire pour non-institutionnel)
     if (selectedAdhesionType && selectedAdhesionType !== "institutionnel") {
-      if (interventionScope === "national" || selectedRegions.length > 0) completed++;
+      if (interventionScope === "national" || (interventionScope === "regions_specifiques" && selectedRegions.length > 0) || interventionScope) completed++;
+      total++;
+    }
+
+    // Nombre d'employés (obligatoire pour non-institutionnel)
+    if (selectedAdhesionType && selectedAdhesionType !== "institutionnel") {
+      if (nombreEmploye) completed++;
       total++;
     }
 
     // Contact
     if (selectedAdhesionType) {
       if (formName) completed++;
+      if (formPosition) completed++; // Fonction (obligatoire)
       if (formPhone && phoneValid) completed++;
-      total += 2;
+      total += 3;
     }
 
     // Formule
@@ -3170,6 +3189,49 @@ const MembersContent = () => {
     return employeeMapping[nombreEmploye] || undefined;
   };
 
+  const scrollToFirstError = (errors: { field: string }[]) => {
+    if (!errors || errors.length === 0) return;
+
+    const fieldToElementId: Record<string, string> = {
+      selectedAdhesionType: "memberType",
+      selectedSubProfile: "subProfile",
+      formName: "representativeName",
+      formPosition: "position",
+      orgName: "orgName",
+      formEmail: "email",
+      formPhone: "phone",
+      formWebsite: "website",
+      formMessage: "message",
+      selectedSubCategory: "subFiliereSection",
+      selectedActivities: "activitiesSection",
+      siegeCommune: "siegeCommune",
+      siegeRegion: "siegeRegion",
+      numberOfEmployees: "employees",
+      interventionScope: "interventionScope",
+      selectedRegions: "regionsSelection",
+      selectedBadge: "membershipPlan",
+    };
+
+    const firstField = errors[0].field;
+    const targetId = fieldToElementId[firstField];
+    if (!targetId) return;
+
+    const target = document.getElementById(targetId);
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    // Focus if element is focusable, otherwise try a focusable child.
+    if (typeof (target as HTMLElement).focus === "function") {
+      (target as HTMLElement).focus({ preventScroll: true });
+    } else {
+      const focusable = target.querySelector<HTMLElement>(
+        'button, input, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      focusable?.focus({ preventScroll: true });
+    }
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -3181,6 +3243,8 @@ const MembersContent = () => {
       selectedAdhesionType,
       formName,
       formPosition,
+      interventionScope,
+      selectedRegions,
       orgName,
       formEmail,
       formPhone,
@@ -3203,6 +3267,15 @@ const MembersContent = () => {
     });
 
     if (errors.length > 0) {
+      const mappedErrors: { [key: string]: string } = {};
+      errors.forEach((error) => {
+        if (!mappedErrors[error.field]) {
+          mappedErrors[error.field] = error.message;
+        }
+      });
+      setFormErrors((prev) => ({ ...prev, ...mappedErrors }));
+      scrollToFirstError(errors);
+
       // Afficher les erreurs dans le modal
       setValidationErrors(errors);
       setShowValidationModal(true);
@@ -4369,17 +4442,18 @@ const MembersContent = () => {
             </div>
             {/* Annuaire Tab */}
             <TabsContent value="annuaire" className="mt-8" role="tabpanel" aria-label="Contenu de l'annuaire">
-              {/* Recent Members Section */}
-              <div className="mb-20 animate-fade-in-up" role="region" aria-label="Section membres récents">
-                <div className="flex items-center justify-between mb-10">
-                  <div className="flex items-center gap-4">
-                    <div className="w-1 h-10 bg-cpu-orange rounded-full" aria-hidden="true"></div>
-                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-800">
-                      Membres Récents
-                    </h2>
-                  </div>
-                  {/* Phase 5: Compteur et contrôles */}
-                  <div className="flex items-center gap-3" role="group" aria-label="Contrôles du carousel">
+              {/* Recent Members Section - Afficher seulement s'il y a des membres */}
+              {recentMembers.length > 0 && (
+                <div className="mb-20 animate-fade-in-up" role="region" aria-label="Section membres récents">
+                  <div className="flex items-center justify-between mb-10">
+                    <div className="flex items-center gap-4">
+                      <div className="w-1 h-10 bg-cpu-orange rounded-full" aria-hidden="true"></div>
+                      <h2 className="text-2xl sm:text-3xl font-bold text-slate-800">
+                        Membres Récents
+                      </h2>
+                    </div>
+                    {/* Phase 5: Compteur et contrôles */}
+                    <div className="flex items-center gap-3" role="group" aria-label="Contrôles du carousel">
                     <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full" role="status" aria-live="polite">
                       <Users className="h-4 w-4 text-cpu-orange" aria-hidden="true" />
                       <span className="text-sm font-bold text-gray-700" aria-label={`Membre ${featuredIndex + 1} sur ${recentMembers.length}`}>
@@ -4407,18 +4481,17 @@ const MembersContent = () => {
                     </Button>
                   </div>
                 </div>
-                {recentMembers.length > 0 ? (
-                  <div 
-                    className="relative"
-                    role="region"
-                    aria-label="Carousel de membres récents"
-                    aria-roledescription="carousel"
-                    onMouseEnter={() => setIsCarouselPaused(true)}
-                    onMouseLeave={() => setIsCarouselPaused(false)}
-                    onTouchStart={onTouchStart}
-                    onTouchMove={onTouchMove}
-                    onTouchEnd={onTouchEnd}
-                  >
+                <div 
+                  className="relative"
+                  role="region"
+                  aria-label="Carousel de membres récents"
+                  aria-roledescription="carousel"
+                  onMouseEnter={() => setIsCarouselPaused(true)}
+                  onMouseLeave={() => setIsCarouselPaused(false)}
+                  onTouchStart={onTouchStart}
+                  onTouchMove={onTouchMove}
+                  onTouchEnd={onTouchEnd}
+                >
                     {/* Phase 5: Barre de progression */}
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200 rounded-t-xl overflow-hidden z-20" role="progressbar" aria-label="Progression du carousel" aria-valuenow={carouselProgress} aria-valuemin={0} aria-valuemax={100}>
                       <div 
@@ -4650,12 +4723,8 @@ const MembersContent = () => {
                       </div>
                     </div>
                   </div>
-                ) : (
-                  <p className="text-gray-500">
-                    Aucune entreprise récemment inscrite pour le moment.
-                  </p>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Search and Filters Bar */}
               <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8 animate-fade-in-up animate-delay-200">
@@ -6681,7 +6750,7 @@ const MembersContent = () => {
                               }}
                               required
                             >
-                              <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium">
+                              <SelectTrigger id="memberType" className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium">
                                 <SelectValue placeholder="Sélectionnez un type" />
                               </SelectTrigger>
                               <SelectContent>
@@ -6782,12 +6851,15 @@ const MembersContent = () => {
 
                           {/* Sous-profil */}
                           <div className="space-y-3">
-                            <Label
-                              htmlFor="subProfile"
-                              className="text-sm font-semibold text-gray-700"
-                            >
-                              Profil
-                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Label
+                                htmlFor="subProfile"
+                                className="text-sm font-semibold text-gray-700"
+                              >
+                                Profil
+                              </Label>
+                              <span className="text-red-500 text-base">*</span>
+                            </div>
                             <Select
                               value={selectedSubProfile}
                               onValueChange={(value) => {
@@ -6953,6 +7025,12 @@ const MembersContent = () => {
                                 )}
                               </SelectContent>
                             </Select>
+                            {formErrors.selectedSubProfile && (
+                              <p className="text-sm text-red-600 flex items-center gap-1">
+                                <AlertCircle className="h-4 w-4" />
+                                {formErrors.selectedSubProfile}
+                              </p>
+                            )}
                           </div>
                         </div>
 
@@ -7242,12 +7320,13 @@ const MembersContent = () => {
                               >
                                 Fonction
                               </Label>
-                              <span className="text-red-500 text-base invisible">*</span>
+                              <span className="text-red-500 text-base">*</span>
                             </div>
                             <div className="relative">
                               <Input
                                 id="position"
                                 placeholder="Ex: Directeur Général, Gérant"
+                                required
                                 className={`h-12 border-2 transition-colors rounded-xl px-4 pr-10 text-gray-900 ${
                                   formErrors.formPosition
                                     ? "border-red-500 focus:border-red-600"
@@ -7274,7 +7353,7 @@ const MembersContent = () => {
                               </p>
                             )}
                             <p className="text-xs text-gray-500">
-                              💡 Champ optionnel
+                              💡 Champ obligatoire
                             </p>
                           </div>
                         </div>
@@ -7480,7 +7559,7 @@ const MembersContent = () => {
                                 <Input
                                   id="phone"
                                   type="tel"
-                                  placeholder="+225 XX XX XX XX XX"
+                                  placeholder="+2250707558846 ou +33612345678"
                                   required
                                   className={`h-12 border-2 transition-colors rounded-xl px-4 pr-10 text-gray-900 ${
                                     phoneError
@@ -7513,7 +7592,7 @@ const MembersContent = () => {
                                 </p>
                               )}
                               <p className="text-xs text-gray-500">
-                                💡 Format Côte d'Ivoire requis
+                                💡 Formats acceptes: international (+...) ou local CI (10 chiffres)
                               </p>
                             </div>
                           </div>
@@ -7522,12 +7601,15 @@ const MembersContent = () => {
                           {selectedAdhesionType !== "institutionnel" && (
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                               <div className="space-y-3">
-                                <Label
-                                  htmlFor="employees"
-                                  className="text-sm font-semibold text-gray-700"
-                                >
-                                  Nombre d'employés
-                                </Label>
+                                <div className="flex items-center gap-2">
+                                  <Label
+                                    htmlFor="employees"
+                                    className="text-sm font-semibold text-gray-700"
+                                  >
+                                    Nombre d'employés
+                                  </Label>
+                                  <span className="text-red-500 text-base">*</span>
+                                </div>
                                 <Select value={nombreEmploye} onValueChange={setNombreEmploye}>
                                   <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-cpu-green/50 focus:border-cpu-green transition-colors rounded-xl bg-white text-gray-900 font-medium">
                                     <SelectValue placeholder="Sélectionnez" />
@@ -7540,6 +7622,12 @@ const MembersContent = () => {
                                     <SelectItem value="500+">Plus de 500</SelectItem>
                                   </SelectContent>
                                 </Select>
+                                {formErrors.numberOfEmployees && (
+                                  <p className="text-sm text-red-600 flex items-center gap-1">
+                                    <AlertCircle className="h-4 w-4" />
+                                    {formErrors.numberOfEmployees}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           )}
@@ -7864,6 +7952,7 @@ const MembersContent = () => {
                                   <Label className="text-base font-bold text-gray-900">
                                     Activités / Corps de métiers
                                   </Label>
+                                  <span className="text-red-500 text-base">*</span>
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
@@ -7917,6 +8006,12 @@ const MembersContent = () => {
                                     </div>
                                   ))}
                               </div>
+                              {formErrors.selectedActivities && (
+                                <p className="text-sm text-red-600 flex items-center gap-1">
+                                  <AlertCircle className="h-4 w-4" />
+                                  {formErrors.selectedActivities}
+                                </p>
+                              )}
                             </div>
                           )}
                         </div>
@@ -8268,12 +8363,15 @@ const MembersContent = () => {
 
                             <div className="space-y-5">
                               <div className="space-y-3">
-                                <Label
-                                  htmlFor="interventionScope"
-                                  className="text-sm font-semibold text-gray-700"
-                                >
-                                  Portée de l'intervention
-                                </Label>
+                                <div className="flex items-center gap-2">
+                                  <Label
+                                    htmlFor="interventionScope"
+                                    className="text-sm font-semibold text-gray-700"
+                                  >
+                                    Portée de l'intervention
+                                  </Label>
+                                  <span className="text-red-500 text-base">*</span>
+                                </div>
                                 <Select
                                   value={interventionScope}
                                   onValueChange={(value) => {
@@ -8295,6 +8393,12 @@ const MembersContent = () => {
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
+                                {formErrors.interventionScope && (
+                                  <p className="text-sm text-red-600 flex items-center gap-1">
+                                    <AlertCircle className="h-4 w-4" />
+                                    {formErrors.interventionScope}
+                                  </p>
+                                )}
                               </div>
 
                               {/* Liste des régions en checkboxes */}
@@ -8396,6 +8500,12 @@ const MembersContent = () => {
                                         {selectedRegions.length > 1 ? "s" : ""}
                                       </span>
                                     </div>
+                                  )}
+                                  {formErrors.selectedRegions && (
+                                    <p className="text-sm text-red-600 flex items-center gap-1">
+                                      <AlertCircle className="h-4 w-4" />
+                                      {formErrors.selectedRegions}
+                                    </p>
                                   )}
                                 </div>
                               )}

@@ -52,12 +52,12 @@ export const validateRepresentativeName = (name: string): FieldValidationResult 
 };
 
 /**
- * Valide la fonction/position (optionnel)
- * Si rempli: min 3, max 100 caractères
+ * Valide la fonction/position (obligatoire)
+ * Min 3, max 100 caractères
  */
 export const validatePosition = (position: string): FieldValidationResult => {
   if (!position?.trim()) {
-    return { isValid: true, error: "" }; // Optionnel
+    return { isValid: false, error: "La fonction est obligatoire" };
   }
 
   const trimmedPosition = position.trim();
@@ -149,36 +149,47 @@ export const validateEmail = (email: string): FieldValidationResult => {
 };
 
 /**
- * Valide le numéro de téléphone Côte d'Ivoire
- * Strict: +225 XX XX XX XX XX (10 chiffres)
+ * Valide le numéro de téléphone (international + CI)
+ * - International: format E.164 (+[code pays][numéro], 8 à 15 chiffres)
+ * - Local CI: 10 chiffres commençant par 01-05, 07-09
  */
 export const validatePhone = (phone: string): FieldValidationResult => {
   if (!phone?.trim()) {
     return { isValid: false, error: "Le numéro de téléphone est obligatoire" };
   }
 
-  // Nettoyer: enlever espaces, tirets, +, 00
-  const cleaned = phone.replace(/[\s\-+]/g, "").replace(/^(00|225)/, "");
+  const value = phone.trim();
+  const digitsOnly = value.replace(/\D/g, "");
 
-  // Doit être exactement 10 chiffres
-  if (!/^\d{10}$/.test(cleaned)) {
-    return {
-      isValid: false,
-      error: "Format Côte d'Ivoire requis: +225 XX XX XX XX XX ou 0X XX XX XX XX",
-    };
+  // Cas 1: numéro international avec + ou 00
+  if (value.startsWith("+") || value.startsWith("00")) {
+    const e164Digits = value.startsWith("00") ? value.slice(2).replace(/\D/g, "") : digitsOnly;
+    if (!/^\d{8,15}$/.test(e164Digits)) {
+      return {
+        isValid: false,
+        error: "Format international invalide (ex: +33612345678)",
+      };
+    }
+    return { isValid: true, error: "" };
   }
 
-  // Vérifier que c'est un opérateur valide CI (01-05, 07-09 pour les premiers chiffres)
-  const validOperators = ["01", "02", "03", "04", "05", "07", "08", "09"];
-  const firstTwoDigits = cleaned.substring(0, 2);
-  if (!validOperators.includes(firstTwoDigits)) {
-    return {
-      isValid: false,
-      error: "Numéro Côte d'Ivoire invalide (commençant par 01-05 ou 07-09)",
-    };
+  // Cas 2: numéro local CI (10 chiffres)
+  if (/^\d{10}$/.test(digitsOnly)) {
+    const validOperators = ["01", "02", "03", "04", "05", "07", "08", "09"];
+    const firstTwoDigits = digitsOnly.substring(0, 2);
+    if (!validOperators.includes(firstTwoDigits)) {
+      return {
+        isValid: false,
+        error: "Numéro local invalide (CI attendu: commence par 01-05 ou 07-09)",
+      };
+    }
+    return { isValid: true, error: "" };
   }
 
-  return { isValid: true, error: "" };
+  return {
+    isValid: false,
+    error: "Format invalide. Exemples: +2250707558846, +33612345678 ou 0707558846",
+  };
 };
 
 /**
@@ -323,12 +334,8 @@ export const validateEmployeeCount = (
   employeeCount: string,
   subProfile?: string
 ): FieldValidationResult => {
-  // Institutionnel et federation_filiere n'ont pas besoin du nombre d'employés
-  if (
-    !adhesionType ||
-    adhesionType === "institutionnel" ||
-    subProfile === "federation_filiere"
-  ) {
+  // Les institutionnels n'ont pas ce champ dans le formulaire
+  if (!adhesionType || adhesionType === "institutionnel") {
     return { isValid: true, error: "" };
   }
 
@@ -350,6 +357,8 @@ export interface FormData {
   selectedAdhesionType: string;
   formName: string;
   formPosition: string;
+  interventionScope: string;
+  selectedRegions: string[];
   orgName: string;
   formEmail: string;
   formPhone: string;
@@ -390,12 +399,21 @@ export const validateCompleteForm = (formData: FormData): ValidationError[] => {
     });
   }
 
-  // Position (optionnel)
+  // Position (obligatoire)
   const positionValidation = validatePosition(formData.formPosition);
   if (!positionValidation.isValid) {
     errors.push({
       field: "formPosition",
       message: positionValidation.error,
+      severity: "error",
+    });
+  }
+
+  // Profil
+  if (!formData.selectedSubProfile?.trim()) {
+    errors.push({
+      field: "selectedSubProfile",
+      message: "Sélectionnez un profil",
       severity: "error",
     });
   }
@@ -467,12 +485,37 @@ export const validateCompleteForm = (formData: FormData): ValidationError[] => {
       });
     }
 
-    // Activités
-    const activitiesValidation = validateActivities(formData.selectedActivities);
-    if (!activitiesValidation.isValid) {
+    // Activités / Corps de métiers (obligatoire hors federation_filiere)
+    if (formData.selectedSubProfile !== "federation_filiere") {
+      const activitiesValidation = validateActivities(formData.selectedActivities);
+      if (!activitiesValidation.isValid) {
+        errors.push({
+          field: "selectedActivities",
+          message: activitiesValidation.error,
+          severity: "error",
+        });
+      }
+    }
+  }
+
+  // Portée de l'intervention (obligatoire pour les types non institutionnels)
+  if (formData.selectedAdhesionType !== "institutionnel") {
+    if (!formData.interventionScope?.trim()) {
       errors.push({
-        field: "selectedActivities",
-        message: activitiesValidation.error,
+        field: "interventionScope",
+        message: "Sélectionnez la portée de l'intervention",
+        severity: "error",
+      });
+    }
+
+    // Si portée par régions spécifiques, au moins une région est requise
+    if (
+      formData.interventionScope === "regions_specifiques" &&
+      (!Array.isArray(formData.selectedRegions) || formData.selectedRegions.length === 0)
+    ) {
+      errors.push({
+        field: "selectedRegions",
+        message: "Sélectionnez au moins une région d'intervention",
         severity: "error",
       });
     }
@@ -617,31 +660,32 @@ export const cleanUrl = (url: string): string => {
 };
 
 /**
- * Formate un numéro de téléphone CI
- * Standardise au format +225 XX XX XX XX XX
+ * Formate un numéro de téléphone de façon sûre pour l'API
+ * - International: normalise vers +XXXXXXXX
+ * - Local CI (10 chiffres): convertit en +225XXXXXXXXXX
  */
 export const formatPhoneCI = (phone: string): string => {
   if (!phone) return "";
-  
-  // Enlever tous les caractères non-chiffres
-  const cleaned = phone.replace(/\D/g, "");
-  
-  // Enlever le 225/00 au début si présent
-  let normalized = cleaned;
-  if (normalized.startsWith("225")) {
-    normalized = normalized.slice(3);
-  } else if (normalized.startsWith("00")) {
-    normalized = normalized.slice(2);
-    if (normalized.startsWith("225")) {
-      normalized = normalized.slice(3);
-    }
+
+  const value = phone.trim();
+
+  // Déjà international avec +
+  if (value.startsWith("+")) {
+    return `+${value.slice(1).replace(/\D/g, "")}`;
   }
-  
-  // Doit être exactement 10 chiffres
-  if (normalized.length !== 10) {
-    return phone; // Retourner original si format non reconnu
+
+  // International commençant par 00
+  if (value.startsWith("00")) {
+    return `+${value.slice(2).replace(/\D/g, "")}`;
   }
-  
-  // Format: +225 XX XX XX XX XX
-  return `+225 ${normalized.slice(0, 2)} ${normalized.slice(2, 4)} ${normalized.slice(4, 6)} ${normalized.slice(6, 8)} ${normalized.slice(8, 10)}`;
+
+  const digitsOnly = value.replace(/\D/g, "");
+
+  // Local CI (10 chiffres)
+  if (/^\d{10}$/.test(digitsOnly)) {
+    return `+225${digitsOnly}`;
+  }
+
+  // Fallback: conserver la valeur d'origine nettoyée
+  return digitsOnly;
 };
