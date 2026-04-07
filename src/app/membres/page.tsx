@@ -4213,6 +4213,49 @@ const MembersContent = () => {
                   </div>
                 )}
 
+                {/* Activités */}
+                {(() => {
+                  let activitesNames: string[] = [];
+                  if (focusedMember.activitesIds && focusedMember.activitesIds.length > 0 && secteursApi && Array.isArray(secteursApi)) {
+                    for (const secteur of secteursApi) {
+                      if (secteur.filieres && Array.isArray(secteur.filieres)) {
+                        for (const filiere of secteur.filieres) {
+                          if (filiere.sousFiliere && Array.isArray(filiere.sousFiliere)) {
+                            for (const sf of filiere.sousFiliere) {
+                              if (sf.activites && Array.isArray(sf.activites)) {
+                                for (const act of sf.activites) {
+                                  if (focusedMember.activitesIds.includes(act.id)) {
+                                    activitesNames.push(act.name);
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+
+                  return activitesNames.length > 0 ? (
+                    <div className="mb-8">
+                      <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <Briefcase className="h-5 w-5 text-cpu-green" />
+                        Activités / Corps de métiers
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {activitesNames.map((activite, idx) => (
+                          <Badge
+                            key={idx}
+                            className="text-sm bg-cpu-green/10 text-cpu-green border-cpu-green/20 px-3 py-1.5 rounded-lg font-medium"
+                          >
+                            {decodeHtmlEntities(activite)}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
+
                 {/* Actions */}
                 <div className="flex flex-wrap gap-3">
                   {focusedMember.website && (

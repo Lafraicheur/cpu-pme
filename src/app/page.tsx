@@ -377,6 +377,89 @@ export default function Home() {
                     className="p-3 rounded-full mb-4"
                     style={{ backgroundColor: "rgba(240, 130, 35, 0.1)" }}
                   >
+                    <GraduationCap className="h-8 w-8 text-[var(--color-primary)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">CPU Formation</h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Développez vos compétences grâce à nos programmes de
+                    formation adaptés aux besoins des PME.
+                  </p>
+                  <a
+                    href="https://formation.cpupme.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm transition-shadow border-gray-200">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div
+                    className="p-3 rounded-full mb-4"
+                    style={{ backgroundColor: "rgba(25, 157, 78, 0.1)" }}
+                  >
+                    <Store className="h-8 w-8 text-[var(--color-success)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    Marketplace de produits locaux
+                  </h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Vendez et achetez des produits locaux sur notre plateforme
+                    de commerce dédiée aux entreprises ivoiriennes.
+                  </p>
+                  <a
+                    href="https://marketplace.cpupme.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-[var(--color-success)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm transition-shadow border-gray-200">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div
+                    className="p-3 rounded-full mb-4"
+                    style={{ backgroundColor: "rgba(240, 130, 35, 0.1)" }}
+                  >
+                    <Banknote className="h-8 w-8 text-[var(--color-primary)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    Réseautage & Événements
+                  </h3>
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    Rejoignez un réseau actif d'entrepreneurs et participez à
+                    des événements stratégiques pour accélérer votre
+                    développement.
+                  </p>
+                  <a
+                    href="https://evenement.cpupme.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
+                  >
+                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm transition-shadow border-gray-200">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div
+                    className="p-3 rounded-full mb-4"
+                    style={{ backgroundColor: "rgba(240, 130, 35, 0.1)" }}
+                  >
                     <Award className="h-8 w-8 text-[var(--color-primary)]" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">
@@ -432,94 +515,14 @@ export default function Home() {
                 <div className="flex flex-col items-center text-center">
                   <div
                     className="p-3 rounded-full mb-4"
-                    style={{ backgroundColor: "rgba(240, 130, 35, 0.1)" }}
-                  >
-                    <GraduationCap className="h-8 w-8 text-[var(--color-primary)]" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">Formation</h3>
-                  <p className="text-[var(--color-text-secondary)] mb-4">
-                    Développez vos compétences grâce à nos programmes de
-                    formation adaptés aux besoins des PME.
-                  </p>
-                  <a
-                    href="#"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
-                  >
-                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
-                  </a>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-sm transition-shadow border-gray-200">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center">
-                  <div
-                    className="p-3 rounded-full mb-4"
                     style={{ backgroundColor: "rgba(25, 157, 78, 0.1)" }}
                   >
-                    <Store className="h-8 w-8 text-[var(--color-success)]" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">
-                    Marketplace de produits locaux
-                  </h3>
-                  <p className="text-[var(--color-text-secondary)] mb-4">
-                    Vendez et achetez des produits locaux sur notre plateforme
-                    de commerce dédiée aux entreprises ivoiriennes.
-                  </p>
-                  <a
-                    href="#"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center text-[var(--color-success)] hover:underline font-medium"
-                  >
-                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
-                  </a>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-sm transition-shadow border-gray-200">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center">
-                  <div
-                    className="p-3 rounded-full mb-4"
-                    style={{ backgroundColor: "rgba(240, 130, 35, 0.1)" }}
-                  >
-                    <Banknote className="h-8 w-8 text-[var(--color-primary)]" />
+                    <Banknote className="h-8 w-8 text-[var(--color-success)]" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Financement</h3>
                   <p className="text-[var(--color-text-secondary)] mb-4">
                     Accédez à des solutions de financement adaptées pour
                     développer votre entreprise et réaliser vos projets.
-                  </p>
-                  <a
-                    href="#"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center text-[var(--color-primary)] hover:underline font-medium"
-                  >
-                    En savoir plus <ChevronRight className="h-4 w-4 ml-1" />
-                  </a>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-sm transition-shadow border-gray-200">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center">
-                  <div
-                    className="p-3 rounded-full mb-4"
-                    style={{ backgroundColor: "rgba(25, 157, 78, 0.1)" }}
-                  >
-                    <UserPlus className="h-8 w-8 text-[var(--color-success)]" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">Réseautage</h3>
-                  <p className="text-[var(--color-text-secondary)] mb-4">
-                    Rejoignez un réseau de plus de 1000 entrepreneurs et
-                    établissez des partenariats stratégiques.
                   </p>
                   <a
                     href="#"

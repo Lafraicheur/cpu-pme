@@ -151,6 +151,36 @@ export default function Footer() {
             <ul className="space-y-3">
               <li>
                 <a
+                  href="https://formation.cpupme.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-inter text-sm text-gray-300 hover:text-[#F08223] transition-colors"
+                >
+                  CPU Formation
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://marketplace.cpupme.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-inter text-sm text-gray-300 hover:text-[#F08223] transition-colors"
+                >
+                  Marketplace
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://evenement.cpupme.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-inter text-sm text-gray-300 hover:text-[#F08223] transition-colors"
+                >
+                  Réseautage & Événements
+                </a>
+              </li>
+              <li>
+                <a
                   href="#"
                   className="font-inter text-sm text-gray-300 hover:text-[#F08223] transition-colors"
                 >
@@ -170,22 +200,6 @@ export default function Footer() {
                   href="#"
                   className="font-inter text-sm text-gray-300 hover:text-[#F08223] transition-colors"
                 >
-                  Formation
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="font-inter text-sm text-gray-300 hover:text-[#F08223] transition-colors"
-                >
-                  Marketplace
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="font-inter text-sm text-gray-300 hover:text-[#F08223] transition-colors"
-                >
                   Financement
                 </a>
               </li>
@@ -195,14 +209,6 @@ export default function Footer() {
                   className="font-inter text-sm text-gray-300 hover:text-[#F08223] transition-colors"
                 >
                   Data Hub
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="font-inter text-sm text-gray-300 hover:text-[#F08223] transition-colors"
-                >
-                  Réseautage & Événements
                 </a>
               </li>
             </ul>

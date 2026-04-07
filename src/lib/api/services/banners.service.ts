@@ -18,7 +18,7 @@ function fixImageUrl(url: string | null): string | null {
     const uploadsMatch = url.match(/\/uploads\/.+$/);
     if (uploadsMatch) {
       // Construire la nouvelle URL avec l'API publique
-      // Retirer seulement le /api à la fin de l'URL, pas dans api.cpupme.com
+      // Retirer seulement le /api à la fin de l'URL, pas dans back.cpupme.com
       const apiBaseWithoutApi = API_BASE_URL.replace(/\/api$/, '');
       return `${apiBaseWithoutApi}${uploadsMatch[0]}`;
     }
@@ -43,12 +43,32 @@ export interface Banner {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  category?: { name?: string | null; slug?: string | null } | string | null;
 }
 
 export interface GetBannersParams {
   position?: string;
   type?: string;
   activeOnly?: boolean;
+}
+
+function isAllowedBannerCategory(banner: Banner): boolean {
+  const category = banner.category;
+
+  // Champ category absent/vide => autorisé
+  if (category === null || category === undefined || category === '') {
+    return true;
+  }
+
+  // Nouveau format Swagger: relation category objet
+  if (typeof category === 'object') {
+    const name = (category.name || '').trim().toLowerCase();
+    const slug = (category.slug || '').trim().toLowerCase();
+    return name === '' || slug === '' || name === 'cpupme' || slug === 'cpupme';
+  }
+
+  // Format string éventuel
+  return category.trim().toLowerCase() === 'cpupme';
 }
 
 export const bannersService = {
@@ -105,11 +125,13 @@ export const bannersService = {
         return [];
       }
 
-      // Corriger les URLs d'images localhost
-      const fixedData = data.map(banner => ({
+      // Corriger les URLs d'images localhost + filtrer la catégorie
+      const fixedData = data
+        .map(banner => ({
         ...banner,
         image_url: fixImageUrl(banner.image_url),
-      }));
+      }))
+        .filter(isAllowedBannerCategory);
 
       return fixedData;
     } catch (error) {

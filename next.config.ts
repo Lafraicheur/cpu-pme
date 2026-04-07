@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'api.cpupme.com',
+        hostname: 'back.cpupme.com',
         pathname: '/uploads/**',
       },
       {

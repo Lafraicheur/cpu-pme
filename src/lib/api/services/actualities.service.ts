@@ -18,7 +18,7 @@ function fixImageUrl(url: string | null): string | null {
     const uploadsMatch = url.match(/\/uploads\/.+$/);
     if (uploadsMatch) {
       // Construire la nouvelle URL avec l'API publique
-      // Retirer seulement le /api à la fin de l'URL, pas dans api.cpupme.com
+      // Retirer seulement le /api à la fin de l'URL, pas dans back.cpupme.com
       const apiBaseWithoutApi = API_BASE_URL.replace(/\/api$/, '');
       return `${apiBaseWithoutApi}${uploadsMatch[0]}`;
     }

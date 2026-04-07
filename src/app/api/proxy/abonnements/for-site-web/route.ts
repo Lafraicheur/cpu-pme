@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.cpupme.com/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://back.cpupme.com/api';
 
 export async function GET() {
   try {

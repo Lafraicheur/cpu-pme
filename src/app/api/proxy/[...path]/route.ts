@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.cpupme.com/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://back.cpupme.com/api';
 
 function buildTargetUrl(pathSegments: string[], searchParams: URLSearchParams) {
   const base = API_BASE_URL.replace(/\/$/, '');

@@ -201,6 +201,39 @@ function HeaderContent() {
                 {/* Sous-menu Services */}
                 {isServicesMenuOpen && (
                   <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
+                    <a
+                      href="https://formation.cpupme.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <Building2 className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
+                        CPU Formation
+                      </span>
+                    </a>
+                    <a
+                      href="https://marketplace.cpupme.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <Layers className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
+                        Marketplace
+                      </span>
+                    </a>
+                    <a
+                      href="https://evenement.cpupme.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
+                    >
+                      <Network className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
+                        Réseautage & Événements
+                      </span>
+                    </a>
                     <Link
                       href="#"
                       className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
@@ -223,36 +256,9 @@ function HeaderContent() {
                       href="#"
                       className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
                     >
-                      <Building2 className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
-                        CPU Formation
-                      </span>
-                    </Link>
-                    <Link
-                      href="#"
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
-                    >
-                      <Layers className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
-                        Marketplace
-                      </span>
-                    </Link>
-                    <Link
-                      href="#"
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
-                    >
                       <Briefcase className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
                       <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
                         Financement
-                      </span>
-                    </Link>
-                    <Link
-                      href="#"
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors group cursor-pointer"
-                    >
-                      <Network className="w-5 h-5 text-[#F08223] group-hover:scale-110 transition-transform" />
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-[#F08223]">
-                        Réseautage & Événements
                       </span>
                     </Link>
                   </div>
@@ -404,6 +410,36 @@ function HeaderContent() {
                 {/* Sous-menu Services mobile */}
                 {isMobileServicesOpen && (
                   <div className="ml-4 mt-1 space-y-1">
+                    <a
+                      href="https://formation.cpupme.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      <Building2 className="w-4 h-4" />
+                      <span>CPU Formation</span>
+                    </a>
+                    <a
+                      href="https://marketplace.cpupme.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      <Layers className="w-4 h-4" />
+                      <span>Marketplace</span>
+                    </a>
+                    <a
+                      href="https://evenement.cpupme.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
+                      onClick={() => setIsDrawerOpen(false)}
+                    >
+                      <Network className="w-4 h-4" />
+                      <span>Réseautage & Événements</span>
+                    </a>
                     <Link
                       href="#"
                       className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
@@ -425,32 +461,8 @@ function HeaderContent() {
                       className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
                       onClick={() => setIsDrawerOpen(false)}
                     >
-                      <Building2 className="w-4 h-4" />
-                      <span>CPU Formation</span>
-                    </Link>
-                    <Link
-                      href="#"
-                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Layers className="w-4 h-4" />
-                      <span>Marketplace</span>
-                    </Link>
-                    <Link
-                      href="#"
-                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
                       <Briefcase className="w-4 h-4" />
                       <span>Financement</span>
-                    </Link>
-                    <Link
-                      href="#"
-                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-orange-50 hover:text-[#F08223] transition-colors cursor-pointer"
-                      onClick={() => setIsDrawerOpen(false)}
-                    >
-                      <Network className="w-4 h-4" />
-                      <span>Réseautage & Événements</span>
                     </Link>
                   </div>
                 )}

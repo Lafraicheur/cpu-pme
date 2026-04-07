@@ -2,8 +2,8 @@
  * Configuration de l'API
  */
 
-// Appeler directement l'API externe (CORS doit être configuré sur api.cpupme.com)
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.cpupme.com/api';
+// Appeler directement l'API externe (CORS doit être configuré sur back.cpupme.com)
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://back.cpupme.com/api';
 
 // Debug: Log de l'URL de base
 if (typeof window !== 'undefined') {
